@@ -1,0 +1,148 @@
+package com.arloor.proxyserver.requestdecoder;
+
+;
+import com.arloor.proxycommon.entity.HttpRequest;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.ReferenceCountUtil;
+
+import java.util.ArrayList;
+
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * 解码http请求，生成HttpRequest对象。
+ */
+public abstract class HttpMessageDecoder extends ChannelInboundHandlerAdapter {
+    private final ByteBuf content = Unpooled.buffer();
+
+    private HttpRequest decodeRequest(ByteBuf msg) {
+        byte[] buff = new byte[msg.readableBytes()];
+        msg.readBytes(buff);
+        if(buff.length<=10){
+            HttpRequest request = new HttpRequest();
+            request.setRequestBody(buff);
+            return request;
+        }
+
+        String startStr=new String(buff,0,8);
+        if(
+                !startStr.startsWith("CONNECT ")&&
+                        !startStr.startsWith("POST ")&&
+                        !startStr.startsWith("GET ")&&
+                        !startStr.startsWith("PUT ")&&
+                        !startStr.startsWith("HEAD ")&&
+                        !startStr.startsWith("DELETE ")&&
+                        !startStr.startsWith("OPTIONS ")&&
+                        !startStr.startsWith("TRACE ")
+        ) {
+            HttpRequest request = new HttpRequest();
+            request.setRequestBody(buff);
+            return request;
+        }
+
+        String msgStr = new String(buff);
+        String requsetLine = parseRequestLine(msgStr);
+        if(requsetLine==null){
+            HttpRequest request = new HttpRequest();
+            request.setRequestBody(buff);
+            return request;
+        }
+
+        List<HttpRequest.HttpRequestHeader> headers = parseRequestHeaders(msgStr);
+        int bodyStartIndex = 0;
+        int tempIndex = msgStr.indexOf("\r\n\r\n");
+        if (tempIndex != -1) {
+            bodyStartIndex = tempIndex + 4;
+        }
+        byte[] requestBody = null;
+        if (bodyStartIndex != msgStr.length()) {
+            requestBody = parseRequestBody(buff, bodyStartIndex);
+        }
+
+        HttpRequest request = new HttpRequest();
+        request.setRequestLine(requsetLine);
+        request.setHeaders(headers);
+        request.setRequestBody(requestBody);
+        return request;
+    }
+
+    private String parseRequestLine(String msg) {
+        int tempIndex = msg.indexOf("\r\n");
+        if(tempIndex==-1){
+            return null;
+        }else {
+            String tempStr=msg.substring(0,tempIndex );
+           String[] split=tempStr.split(" ");
+           if(split.length!=3||!split[2].startsWith("HTTP/")){
+               return null;
+           }else return tempStr;
+        }
+        //不使用以下正则表达式，因为在请求体过长的情况下，会出现stackoverflow。。。
+        //可以说是很牛逼了。。
+//        Pattern pattern=Pattern.compile("(CONNECT|GET|POST|PUT|HEAD|DELETE|OPTIONS|TRACE) (.|\\.)* HTTP/\\d{1}\\.\\d{1}");
+//        Matcher m=pattern.matcher(msg);
+//        if(m.find()){
+//            return m.group(0);
+//        }else return null;
+    }
+
+    private List<HttpRequest.HttpRequestHeader> parseRequestHeaders(String msg) {
+        int tempIndex = msg.indexOf("\r\n");
+        int headersStartIndex = 0;
+        int headersEndIndex = msg.indexOf("\r\n\r\n");
+        if (tempIndex != -1&&headersEndIndex!=-1) {
+            headersStartIndex = tempIndex + 2;
+        } else {
+            return null;
+        }
+        List<HttpRequest.HttpRequestHeader> httpRequestHeaders=new ArrayList<>();
+        try {
+            String headersStr = msg.substring(headersStartIndex, headersEndIndex);
+            String[] headersSplit = headersStr.split("\r\n");
+            for (String headerEntry : headersSplit
+            ) {
+                String[] lineSplit = headerEntry.split(": ");
+                HttpRequest.HttpRequestHeader header=new HttpRequest.HttpRequestHeader();
+                header.setKey(lineSplit[0]);
+
+                header.setValue(lineSplit.length == 2 ? lineSplit[1] : "");
+                httpRequestHeaders.add(header);
+            }
+        }catch (StringIndexOutOfBoundsException e){
+            e.printStackTrace();
+        }
+
+        return httpRequestHeaders;
+    }
+
+    private byte[] parseRequestBody(byte[] buff, int bodyStartIndex) {
+        int size = buff.length - bodyStartIndex;
+        byte[] body = new byte[size];
+        System.arraycopy(buff, bodyStartIndex, body, 0, size);
+        return body;
+    }
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        //暂存内容  //发现每次channelRead只读1024字节
+        content.writeBytes((ByteBuf) msg);
+        ReferenceCountUtil.release(msg);
+    }
+
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        //如果的确读到了内容,则处理请求
+        if (content.writerIndex() != 0) {
+            HttpRequest request = decodeRequest((ByteBuf) content);
+            processRequest(ctx, request);
+            //清空内容
+            content.clear();
+        }
+    }
+
+    abstract void processRequest(ChannelHandlerContext ctx ,HttpRequest request);
+}
