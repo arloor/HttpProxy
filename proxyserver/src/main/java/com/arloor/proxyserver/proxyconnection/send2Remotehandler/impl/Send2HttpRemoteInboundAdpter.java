@@ -1,6 +1,6 @@
 package com.arloor.proxyserver.proxyconnection.send2Remotehandler.impl;
 
-import com.arloor.proxycommon.entity.HttpRequest;
+import com.arloor.proxycommon.httpentity.HttpRequest;
 import com.arloor.proxyserver.proxyconnection.send2Remotehandler.Send2RemoteAdapter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

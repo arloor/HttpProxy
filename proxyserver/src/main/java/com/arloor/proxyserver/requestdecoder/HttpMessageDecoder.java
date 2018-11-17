@@ -1,7 +1,7 @@
 package com.arloor.proxyserver.requestdecoder;
 
 ;
-import com.arloor.proxycommon.entity.HttpRequest;
+import com.arloor.proxycommon.httpentity.HttpRequest;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -11,8 +11,6 @@ import io.netty.util.ReferenceCountUtil;
 import java.util.ArrayList;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * 解码http请求，生成HttpRequest对象。

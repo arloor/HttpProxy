@@ -1,6 +1,6 @@
 package com.arloor.proxyserver.proxyconnection.send2Remotehandler;
 
-import com.arloor.proxycommon.entity.HttpRequest;
+import com.arloor.proxycommon.httpentity.HttpRequest;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.SocketChannel;

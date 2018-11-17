@@ -1,9 +1,9 @@
 package com.arloor.proxyserver.proxyconnection;
 
 
-import com.arloor.proxycommon.entity.HttpMethod;
-import com.arloor.proxycommon.entity.HttpRequest;
-import com.arloor.proxycommon.entity.HttpResponse;
+import com.arloor.proxycommon.httpentity.HttpMethod;
+import com.arloor.proxycommon.httpentity.HttpRequest;
+import com.arloor.proxycommon.httpentity.HttpResponse;
 import com.arloor.proxyserver.ServerProxyBootStrap;
 import com.arloor.proxyserver.proxyconnection.send2Remotehandler.factory.Send2RemoteAdpterFactory;
 import io.netty.bootstrap.Bootstrap;

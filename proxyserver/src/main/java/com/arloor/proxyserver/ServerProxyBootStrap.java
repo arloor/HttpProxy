@@ -1,6 +1,8 @@
 package com.arloor.proxyserver;
 
 
+import com.arloor.proxycommon.filter.crypto.handler.DecryptHandler;
+import com.arloor.proxycommon.filter.crypto.handler.EncryptHandler;
 import com.arloor.proxyserver.requestdecoder.DefaultHttpMessageDecoderAdapter;
 import com.arloor.proxyserver.proxyconnection.ProxyConnectionHandler;
 import io.netty.bootstrap.ServerBootstrap;
@@ -16,6 +18,7 @@ public class ServerProxyBootStrap {
 
     private static Logger logger= LoggerFactory.getLogger(ServerProxyBootStrap.class);
     private static  final int port=8080;
+    private static final boolean encrypt=true;
 
     public final static EventLoopGroup REMOTEWORKER =new NioEventLoopGroup(4);
     private final static  EventLoopGroup BOSS = new NioEventLoopGroup(4);
@@ -48,6 +51,10 @@ public class ServerProxyBootStrap {
 
         @Override
         protected void initChannel(SocketChannel channel) throws Exception {
+            if(encrypt){
+                channel.pipeline().addLast(new EncryptHandler());
+                channel.pipeline().addLast(new DecryptHandler());
+            }
             channel.pipeline().addLast(new DefaultHttpMessageDecoderAdapter());
             channel.pipeline().addLast(new ProxyConnectionHandler(channel));
         }

@@ -1,6 +1,6 @@
 package com.arloor.proxyserver.proxyconnection.send2Remotehandler.factory;
 
-import com.arloor.proxycommon.entity.HttpMethod;
+import com.arloor.proxycommon.httpentity.HttpMethod;
 import com.arloor.proxyserver.proxyconnection.send2Remotehandler.impl.Send2HttpRemoteInboundAdpter;
 import com.arloor.proxyserver.proxyconnection.send2Remotehandler.impl.Send2HttpsRemoteInboundAdpter;
 import com.arloor.proxyserver.proxyconnection.send2Remotehandler.Send2RemoteAdapter;

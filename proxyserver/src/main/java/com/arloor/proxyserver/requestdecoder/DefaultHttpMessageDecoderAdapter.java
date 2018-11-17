@@ -1,7 +1,7 @@
 package com.arloor.proxyserver.requestdecoder;
 
 
-import com.arloor.proxycommon.entity.HttpRequest;
+import com.arloor.proxycommon.httpentity.HttpRequest;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
