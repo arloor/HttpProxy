@@ -162,7 +162,8 @@ public class HttpRequest {
     @Override
     public String toString() {
         return "HttpRequest{" +
-                "method='" + method + '\'' +
+                "body='" + (requestBody!=null?requestBody.length+"字节":"null") + '\'' +
+                ", method='" + method + '\'' +
                 ", host='" + host + '\'' +
                 ", port=" + port +
                 ", path=" + path +
