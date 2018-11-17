@@ -1,4 +1,4 @@
-package com.arloor.proxycommon.entity;
+package com.arloor.proxycommon.httpentity;
 
 public enum HttpMethod {
     CONNECT, GET, POST, PUT, HEAD, DELETE, OPTIONS, TRACE,NULLMETHOD;

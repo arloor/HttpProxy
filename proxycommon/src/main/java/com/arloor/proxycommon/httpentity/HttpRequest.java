@@ -1,8 +1,7 @@
-package com.arloor.proxycommon.entity;
+package com.arloor.proxycommon.httpentity;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.channels.SocketChannel;
 import java.util.List;
 
 public class HttpRequest {

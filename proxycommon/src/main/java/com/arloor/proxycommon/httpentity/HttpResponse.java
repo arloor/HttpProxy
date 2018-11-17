@@ -1,4 +1,4 @@
-package com.arloor.proxycommon.entity;
+package com.arloor.proxycommon.httpentity;
 
 public class HttpResponse {
 
