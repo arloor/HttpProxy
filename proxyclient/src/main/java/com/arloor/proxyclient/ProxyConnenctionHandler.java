@@ -36,7 +36,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
                             remoteChannel = ch;
-                            if (ClientProxyBootStrap.encrypt) {
+                            if (ClientProxyBootStrap.crypto) {
                                 ch.pipeline().addLast(new EncryptHandler());
                                 ch.pipeline().addLast(new DecryptHandler());
                             }
