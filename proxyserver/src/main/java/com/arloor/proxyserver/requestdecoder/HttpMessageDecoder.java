@@ -2,11 +2,14 @@ package com.arloor.proxyserver.requestdecoder;
 
 ;
 import com.arloor.proxycommon.httpentity.HttpRequest;
+import com.arloor.proxycommon.util.ExceptionUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
@@ -16,6 +19,7 @@ import java.util.List;
  * 解码http请求，生成HttpRequest对象。
  */
 public abstract class HttpMessageDecoder extends ChannelInboundHandlerAdapter {
+    private static Logger logger= LoggerFactory.getLogger(HttpMessageDecoder.class);
     private final ByteBuf content = Unpooled.buffer();
 
     private HttpRequest decodeRequest(ByteBuf msg) {
@@ -111,8 +115,8 @@ public abstract class HttpMessageDecoder extends ChannelInboundHandlerAdapter {
                 header.setValue(lineSplit.length == 2 ? lineSplit[1] : "");
                 httpRequestHeaders.add(header);
             }
-        }catch (StringIndexOutOfBoundsException e){
-            e.printStackTrace();
+        }catch (Exception e){
+            logger.error(ExceptionUtil.getMessage(e));
         }
 
         return httpRequestHeaders;

@@ -1,6 +1,7 @@
 package com.arloor.proxyserver.proxyconnection.send2Remotehandler.impl;
 
 import com.arloor.proxycommon.httpentity.HttpRequest;
+import com.arloor.proxycommon.util.ExceptionUtil;
 import com.arloor.proxyserver.proxyconnection.send2Remotehandler.Send2RemoteAdapter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -26,6 +27,11 @@ public class Send2HttpRemoteInboundAdpter extends Send2RemoteAdapter {
             logger.debug("向remote："+remoteChannel.remoteAddress()+"写");
         }).await();
 
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.error(ExceptionUtil.getMessage(cause));
     }
 
     ByteBuf parseRequest2Bytes(HttpRequest request){

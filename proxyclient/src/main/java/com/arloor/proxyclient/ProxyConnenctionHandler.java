@@ -3,6 +3,7 @@ package com.arloor.proxyclient;
 import com.arloor.proxycommon.filter.crypto.handler.DecryptHandler;
 import com.arloor.proxycommon.filter.crypto.handler.EncryptHandler;
 import com.arloor.proxycommon.httpentity.HttpResponse;
+import com.arloor.proxycommon.util.ExceptionUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -63,6 +64,11 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        logger.error(ExceptionUtil.getMessage(cause));
+    }
+
+    @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         if (remoteChannel != null && remoteChannel.isActive())
             remoteChannel.close().addListener((future -> {
@@ -92,7 +98,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            cause.printStackTrace();
+            logger.error(ExceptionUtil.getMessage(cause));
         }
     }
 }
