@@ -18,7 +18,9 @@ import java.util.Properties;
 public class ClientProxyBootStrap {
 
     private static Logger logger= LoggerFactory.getLogger(ClientProxyBootStrap.class);
-    private static  int port=8081;
+    private static  int clientPort =8081;
+    public static  int serverPort =8081;
+    public static  String serverHost ="127.0.0.1";
     public static boolean crypto=true;
 
     public final static EventLoopGroup REMOTEWORKER =new NioEventLoopGroup(4);
@@ -38,12 +40,19 @@ public class ClientProxyBootStrap {
             ClientProxyBootStrap.crypto =false;
         }
         logger.info("当前代理是否进行加密： "+ClientProxyBootStrap.crypto);
-
-        String port=prop.getProperty("client.port", "8080");
+        String clientPort=prop.getProperty("client.port", "8081");
         try {
-            ClientProxyBootStrap.port =Integer.parseInt(port);
+            ClientProxyBootStrap.clientPort =Integer.parseInt(clientPort);
         }catch (Exception e){
-            logger.error("解析server.port配置失败，设置为默认端口："+ClientProxyBootStrap.port);
+            logger.error("解析client.port配置失败，设置为默认端口："+ClientProxyBootStrap.clientPort);
+        }
+        String serverhost=prop.getProperty("server.host","127.0.0.1");
+        ClientProxyBootStrap.serverHost =serverhost;
+        String serverport=prop.getProperty("server.port","8080");
+        try {
+            ClientProxyBootStrap.serverPort =Integer.parseInt(serverport);
+        }catch (Exception e){
+            logger.error("server.port配置失败，设置为默认端口："+ClientProxyBootStrap.serverPort);
         }
 
         try {
@@ -53,8 +62,8 @@ public class ClientProxyBootStrap {
                     .option(ChannelOption.SO_BACKLOG, 1024)
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
                     .childHandler(MyChannelInitializer.instance);
-            ChannelFuture future = bootstrap.bind(ClientProxyBootStrap.port).sync();
-            logger.info("开启代理 端口:"+ClientProxyBootStrap.port);
+            ChannelFuture future = bootstrap.bind(ClientProxyBootStrap.clientPort).sync();
+            logger.info("开启代理 端口:"+ClientProxyBootStrap.clientPort);
             future.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();

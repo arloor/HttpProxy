@@ -41,5 +41,23 @@ crypto=false
 
 当然，proxyclient无论如何不可以单独运行
 
+## 在vps上运行情况
+
+在使用字节取反的加密下，已经可以|fan|qiang]|了，惊喜惊喜。
+
+```jshelllanguage
+2018-11-18 08:44:54.446 [nioEventLoopGroup-4-1] INFO  c.a.p.r.DefaultHttpMessageDecoderAdapter - 处理请求 HttpRequest{body='null', method='CONNECT', host='adservice.google.co.jp', port=443, path=adservice.google.co.jp:443}
+2018-11-18 08:44:54.457 [nioEventLoopGroup-2-1] INFO  c.a.p.proxyconnection.ProxyConnectionHandler - 连接成功: adservice.google.co.jp:443
+
+2018-11-18 08:44:54.630 [nioEventLoopGroup-4-1] INFO  c.a.p.r.DefaultHttpMessageDecoderAdapter - 处理请求 HttpRequest{body='null', method='CONNECT', host='ogs.google.com', port=443, path=ogs.google.com:443}
+2018-11-18 08:44:54.650 [nioEventLoopGroup-2-2] INFO  c.a.p.proxyconnection.ProxyConnectionHandler - 连接成功: ogs.google.com:443
+
+2018-11-18 08:45:45.016 [nioEventLoopGroup-4-1] INFO  c.a.p.r.DefaultHttpMessageDecoderAdapter - 处理请求 HttpRequest{body='null', method='CONNECT', host='r1---sn-a5meknek.googlevideo.com', port=443, path=r1---sn-a5meknek.googlevideo.com:443}
+2018-11-18 08:45:45.139 [nioEventLoopGroup-2-1] INFO  c.a.p.proxyconnection.ProxyConnectionHandler - 连接成功: r1---sn-a5meknek.googlevideo.com:443
+
+2018-11-18 08:45:54.703 [nioEventLoopGroup-4-1] INFO  c.a.p.r.DefaultHttpMessageDecoderAdapter - 处理请求 HttpRequest{body='null', method='CONNECT', host='www.google.co.jp', port=443, path=www.google.co.jp:443}
+2018-11-18 08:45:54.754 [nioEventLoopGroup-2-1] INFO  c.a.p.proxyconnection.ProxyConnectionHandler - 连接成功: www.google.co.jp:443
+```
+
 
 

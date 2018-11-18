@@ -36,9 +36,9 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
     }
 
     private ProxyConnectionHandler() {
-        rejectHosts.add("google");
-        rejectHosts.add("youtube");
-        rejectHosts.add("facebook");
+//        rejectHosts.add("google");
+//        rejectHosts.add("youtube");
+//        rejectHosts.add("facebook");
     }
 
     public void channelRead(ChannelHandlerContext localCtx, Object msg) throws Exception {
