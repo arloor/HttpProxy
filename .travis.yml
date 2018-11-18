@@ -4,7 +4,7 @@ jdk:
 install:
   - cd proxycommon && mvn install -DskipTests=true -Dmaven.javadoc.skip=true
 script:
-  - cd proxyserver
+  - cd ../proxyserver
   - mvn test
   - cd ../proxyclient
   - mvn test
