@@ -4,6 +4,7 @@ package com.arloor.proxyserver.proxyconnection;
 import com.arloor.proxycommon.httpentity.HttpMethod;
 import com.arloor.proxycommon.httpentity.HttpRequest;
 import com.arloor.proxycommon.httpentity.HttpResponse;
+import com.arloor.proxycommon.util.ExceptionUtil;
 import com.arloor.proxyserver.ServerProxyBootStrap;
 import com.arloor.proxyserver.proxyconnection.send2Remotehandler.factory.Send2RemoteAdpterFactory;
 import io.netty.bootstrap.Bootstrap;
@@ -109,8 +110,8 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.info("出现异常："+cause.getMessage()+"——"+ctx.channel().remoteAddress());
-        cause.printStackTrace();
+        logger.error("出现异常："+cause.getMessage()+"——"+ctx.channel().remoteAddress());
+        logger.error(ExceptionUtil.getMessage(cause));
     }
 
     private class SendBack2ClientHandler extends SimpleChannelInboundHandler<ByteBuf> {
@@ -125,8 +126,8 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            logger.info("出现异常："+cause.getMessage()+"——"+ctx.channel());
-            cause.printStackTrace();
+            logger.error("出现异常："+cause.getMessage()+"——"+ctx.channel());
+            logger.error(ExceptionUtil.getMessage(cause));
         }
 
         /**

@@ -1,6 +1,7 @@
 package com.arloor.proxyserver.proxyconnection.send2Remotehandler;
 
 import com.arloor.proxycommon.httpentity.HttpRequest;
+import com.arloor.proxycommon.util.ExceptionUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.SocketChannel;
@@ -16,7 +17,7 @@ public abstract class Send2RemoteAdapter  extends SimpleChannelInboundHandler<Ht
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.info("出现异常："+cause.getMessage()+"——"+ctx.channel());
-        cause.printStackTrace();
+        logger.error("出现异常："+cause.getMessage()+"——"+ctx.channel());
+        logger.error(ExceptionUtil.getMessage(cause));
     }
 }
