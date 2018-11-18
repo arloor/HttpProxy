@@ -44,7 +44,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                             ch.pipeline().addLast(new SendBack2ClientHandler());
                         }
                     });
-            ChannelFuture future = bootstrap.connect("127.0.0.1", 8080);
+            ChannelFuture future = bootstrap.connect(ClientProxyBootStrap.serverHost, ClientProxyBootStrap.serverPort);
             future.addListener(ChannelFutureListener -> {
                 if (future.isSuccess()) {
                     logger.info("连接成功: 到代理服务器");
