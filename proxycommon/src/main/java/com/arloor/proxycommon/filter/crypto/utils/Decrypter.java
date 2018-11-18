@@ -1,16 +1,18 @@
 package com.arloor.proxycommon.filter.crypto.utils;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.util.ByteProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 public interface Decrypter {
     Logger logger= LoggerFactory.getLogger(Decrypter.class);
 
+    void decrypt(ByteBuf buf);
+
     static Decrypter simple(){
         return (buf)->{
-            logger.debug("读时解密");
+            logger.debug("读时解密(字节取反)");
             int lengh=buf.writerIndex();
             byte[] bytes=new byte[lengh];
             buf.readBytes(bytes);
@@ -22,5 +24,4 @@ public interface Decrypter {
         };
     }
 
-    void decrypt(ByteBuf buf);
 }

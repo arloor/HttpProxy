@@ -1,0 +1,10 @@
+language: java
+jdk:
+- oraclejdk8
+install:
+  - cd proxycommon && mvn install -DskipTests=true -Dmaven.javadoc.skip=true
+script:
+  - cd proxyserver
+  - mvn test
+  - cd ../proxyclient
+  - mvn test
