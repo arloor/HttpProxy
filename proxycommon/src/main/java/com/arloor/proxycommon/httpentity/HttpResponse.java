@@ -1,16 +1,31 @@
 package com.arloor.proxycommon.httpentity;
 
+import java.util.Date;
+
 public class HttpResponse {
 
-    public static byte[] ESTABLISHED(){
-        StringBuilder sb=new StringBuilder();
+    public static byte[] ESTABLISHED() {
+        StringBuilder sb = new StringBuilder();
         sb.append("HTTP/1.1 200 Connection Established\r\n");
         sb.append("Proxy-agent: https://github.com/arloor/proxynew\r\n");
         sb.append("\r\n");
         return sb.toString().getBytes();
     }
-    public static byte[] ERROR503(){
-        StringBuilder sb=new StringBuilder();
+
+    public static byte[] ERROR404() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("HTTP/1.1 404\r\n" +
+                "Content-Type: text/html;charset=ISO-8859-1\r\n" +
+                "Content-Language: zh\r\n" +
+                "Content-Length: 254\r\n" +
+                "Connection: close\r\n" +
+                "\r\n" +
+                "<html><body><h1>Whitelabel Error Page</h1><p>This application has no explicit mapping for /error, so you are seeing this as a fallback.</p><div>There was an unexpected error (type=Not Found, status=404).</div><div>No message available</div></body></html>");
+        return sb.toString().getBytes();
+    }
+
+    public static byte[] ERROR503() {
+        StringBuilder sb = new StringBuilder();
         sb.append("HTTP/1.0 503 Error\r\n");
         sb.append("Content-Language: zh-CN\r\n");
         sb.append("Content-Length: 656\r\n");
