@@ -49,6 +49,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                 if (future.isSuccess()) {
                     logger.info("连接成功: 到代理服务器");
                     //todo：向chennel写
+                    logger.info("发送请求 "+((ByteBuf)msg).writerIndex()+"字节 " + remoteChannel.remoteAddress());
                     remoteChannel.writeAndFlush(msg);
                 } else {
                     logger.error("连接失败:  到代理服务器");
@@ -59,6 +60,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                 }
             });
         } else {
+            logger.info("发送请求 "+((ByteBuf)msg).writerIndex()+"字节 " + remoteChannel.remoteAddress());
             remoteChannel.writeAndFlush(msg);
         }
     }
@@ -82,7 +84,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
         @Override
         protected void channelRead0(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
             localChannel.writeAndFlush(byteBuf.retain()).addListener(ChannelFutureListener -> {
-                logger.info("返回响应 "+byteBuf.writerIndex()+"字节" + channelHandlerContext.channel().remoteAddress());
+                logger.info("返回响应 "+byteBuf.writerIndex()+"字节 " + channelHandlerContext.channel().remoteAddress());
             });
         }
 

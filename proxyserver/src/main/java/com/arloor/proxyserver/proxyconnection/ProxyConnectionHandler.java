@@ -126,7 +126,7 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
         @Override
         protected void channelRead0(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
             localChannel.writeAndFlush(byteBuf.retain()).addListener(ChannelFutureListener -> {
-                logger.debug("返回响应" + channelHandlerContext.channel().remoteAddress());
+                logger.info("返回响应 " +byteBuf.writerIndex()+"字节 "+channelHandlerContext.channel().remoteAddress());
             });
         }
 
