@@ -49,8 +49,13 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
                 if (request.getMethod() != null) {
                     establishConnectionAndSend(request, localCtx);
                 }else {
+                    //可以认为这是非法的不正常的请求，返回一个404响应，省得别人怀疑
                     logger.error("错误的第一次请求，没有指定host port，关闭此channel");
-                    localChannel.close();
+                    localChannel.pipeline().removeFirst();
+                    localChannel.writeAndFlush(Unpooled.wrappedBuffer(HttpResponse.ERROR404())).addListener(future -> {
+                        localChannel.close();
+                    });
+
                 }
             }else {
                 localCtx.fireChannelRead(request);
