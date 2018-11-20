@@ -25,7 +25,6 @@ public class DefaultHttpMessageDecoderAdapter extends HttpMessageDecoder  {
 
     @Override
     void processRequest(ChannelHandlerContext ctx, HttpRequest request) {
-        logger.info("处理请求 " +request);
         request.reform();
 //        printRequestInfo(request);
         ctx.fireChannelRead(request);
