@@ -44,6 +44,7 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext localCtx, Object msg) throws Exception {
 
         HttpRequest request = (HttpRequest) msg;
+        logger.info("处理请求"+"[客户端:"+localChannel.remoteAddress()+"] " +request );
         if (!rejectRequest(request)) {
             if(remoteChannel==null){
                 if (request.getMethod() != null) {
