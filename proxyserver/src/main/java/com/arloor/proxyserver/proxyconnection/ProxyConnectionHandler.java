@@ -51,6 +51,7 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
                 }else {
                     //可以认为这是非法的不正常的请求，返回一个404响应，省得别人怀疑
                     logger.error("错误的第一次请求，没有指定host port，关闭此channel");
+                    logger.error("错误content:\n" +new String(request.getRequestBody()));
                     //在这个时候就不要对响应加密了
                     localChannel.pipeline().removeFirst();
                     localChannel.writeAndFlush(Unpooled.wrappedBuffer(HttpResponse.ERROR404())).addListener(future -> {
