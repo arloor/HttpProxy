@@ -22,6 +22,15 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
 
     private SocketChannel remoteChannel;
 
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        boolean canWrite = ctx.channel().isWritable();
+        logger.warn(ctx.channel()+" 可写性："+canWrite);
+        //流量控制，不允许继续读
+        localChannel.config().setAutoRead(canWrite);
+        super.channelWritabilityChanged(ctx);
+    }
+
     public ProxyConnenctionHandler(SocketChannel channel) {
         this.localChannel = channel;
     }
@@ -86,6 +95,15 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
             localChannel.writeAndFlush(byteBuf.retain()).addListener(ChannelFutureListener -> {
                 logger.info("返回响应 "+byteBuf.writerIndex()+"字节 " + channelHandlerContext.channel().remoteAddress());
             });
+        }
+
+        @Override
+        public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+            boolean canWrite = ctx.channel().isWritable();
+            logger.warn(ctx.channel()+" 可写性："+canWrite);
+            //流量控制，不允许继续读
+            localChannel.config().setAutoRead(canWrite);
+            super.channelWritabilityChanged(ctx);
         }
 
 

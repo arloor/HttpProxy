@@ -6,7 +6,7 @@
 
     <groupId>com.arloor</groupId>
     <artifactId>proxyserver</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.1.6.Final</version>
+            <version>4.1.32.Final</version>
         </dependency>
         <!--<dependency>-->
         <!--<groupId>org.slf4j</groupId>-->
