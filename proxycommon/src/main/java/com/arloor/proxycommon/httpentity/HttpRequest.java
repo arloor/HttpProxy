@@ -124,7 +124,13 @@ public class HttpRequest {
             if (header.getKey().equals("Host")) {
                 String hostAndPort = header.getValue();
                 String[] hostPortSplit = hostAndPort.split(":");
-                this.host = hostPortSplit[0];
+                //fix apt usr proxy
+                //CONNECT download.docker.com:443 HTTP/1.1
+                //Host: 127.0.0.1:8081
+                //User-Agent: Debian APT-HTTP/1.3 (1.6.6)
+                //fuck apt！
+                if(!hostPortSplit[0].contains("127.0.0.1")&&!hostPortSplit[0].startsWith("192.168.")&&!hostPortSplit[0].startsWith("10."))
+                    this.host = hostPortSplit[0];
                 if (this.method.equals(HttpMethod.CONNECT) && hostPortSplit.length == 1) {
                     this.port = 443;
                 } else
