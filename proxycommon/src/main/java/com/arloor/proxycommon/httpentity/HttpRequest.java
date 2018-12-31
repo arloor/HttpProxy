@@ -57,9 +57,9 @@ public class HttpRequest {
     public void reform() {
         //处理因为代理而发生的http请求头变化
         replaceKey("Proxy-Connection", "Connection");
-        if (requestLine != null){
-            String[] split=requestLine.split(" ");
-            requestLine=split[0]+" "+path+" "+split[2];
+        if (requestLine != null) {
+            String[] split = requestLine.split(" ");
+            requestLine = split[0] + " " + path + " " + split[2];
         }
     }
 
@@ -129,12 +129,14 @@ public class HttpRequest {
                 //Host: 127.0.0.1:8081
                 //User-Agent: Debian APT-HTTP/1.3 (1.6.6)
                 //fuck apt！
-                if(!hostPortSplit[0].contains("127.0.0.1")&&!hostPortSplit[0].startsWith("192.168.")&&!hostPortSplit[0].startsWith("10."))
+                if (!hostPortSplit[0].contains("127.0.0.1") && !hostPortSplit[0].startsWith("192.168.") && !hostPortSplit[0].startsWith("10.")) {
                     this.host = hostPortSplit[0];
-                if (this.method.equals(HttpMethod.CONNECT) && hostPortSplit.length == 1) {
-                    this.port = 443;
-                } else
-                    this.port = Integer.parseInt(hostPortSplit.length == 2 ? hostPortSplit[1] : "80");//如果不带端口号则，默认为80
+                    if (this.method.equals(HttpMethod.CONNECT) && hostPortSplit.length == 1) {
+                        this.port = 443;
+                    } else {
+                        this.port = Integer.parseInt(hostPortSplit.length == 2 ? hostPortSplit[1] : "80");//如果不带端口号则，默认为80
+                    }
+                }
                 break;
             }
         }
@@ -167,7 +169,7 @@ public class HttpRequest {
     @Override
     public String toString() {
         return "HttpRequest{" +
-                "body='" + (requestBody!=null?requestBody.length+"字节":"null") + '\'' +
+                "body='" + (requestBody != null ? requestBody.length + "字节" : "null") + '\'' +
                 ", method='" + method + '\'' +
                 ", host='" + host + '\'' +
                 ", port=" + port +
