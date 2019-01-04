@@ -17,7 +17,7 @@ public class AESUtil {
     // 密钥算法
     public static final String KEY_ALGORITHM = "AES";
     // 加密/解密算法/工作模式/填充方式
-    public static final String CIPHER_ALGORITHM = "AES/ECB/PKCS7Padding";
+    public static final String CIPHER_ALGORITHM = "AES/ECB/PKCS5Padding";
 
     /**
      * AES加密
@@ -25,15 +25,15 @@ public class AESUtil {
      * @param key 密钥
      * @return
      */
-    static String encrypt(String source, String key) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, NoSuchProviderException {
+    static byte[] encrypt(String source, byte[] key) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException, NoSuchProviderException {
         try {
             Security.addProvider(new BouncyCastleProvider());
-            Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM,"BC");
-            SecretKeySpec keySpec=new SecretKeySpec(key.getBytes(), KEY_ALGORITHM);
+            Cipher cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+            SecretKeySpec keySpec=new SecretKeySpec(key, KEY_ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE,keySpec );
 
             byte[] secret = cipher.doFinal(source.getBytes());
-            return bytes2Hex(secret);
+            return secret;
         } catch (Exception e) {
             throw e;
         }

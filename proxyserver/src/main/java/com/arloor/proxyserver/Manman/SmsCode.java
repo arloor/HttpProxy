@@ -1,44 +1,39 @@
 package com.arloor.proxyserver.Manman;
 
-import com.arloor.proxyserver.Manman.AESUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import sun.misc.BASE64Encoder;
 
 import javax.crypto.*;
 import java.io.UnsupportedEncodingException;
 import java.security.*;
+import java.util.Arrays;
 
 public class SmsCode {
-    public static  void main(String[] args) throws InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException {
-        String url="/searchtruck-app/truck/search-f367e4e5fa7b38ed";
-        String key=string2SHA256(url);
-        System.out.println("key: "+key);
-//        String result=encrypt("{\"abc\":\"123\"}",key.substring(0,16));
-        String result= null;
-        System.out.println("{\"abc\":\"123\"}");
-        try {
-            result = AESUtil.encrypt("{\"abc\":\"123\"}",key.substring(0,16));
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
-        }
-        System.out.println(result);
+    public static  void main(String[] args) throws InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException, NoSuchProviderException {
+        String url="/logistics/user/getloginverifycode-d4af719008dd7f88";
+        byte[] key=string2SHA256(url);
+        System.out.println("aes128 key(hex): "+bytes2Hex(key));
+        byte[] aesResult = AESUtil.encrypt("{\"from\":\"8\",\"telephone\":\"17625955421\"}", Arrays.copyOf(key,16));
+        System.out.println("aes128 result(hex): "+bytes2Hex(aesResult));
+        byte[] confusionResult= Transform.confusion(aesResult);
+        System.out.println("confusion result(hex): "+bytes2Hex(confusionResult));
+        System.out.println("confusion result(String): "+new String(confusionResult));
     }
 
-    public static String string2SHA256(String str){
+    public static byte[] string2SHA256(String str){
         MessageDigest messageDigest;
-        String encdeStr = "";
         try {
             messageDigest = MessageDigest.getInstance("SHA-256");
             byte[] hash = messageDigest.digest(str.getBytes("UTF-8"));
             // 將 byte 轉換爲 string
             // 得到返回結果
-            encdeStr = bytes2Hex(hash);
+            return hash;
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        return encdeStr;
+        return null;
     }
 
 
