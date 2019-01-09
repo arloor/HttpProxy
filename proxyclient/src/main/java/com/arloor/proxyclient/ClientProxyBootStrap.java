@@ -1,5 +1,6 @@
 package com.arloor.proxyclient;
 
+import com.arloor.proxycommon.Config;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -28,27 +29,19 @@ public class ClientProxyBootStrap {
     private final static EventLoopGroup LOCALWORKER = new NioEventLoopGroup(1);
 
     public static void main(String[] args){
-        Properties prop = new Properties();
-        InputStream in = ClientProxyBootStrap.class.getResourceAsStream("/proxy.properties");
-        try {
-            prop.load(in);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        String crypto=prop.getProperty("crypto","false");
-        if(crypto.equals("false")){
-            ClientProxyBootStrap.crypto =false;
-        }
+        ClientProxyBootStrap.crypto = Config.crypto();
         logger.info("当前代理是否进行加密： "+ClientProxyBootStrap.crypto);
-        String clientPort=prop.getProperty("client.port", "8081");
+        if(ClientProxyBootStrap.crypto){
+            logger.info("所采用的加密实现： "+Config.cryptoType());
+        }
+        String clientPort=Config.clientPort();
         try {
             ClientProxyBootStrap.clientPort =Integer.parseInt(clientPort);
         }catch (Exception e){
             logger.error("解析client.port配置失败，设置为默认端口："+ClientProxyBootStrap.clientPort);
         }
-        String serverhost=prop.getProperty("server.host","127.0.0.1");
-        ClientProxyBootStrap.serverHost =serverhost;
-        String serverport=prop.getProperty("server.port","8080");
+        ClientProxyBootStrap.serverHost =Config.serverhost();
+        String serverport=Config.serverport();
         try {
             ClientProxyBootStrap.serverPort =Integer.parseInt(serverport);
         }catch (Exception e){

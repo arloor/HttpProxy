@@ -11,4 +11,14 @@ public enum CryptoType {
             return AES;
         }else return SIMPLE;
     }
+
+
+    @Override
+    public String toString() {
+        switch (this){
+            case AES:return "AES";
+            case SIMPLE:return "SIMPLE";
+            default:return "SIMPLE";
+        }
+    }
 }

@@ -20,21 +20,32 @@ public class AES128 implements Cryptor {
 
     @Override
     public void decrypt(ByteBuf buf) {
-
+        int lengh=buf.writerIndex();
+        byte[] bytes=new byte[lengh];
+        buf.readBytes(bytes);
+        System.out.println("读到： "+new String(bytes));
+        byte[] decrypt=decrypt(bytes);
+        buf.clear();
+        buf.writeBytes(decrypt);
     }
 
     @Override
     public void encrypt(ByteBuf buf) {
-
+        int lengh=buf.writerIndex();
+        byte[] bytes=new byte[lengh];
+        buf.readBytes(bytes);
+        System.out.println("读到： "+new String(bytes));
+        byte[] encrypt=encrypt(bytes);
+        buf.clear();
+        buf.writeBytes(encrypt);
     }
 
     /**
      * 加密
      * @param source
-     * @param keyStr 原始秘钥字符串，注意不是最终的秘钥
      * @return 加密后的字节数组
      */
-    public byte[] encrypt(byte[] source, String keyStr) {
+    public byte[] encrypt(byte[] source) {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             SecretKeySpec keySpec=new SecretKeySpec(key, "AES");
@@ -50,10 +61,9 @@ public class AES128 implements Cryptor {
     /**
      * 解密
      * @param encoded
-     * @param keyStr 原始秘钥字符串，注意不是最终的秘钥
      * @return 解密后的字节数组
      */
-    public byte[] decrypt(byte[] encoded, String keyStr) {
+    public byte[] decrypt(byte[] encoded) {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"));

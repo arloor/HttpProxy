@@ -1,33 +1,17 @@
 package com.arloor.proxycommon.filter.crypto.utils;
 
-import com.arloor.proxycommon.filter.crypto.handler.CryptoHandler;
+import com.arloor.proxycommon.Config;
 import io.netty.buffer.ByteBuf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
-
 public interface Cryptor {
     Logger logger= LoggerFactory.getLogger(Cryptor.class);
-    String cryptoKey= Cryptor.getCryptoKey();
+    String cryptoKey= Config.cryptoKey();
 
     void decrypt(ByteBuf buf);
 
     void encrypt(ByteBuf buf);
-
-    static String getCryptoKey() {
-        Properties prop = new Properties();
-        InputStream in = CryptoHandler.class.getResourceAsStream("/proxy.properties");
-        try {
-            prop.load(in);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        String cryptoKey=prop.getProperty("crypto.key","竟然不设置密码。。真粗心");
-        return cryptoKey;
-    }
 
     static Cryptor simple(){
         return new Cryptor() {
@@ -36,6 +20,7 @@ public interface Cryptor {
                 int lengh=buf.writerIndex();
                 byte[] bytes=new byte[lengh];
                 buf.readBytes(bytes);
+                System.out.println("读到： "+new String(bytes));
                 for (int i = 0; i <lengh ; i++) {
                     bytes[i]=(byte) ~bytes[i];
                 }
