@@ -1,30 +1,20 @@
 package com.arloor.proxycommon.filter.crypto.utils;
 
-import com.arloor.proxycommon.filter.crypto.utils.cryptoimpl.DESdecrypter;
-import com.arloor.proxycommon.filter.crypto.utils.cryptoimpl.DESencrypter;
+import com.arloor.proxycommon.filter.crypto.utils.cryptoimpl.AES128;
 
 import java.util.HashMap;
 import java.util.function.Supplier;
 
 public class CryptoFactory {
-    private static HashMap<CryptoType, Supplier<Encrypter>> encyptTypeMap=new HashMap<>();
-
-    private static HashMap<CryptoType, Supplier<Decrypter>> decyptTypeMap=new HashMap<>();
+    private static HashMap<CryptoType, Supplier<Cryptor>> cryptorMap=new HashMap<>();
 
     //初始化两个map
     static {
-        encyptTypeMap.put(CryptoType.SIMPLE, Encrypter::simple);
-        decyptTypeMap.put(CryptoType.SIMPLE, Decrypter::simple);
-
-        encyptTypeMap.put(CryptoType.DES, DESencrypter::new);
-        decyptTypeMap.put(CryptoType.DES, DESdecrypter::new);
+        cryptorMap.put(CryptoType.SIMPLE, Cryptor::simple);
+        cryptorMap.put(CryptoType.AES, AES128::new);
     }
 
-    public static Encrypter createEncrypter(CryptoType type){
-        return encyptTypeMap.get(type).get();
-    }
-
-    public static Decrypter createDecrypter(CryptoType type){
-        return decyptTypeMap.get(type).get();
+    public static Cryptor createCryptor(CryptoType cryptoType) {
+        return cryptorMap.get(cryptoType).get();
     }
 }

@@ -9,6 +9,7 @@ import java.util.Properties;
 public interface CryptoHandler {
     CryptoType cryptoType= CryptoHandler.getCryptoType();
 
+
     static CryptoType getCryptoType(){
         Properties prop = new Properties();
         InputStream in = CryptoHandler.class.getResourceAsStream("/proxy.properties");
@@ -20,4 +21,6 @@ public interface CryptoHandler {
         String cryptoType=prop.getProperty("crypto.type","SIMPLE");
         return CryptoType.parse(cryptoType);
     }
+
+
 }
