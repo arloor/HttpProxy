@@ -52,7 +52,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                             remoteChannel = ch;
                             if (ClientProxyBootStrap.crypto) {
                                 //如果不是字节取反，则增加分隔符
-                                if(CryptoHandler.cryptoType!=CryptoType.SIMPLE){
+                                if(!CryptoHandler.cryptoType.equals( CryptoType.SIMPLE)){
                                     ch.pipeline().addLast(new DelimiterBasedFrameDecoder(65536,true,true, Unpooled.copiedBuffer(Config.delimiter().getBytes())));
                                     ch.pipeline().addLast(new ChannelOutboundHandlerAdapter(){
                                         @Override
