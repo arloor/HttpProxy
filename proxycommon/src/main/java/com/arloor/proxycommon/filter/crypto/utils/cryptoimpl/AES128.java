@@ -2,6 +2,7 @@ package com.arloor.proxycommon.filter.crypto.utils.cryptoimpl;
 
 import com.arloor.proxycommon.filter.crypto.utils.Cryptor;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
@@ -23,21 +24,21 @@ public class AES128 implements Cryptor {
         int lengh=buf.writerIndex();
         byte[] bytes=new byte[lengh];
         buf.readBytes(bytes);
-        System.out.println("读到： "+new String(bytes));
+//        System.out.println("解密以下： "+new String(bytes));
         byte[] decrypt=decrypt(bytes);
         buf.clear();
         buf.writeBytes(decrypt);
     }
 
     @Override
-    public void encrypt(ByteBuf buf) {
+    public ByteBuf encrypt(ByteBuf buf) {
         int lengh=buf.writerIndex();
         byte[] bytes=new byte[lengh];
         buf.readBytes(bytes);
-        System.out.println("读到： "+new String(bytes));
+//        System.out.println("加密以下： "+new String(bytes));
         byte[] encrypt=encrypt(bytes);
-        buf.clear();
-        buf.writeBytes(encrypt);
+        buf= Unpooled.wrappedBuffer(encrypt);
+        return buf;
     }
 
     /**
