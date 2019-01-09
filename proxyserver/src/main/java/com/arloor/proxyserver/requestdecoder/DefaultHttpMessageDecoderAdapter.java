@@ -6,6 +6,8 @@ import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class DefaultHttpMessageDecoderAdapter extends HttpMessageDecoder  {
     private static Logger logger= LoggerFactory.getLogger(DefaultHttpMessageDecoderAdapter.class);
 
@@ -18,7 +20,7 @@ public class DefaultHttpMessageDecoderAdapter extends HttpMessageDecoder  {
             System.out.println(header.getKey()+": "+header.getValue());
         }}
         System.out.println();
-        System.out.println("bodysize: "+(request.getRequestBody()==null?0:request.getRequestBody().length));
+        System.out.println((request.getRequestBody()==null?null:new String(request.getRequestBody(),UTF_8)));
         System.out.println("================================================================================");
     }
 

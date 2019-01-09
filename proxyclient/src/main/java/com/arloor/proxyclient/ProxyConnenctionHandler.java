@@ -1,7 +1,10 @@
 package com.arloor.proxyclient;
 
+import com.arloor.proxycommon.Config;
+import com.arloor.proxycommon.filter.crypto.handler.CryptoHandler;
 import com.arloor.proxycommon.filter.crypto.handler.DecryptHandler;
 import com.arloor.proxycommon.filter.crypto.handler.EncryptHandler;
+import com.arloor.proxycommon.filter.crypto.utils.CryptoType;
 import com.arloor.proxycommon.httpentity.HttpResponse;
 import com.arloor.proxycommon.util.ExceptionUtil;
 import io.netty.bootstrap.Bootstrap;
@@ -10,6 +13,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +51,20 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                         protected void initChannel(SocketChannel ch) throws Exception {
                             remoteChannel = ch;
                             if (ClientProxyBootStrap.crypto) {
+                                //如果不是字节取反，则增加分隔符
+                                if(CryptoHandler.cryptoType!=CryptoType.SIMPLE){
+                                    ch.pipeline().addLast(new DelimiterBasedFrameDecoder(65536,true,true, Unpooled.copiedBuffer(Config.delimiter().getBytes())));
+                                    ch.pipeline().addLast(new ChannelOutboundHandlerAdapter(){
+                                        @Override
+                                        public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+                                            if(msg instanceof ByteBuf){
+                                                ByteBuf buf=(ByteBuf)msg;
+                                                buf.writeBytes(Config.delimiter().getBytes());
+                                            }
+                                            super.write(ctx, msg, promise);
+                                        }
+                                    });
+                                }
                                 ch.pipeline().addLast(new EncryptHandler());
                                 ch.pipeline().addLast(new DecryptHandler());
                             }

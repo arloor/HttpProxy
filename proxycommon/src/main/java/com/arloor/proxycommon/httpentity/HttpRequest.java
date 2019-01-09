@@ -172,7 +172,7 @@ public class HttpRequest {
                 "body='" + (requestBody != null ? requestBody.length + "字节" : "null") + '\'' +
                 ", method='" + method + '\'' +
                 ", host='" + host + '\'' +
-                ", port=" + port +
+                ", serverport=" + port +
                 ", path=" + path +
                 "}";
     }
