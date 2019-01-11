@@ -23,7 +23,7 @@ public class AES128 implements Cryptor {
         int lengh=buf.writerIndex();
         byte[] bytes=new byte[lengh];
         buf.readBytes(bytes);
-        System.out.println("读到： "+new String(bytes));
+        System.out.println("解密以下： "+new String(bytes));
         byte[] decrypt=decrypt(bytes);
         buf.clear();
         buf.writeBytes(decrypt);
@@ -34,7 +34,7 @@ public class AES128 implements Cryptor {
         int lengh=buf.writerIndex();
         byte[] bytes=new byte[lengh];
         buf.readBytes(bytes);
-        System.out.println("读到： "+new String(bytes));
+        System.out.println("加密以下： "+new String(bytes));
         byte[] encrypt=encrypt(bytes);
         buf.clear();
         buf.writeBytes(encrypt);
