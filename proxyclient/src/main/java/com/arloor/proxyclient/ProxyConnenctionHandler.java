@@ -1,7 +1,10 @@
 package com.arloor.proxyclient;
 
+import com.arloor.proxycommon.Config;
+import com.arloor.proxycommon.filter.crypto.handler.CryptoHandler;
 import com.arloor.proxycommon.filter.crypto.handler.DecryptHandler;
 import com.arloor.proxycommon.filter.crypto.handler.EncryptHandler;
+import com.arloor.proxycommon.filter.crypto.utils.CryptoType;
 import com.arloor.proxycommon.httpentity.HttpResponse;
 import com.arloor.proxycommon.util.ExceptionUtil;
 import io.netty.bootstrap.Bootstrap;
@@ -10,6 +13,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +29,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
         boolean canWrite = ctx.channel().isWritable();
-        logger.warn(ctx.channel()+" 可写性："+canWrite);
+        logger.warn(ctx.channel() + " 可写性：" + canWrite);
         //流量控制，不允许继续读
         localChannel.config().setAutoRead(canWrite);
         super.channelWritabilityChanged(ctx);
@@ -47,6 +51,20 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                         protected void initChannel(SocketChannel ch) throws Exception {
                             remoteChannel = ch;
                             if (ClientProxyBootStrap.crypto) {
+                                //如果不是字节取反，则增加分隔符
+                                if (CryptoHandler.cryptoType != CryptoType.SIMPLE) {
+                                    ch.pipeline().addLast(new DelimiterBasedFrameDecoder(65536, true, true, Unpooled.copiedBuffer(Config.delimiter().getBytes())));
+                                    ch.pipeline().addLast(new ChannelOutboundHandlerAdapter() {
+                                        @Override
+                                        public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+                                            if (msg instanceof ByteBuf) {
+                                                ByteBuf buf = (ByteBuf) msg;
+                                                buf.writeBytes(Config.delimiter().getBytes());
+                                            }
+                                            super.write(ctx, msg, promise);
+                                        }
+                                    });
+                                }
                                 ch.pipeline().addLast(new EncryptHandler());
                                 ch.pipeline().addLast(new DecryptHandler());
                             }
@@ -58,19 +76,34 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                 if (future.isSuccess()) {
                     logger.info("连接成功: 到代理服务器");
                     //todo：向chennel写
-                    logger.info("发送请求 "+((ByteBuf)msg).writerIndex()+"字节 " + remoteChannel.remoteAddress());
-                    remoteChannel.writeAndFlush(msg);
+                    remoteChannel.writeAndFlush(msg).addListener(future1 -> {
+                        if (future1.isSuccess()) {
+                            logger.info("发送请求 " + ((ByteBuf) msg).writerIndex() + "字节 " + remoteChannel.remoteAddress());
+                        } else {
+                            logger.warn("向" + remoteChannel.remoteAddress() + "写失败，异常信息如下：");
+                            logger.warn(ExceptionUtil.getMessage(future1.cause()));
+                        }
+                    });
                 } else {
                     logger.error("连接失败:  到代理服务器");
-                    localCtx.writeAndFlush(Unpooled.wrappedBuffer(HttpResponse.ERROR503())).addListener(future1 -> {
+                    ByteBuf error503=Unpooled.buffer();
+                    error503.writeBytes(HttpResponse.ERROR503());
+                    localCtx.writeAndFlush(error503).addListener(future1 -> {
                         localChannel.close();
                     });
 
                 }
             });
         } else {
-            logger.info("发送请求 "+((ByteBuf)msg).writerIndex()+"字节 " + remoteChannel.remoteAddress());
-            remoteChannel.writeAndFlush(msg);
+            logger.info("发送请求 " + ((ByteBuf) msg).writerIndex() + "字节 " + remoteChannel.remoteAddress());
+            remoteChannel.writeAndFlush(msg).addListener(future1 -> {
+                if (future1.isSuccess()) {
+                    logger.info("发送请求 " + ((ByteBuf) msg).writerIndex() + "字节 " + remoteChannel.remoteAddress());
+                } else {
+                    logger.warn("向" + remoteChannel.remoteAddress() + "写失败，异常信息如下：");
+                    logger.warn(ExceptionUtil.getMessage(future1.cause()));
+                }
+            });
         }
     }
 
@@ -92,15 +125,20 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
 
         @Override
         protected void channelRead0(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
-            localChannel.writeAndFlush(byteBuf.retain()).addListener(ChannelFutureListener -> {
-                logger.info("返回响应 "+byteBuf.writerIndex()+"字节 " + channelHandlerContext.channel().remoteAddress());
+            localChannel.writeAndFlush(byteBuf.retain()).addListener(future -> {
+                if (future.isSuccess()) {
+                    logger.info("返回响应 " + byteBuf.writerIndex() + "字节 " + channelHandlerContext.channel().remoteAddress());
+                } else {
+                    logger.warn("向" + remoteChannel.remoteAddress() + "写失败，异常信息如下：");
+                    logger.warn(ExceptionUtil.getMessage(future.cause()));
+                }
             });
         }
 
         @Override
         public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
             boolean canWrite = ctx.channel().isWritable();
-            logger.warn(ctx.channel()+" 可写性："+canWrite);
+            logger.warn(ctx.channel() + " 可写性：" + canWrite);
             //流量控制，不允许继续读
             localChannel.config().setAutoRead(canWrite);
             super.channelWritabilityChanged(ctx);

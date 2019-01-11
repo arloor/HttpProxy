@@ -1,21 +1,25 @@
 package com.arloor.proxyserver;
 
 
+import com.arloor.proxycommon.Config;
+import com.arloor.proxycommon.filter.crypto.handler.CryptoHandler;
 import com.arloor.proxycommon.filter.crypto.handler.DecryptHandler;
 import com.arloor.proxycommon.filter.crypto.handler.EncryptHandler;
+import com.arloor.proxycommon.filter.crypto.utils.CryptoType;
 import com.arloor.proxyserver.requestdecoder.DefaultHttpMessageDecoderAdapter;
 import com.arloor.proxyserver.proxyconnection.ProxyConnectionHandler;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
+import java.util.Arrays;
 
 
 public class ServerProxyBootStrap {
@@ -29,24 +33,13 @@ public class ServerProxyBootStrap {
     private final static EventLoopGroup LOCALWORKER = new NioEventLoopGroup(1);
 
     public static void main(String[] args){
-
-        Properties prop = new Properties();
-        InputStream in = ServerProxyBootStrap.class.getResourceAsStream("/proxy.properties");
-        try {
-            prop.load(in);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        String crypto=prop.getProperty("crypto","false");
-
-        if(crypto.equals("false")){
-            ServerProxyBootStrap.crypto =false;
-        }
+        ServerProxyBootStrap.crypto = Config.crypto();
         logger.info("当前代理是否进行加密： "+ServerProxyBootStrap.crypto);
-
-        String port=prop.getProperty("server.port", "8080");
+        if(ServerProxyBootStrap.crypto){
+            logger.info("所采用的加密实现： "+Config.cryptoType());
+        }
         try {
-            ServerProxyBootStrap.port =Integer.parseInt(port);
+            ServerProxyBootStrap.port =Integer.parseInt(Config.serverport());
         }catch (Exception e){
             logger.error("解析server.port配置失败");
         }
@@ -77,6 +70,20 @@ public class ServerProxyBootStrap {
         @Override
         protected void initChannel(SocketChannel channel) throws Exception {
             if(crypto){
+                if(!CryptoHandler.cryptoType.equals( CryptoType.SIMPLE)){
+                    channel.pipeline().addLast(new DelimiterBasedFrameDecoder(65536,true,true, Unpooled.copiedBuffer(Config.delimiter().getBytes())));
+                    channel.pipeline().addLast(new ChannelOutboundHandlerAdapter(){
+                        @Override
+                        public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+                            if (msg instanceof ByteBuf) {
+                                ByteBuf buf = (ByteBuf) msg;
+                                buf.writeBytes(Config.delimiter().getBytes());
+                            }
+
+                            super.write(ctx, msg, promise);
+                        }
+                    });
+                }
                 channel.pipeline().addLast(new EncryptHandler());
                 channel.pipeline().addLast(new DecryptHandler());
             }

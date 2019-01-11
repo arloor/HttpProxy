@@ -63,11 +63,12 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
                     establishConnectionAndSend(request, localCtx);
                 } else {
                     //可以认为这是非法的不正常的请求，返回一个404响应，省得别人怀疑
-                    logger.error("错误的第一次请求，没有指定host port，关闭此channel");
+                    logger.error("错误的第一次请求，没有指定host serverport，关闭此channel");
                     logger.error("错误content:\n" + new String(request.getRequestBody()));
                     //在这个时候就不要对响应加密了
-                    localChannel.pipeline().removeFirst();
-                    localChannel.writeAndFlush(Unpooled.wrappedBuffer(HttpResponse.ERROR404())).addListener(future -> {
+//                    localChannel.pipeline().removeFirst();
+                    ByteBuf byteBuf=Unpooled.buffer();
+                    localChannel.writeAndFlush(byteBuf.writeBytes(HttpResponse.ERROR404())).addListener(future -> {
                         localChannel.close();
                     });
 
@@ -102,12 +103,21 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
                 logger.info("连接成功: " + request.getHost() + ":" + request.getPort() + (request.getMethod().equals(HttpMethod.CONNECT) ? "" : request.getPath()));
                 localCtx.pipeline().addLast(Send2RemoteAdpterFactory.create(request.getMethod(), remoteChannel));
                 if (request.getMethod().equals(HttpMethod.CONNECT)) {
-                    localChannel.writeAndFlush(Unpooled.wrappedBuffer(HttpResponse.ESTABLISHED()));
+                    ByteBuf byteBuf=Unpooled.buffer();
+                    localChannel.writeAndFlush(byteBuf.writeBytes(HttpResponse.ESTABLISHED())).addListener(future1 -> {
+                        if(future1.isSuccess()){
+                            logger.info("success：通知隧道建立成功 "+localChannel.remoteAddress());
+                        } else {
+                            logger.warn("向" + localChannel.remoteAddress() + "写失败，异常信息如下：");
+                            logger.warn(ExceptionUtil.getMessage(future1.cause()));
+                        }
+                    });
                 }
                 localCtx.fireChannelRead(request);
             } else {
                 logger.error("连接失败: " + request.getHost() + ":" + request.getPort() + request.getPath());
-                localChannel.writeAndFlush(Unpooled.wrappedBuffer(HttpResponse.ERROR503())).addListener((localFuture -> {
+                ByteBuf byteBuf=Unpooled.buffer();
+                localChannel.writeAndFlush(byteBuf.writeBytes(HttpResponse.ERROR503())).addListener((localFuture -> {
                     localChannel.close();
                 }));
             }
@@ -159,8 +169,14 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
 //               logger.info("阻塞！已经不可写了，你还要写，你是禽兽吗！妈个鸡");
 //               Thread.sleep(50);
 //           }
-            localChannel.writeAndFlush(byteBuf.retain()).addListener(ChannelFutureListener -> {
-                logger.info("返回响应 " + byteBuf.writerIndex() + "字节 " + channelHandlerContext.channel().remoteAddress());
+            localChannel.writeAndFlush(byteBuf.retain()).addListener(future -> {
+                if(future.isSuccess()){
+                    logger.info("返回响应 " + byteBuf.writerIndex() + "字节 " + channelHandlerContext.channel().remoteAddress());
+                } else {
+                    logger.warn("向" + channelHandlerContext.channel() + "写失败，异常信息如下：");
+                    logger.warn(ExceptionUtil.getMessage(future.cause()));
+                }
+
             });
         }
 
@@ -202,7 +218,8 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
         ) {
             if (request.getHost().contains(rejectHost)) {
                 logger.info("不代理{}", request.getHost());
-                localChannel.writeAndFlush(Unpooled.wrappedBuffer(HttpResponse.ERROR503())).addListener((future -> {
+                ByteBuf error503=Unpooled.buffer();
+                localChannel.writeAndFlush(error503.writeBytes(HttpResponse.ERROR503())).addListener((future -> {
                     localChannel.close();
                 }));
                 return true;
