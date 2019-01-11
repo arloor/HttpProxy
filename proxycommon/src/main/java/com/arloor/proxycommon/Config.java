@@ -49,4 +49,8 @@ public class Config {
         return prop.getProperty("server.host", "127.0.0.1");
     }
 
+
+    public static String requestEndMark(){
+        return prop.getProperty("request.end.mark","request.end.mark");
+    }
 }

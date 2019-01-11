@@ -40,6 +40,22 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        if (ClientProxyBootStrap.crypto&&CryptoHandler.cryptoType != CryptoType.SIMPLE) {
+            //如果不是字节取反，则增加分隔符
+            remoteChannel.writeAndFlush(Unpooled.buffer().writeBytes(Config.requestEndMark().getBytes())).addListener(future1 -> {
+                if (future1.isSuccess()) {
+                    logger.info("发送请求结束标志 "+Config.requestEndMark()+" " + remoteChannel.remoteAddress());
+                } else {
+                    logger.warn("向" + remoteChannel.remoteAddress() + "写失败，异常信息如下：");
+                    logger.warn(ExceptionUtil.getMessage(future1.cause()));
+                }
+            });
+        }
+        super.channelReadComplete(ctx);
+    }
+
+    @Override
     public void channelRead(ChannelHandlerContext localCtx, Object msg) throws Exception {
         if (remoteChannel == null) {
             Bootstrap bootstrap = new Bootstrap();
@@ -120,6 +136,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
             }));
         super.channelInactive(ctx);
     }
+
 
     private class SendBack2ClientHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
