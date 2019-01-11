@@ -75,16 +75,9 @@ public class ServerProxyBootStrap {
                     channel.pipeline().addLast(new ChannelOutboundHandlerAdapter(){
                         @Override
                         public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-                            if(msg instanceof ByteBuf){
-                                ByteBuf buf=(ByteBuf)msg;
-                                //buf.writeBytes(Config.delimiter().getBytes());
-                                byte[] bytes1=new byte[buf.writerIndex()];
-                                buf.readBytes(bytes1);
-                                byte[] bytes2=new byte[buf.writerIndex()+Config.delimiter().length()];
-                                System.arraycopy(bytes1,0,bytes2,0,bytes1.length);
-                                System.arraycopy(Config.delimiter().getBytes(),0,bytes2,buf.writerIndex(),Config.delimiter().length());
-//                                System.out.println("写回："+new String(bytes2));
-                                msg=Unpooled.wrappedBuffer(bytes2);
+                            if (msg instanceof ByteBuf) {
+                                ByteBuf buf = (ByteBuf) msg;
+                                buf.writeBytes(Config.delimiter().getBytes());
                             }
 
                             super.write(ctx, msg, promise);

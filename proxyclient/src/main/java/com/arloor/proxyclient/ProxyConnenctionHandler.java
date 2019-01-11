@@ -86,7 +86,9 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                     });
                 } else {
                     logger.error("连接失败:  到代理服务器");
-                    localCtx.writeAndFlush(Unpooled.wrappedBuffer(HttpResponse.ERROR503())).addListener(future1 -> {
+                    ByteBuf error503=Unpooled.buffer();
+                    error503.writeBytes(HttpResponse.ERROR503());
+                    localCtx.writeAndFlush(error503).addListener(future1 -> {
                         localChannel.close();
                     });
 
