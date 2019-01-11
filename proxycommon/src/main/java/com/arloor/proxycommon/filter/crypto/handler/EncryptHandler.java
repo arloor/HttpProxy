@@ -15,7 +15,7 @@ public  class EncryptHandler extends ChannelOutboundHandlerAdapter implements Cr
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         if(msg instanceof ByteBuf){
             ByteBuf buf=(ByteBuf)msg;
-            cryptor.encrypt(buf);
+            msg=cryptor.encrypt(buf);
         }
         super.write(ctx, msg, promise);
     }
