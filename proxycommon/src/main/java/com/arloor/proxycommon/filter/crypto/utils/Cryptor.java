@@ -11,7 +11,7 @@ public interface Cryptor {
 
     void decrypt(ByteBuf buf);
 
-    ByteBuf encrypt(ByteBuf buf);
+    void encrypt(ByteBuf buf);
 
     static Cryptor simple(){
         return new Cryptor() {
@@ -35,10 +35,9 @@ public interface Cryptor {
             }
 
             @Override
-            public ByteBuf encrypt(ByteBuf buf) {
+            public void encrypt(ByteBuf buf) {
                 logger.debug("读时解密(字节取反)");
                 qufan(buf);
-                return buf;
             }
         };
     }
