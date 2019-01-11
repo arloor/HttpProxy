@@ -1,6 +1,7 @@
 package com.arloor.proxyserver.requestdecoder;
 
 ;
+import com.arloor.proxycommon.Config;
 import com.arloor.proxycommon.httpentity.HttpRequest;
 import com.arloor.proxycommon.util.ExceptionUtil;
 import io.netty.buffer.ByteBuf;
@@ -131,19 +132,42 @@ public abstract class HttpMessageDecoder extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        byte[] temp=new byte[((ByteBuf)msg).writerIndex()];
+        ((ByteBuf) msg).markReaderIndex();
+        ((ByteBuf) msg).readBytes(temp);
+        ((ByteBuf) msg).resetReaderIndex();
+        System.out.println("http解析器 读到："+new String(temp));
+
         //暂存内容  //发现每次channelRead只读1024字节
-        content.writeBytes((ByteBuf) msg);
+        if(((ByteBuf)msg).writerIndex()== Config.requestEndMark().length()){
+            byte[] bytes=new byte[Config.requestEndMark().length()];
+            ((ByteBuf) msg).markReaderIndex();
+            ((ByteBuf) msg).readBytes(bytes);
+            ((ByteBuf) msg).resetReaderIndex();
+            if(new String(bytes).equals(Config.requestEndMark())){
+                if (content.writerIndex() != 0) {
+                    HttpRequest request = decodeRequest((ByteBuf) content);
+                    processRequest(ctx, request);
+                    //清空内容
+                    content.clear();
+                }
+            }else {
+                content.writeBytes((ByteBuf) msg);
+            }
+        }else{
+            content.writeBytes((ByteBuf) msg);
+        }
         ReferenceCountUtil.release(msg);
     }
 
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         //如果的确读到了内容,则处理请求
-        if (content.writerIndex() != 0) {
-            HttpRequest request = decodeRequest((ByteBuf) content);
-            processRequest(ctx, request);
-            //清空内容
-            content.clear();
-        }
+//        if (content.writerIndex() != 0) {
+//            HttpRequest request = decodeRequest((ByteBuf) content);
+//            processRequest(ctx, request);
+//            //清空内容
+//            content.clear();
+//        }
     }
 
     abstract void processRequest(ChannelHandlerContext ctx ,HttpRequest request);
