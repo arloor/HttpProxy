@@ -19,6 +19,8 @@ import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+
 
 public class ServerProxyBootStrap {
 
@@ -68,15 +70,23 @@ public class ServerProxyBootStrap {
         @Override
         protected void initChannel(SocketChannel channel) throws Exception {
             if(crypto){
-                if(CryptoHandler.cryptoType!= CryptoType.SIMPLE){
+                if(!CryptoHandler.cryptoType.equals( CryptoType.SIMPLE)){
                     channel.pipeline().addLast(new DelimiterBasedFrameDecoder(65536,true,true, Unpooled.copiedBuffer(Config.delimiter().getBytes())));
                     channel.pipeline().addLast(new ChannelOutboundHandlerAdapter(){
                         @Override
                         public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
                             if(msg instanceof ByteBuf){
                                 ByteBuf buf=(ByteBuf)msg;
-                                buf.writeBytes(Config.delimiter().getBytes());
+                                //buf.writeBytes(Config.delimiter().getBytes());
+                                byte[] bytes1=new byte[buf.writerIndex()];
+                                buf.readBytes(bytes1);
+                                byte[] bytes2=new byte[buf.writerIndex()+Config.delimiter().length()];
+                                System.arraycopy(bytes1,0,bytes2,0,bytes1.length);
+                                System.arraycopy(Config.delimiter().getBytes(),0,bytes2,buf.writerIndex(),Config.delimiter().length());
+//                                System.out.println("写回："+new String(bytes2));
+                                msg=Unpooled.wrappedBuffer(bytes2);
                             }
+
                             super.write(ctx, msg, promise);
                         }
                     });
