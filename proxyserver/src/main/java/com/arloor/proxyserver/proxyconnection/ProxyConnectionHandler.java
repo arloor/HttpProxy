@@ -67,7 +67,8 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
                     logger.error("错误content:\n" + new String(request.getRequestBody()));
                     //在这个时候就不要对响应加密了
 //                    localChannel.pipeline().removeFirst();
-                    localChannel.writeAndFlush(Unpooled.copiedBuffer(HttpResponse.ERROR404())).addListener(future -> {
+                    ByteBuf byteBuf=Unpooled.buffer();
+                    localChannel.writeAndFlush(byteBuf.writeBytes(HttpResponse.ERROR404())).addListener(future -> {
                         localChannel.close();
                     });
 
@@ -102,7 +103,8 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
                 logger.info("连接成功: " + request.getHost() + ":" + request.getPort() + (request.getMethod().equals(HttpMethod.CONNECT) ? "" : request.getPath()));
                 localCtx.pipeline().addLast(Send2RemoteAdpterFactory.create(request.getMethod(), remoteChannel));
                 if (request.getMethod().equals(HttpMethod.CONNECT)) {
-                    localChannel.writeAndFlush(Unpooled.copiedBuffer(HttpResponse.ESTABLISHED())).addListener(future1 -> {
+                    ByteBuf byteBuf=Unpooled.buffer();
+                    localChannel.writeAndFlush(byteBuf.writeBytes(HttpResponse.ESTABLISHED())).addListener(future1 -> {
                         if(future1.isSuccess()){
                             logger.info("success：通知隧道建立成功 "+localChannel.remoteAddress());
                         } else {
@@ -114,7 +116,8 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
                 localCtx.fireChannelRead(request);
             } else {
                 logger.error("连接失败: " + request.getHost() + ":" + request.getPort() + request.getPath());
-                localChannel.writeAndFlush(Unpooled.wrappedBuffer(HttpResponse.ERROR503())).addListener((localFuture -> {
+                ByteBuf byteBuf=Unpooled.buffer();
+                localChannel.writeAndFlush(byteBuf.writeBytes(HttpResponse.ERROR503())).addListener((localFuture -> {
                     localChannel.close();
                 }));
             }
@@ -215,7 +218,8 @@ public class ProxyConnectionHandler extends ChannelInboundHandlerAdapter {
         ) {
             if (request.getHost().contains(rejectHost)) {
                 logger.info("不代理{}", request.getHost());
-                localChannel.writeAndFlush(Unpooled.wrappedBuffer(HttpResponse.ERROR503())).addListener((future -> {
+                ByteBuf error503=Unpooled.buffer();
+                localChannel.writeAndFlush(error503.writeBytes(HttpResponse.ERROR503())).addListener((future -> {
                     localChannel.close();
                 }));
                 return true;
