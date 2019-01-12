@@ -4,14 +4,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
 import com.arloor.proxycommon.httpentity.HttpMethod;
-import com.arloor.proxycommon.httpentity.HttpRequest;
 import com.arloor.proxycommon.httpentity.HttpResponse;
 import com.arloor.proxycommon.util.ExceptionUtil;
-import com.arloor.proxyserver.proxyconnection.ProxyConnectionHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -110,11 +107,6 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
                 buf.writeBytes(body);
             }
         }
-        buf.markReaderIndex();
-        byte[] content=new byte[buf.writerIndex()];
-        buf.readBytes(content);
-
-        buf.resetReaderIndex();
         remoteChannel.writeAndFlush(buf).addListener(future -> {
             if(future.isSuccess()){
             }else{
