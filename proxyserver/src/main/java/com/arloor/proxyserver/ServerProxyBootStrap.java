@@ -2,14 +2,17 @@ package com.arloor.proxyserver;
 
 
 import com.arloor.proxycommon.Config;
+import com.arloor.proxycommon.Handler.AppendDelimiterOutboundHandler;
 import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
 import com.arloor.proxycommon.crypto.handler.DecryptHandler;
 import com.arloor.proxycommon.crypto.handler.EncryptHandler;
+import com.arloor.proxycommon.httpentity.HttpResponse;
 import com.arloor.proxyserver.requestdecoder.DefaultHttpMessageDecoderAdapter;
 import com.arloor.proxyserver.proxyconnection.ProxyConnectionHandler;
 import com.arloor.proxyserver.requestdecoder.Byte2JSONObjectDecoder;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -68,15 +71,9 @@ public class ServerProxyBootStrap {
         @Override
         protected void initChannel(SocketChannel channel) throws Exception {
             channel.pipeline().addLast(new ReadAllBytebufInboundHandler());
-            channel.pipeline().addLast(new ChannelOutboundHandlerAdapter(){
-                @Override
-                public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-                    ByteBuf buf=(ByteBuf)msg;
-                    buf.writeBytes(Config.requestEndMark().getBytes());
-                    super.write(ctx, msg, promise);
-                }
-            });
-            channel.pipeline().addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,true,true, Unpooled.wrappedBuffer(Config.requestEndMark().getBytes())));
+            channel.pipeline().addLast(new AuthVerifyInboundhandler());
+            channel.pipeline().addLast(new AppendDelimiterOutboundHandler());
+            channel.pipeline().addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,true,true, Unpooled.wrappedBuffer(Config.delimiter().getBytes())));
             if(crypto){
                 channel.pipeline().addLast(new EncryptHandler());
                 channel.pipeline().addLast(new DecryptHandler());

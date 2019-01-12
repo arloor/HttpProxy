@@ -2,6 +2,7 @@ package com.arloor.proxyclient;
 
 import com.alibaba.fastjson.JSONObject;
 import com.arloor.proxycommon.Config;
+import com.arloor.proxycommon.Handler.AppendDelimiterOutboundHandler;
 import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
 import com.arloor.proxycommon.crypto.handler.CryptoHandler;
 import com.arloor.proxycommon.crypto.handler.DecryptHandler;
@@ -66,15 +67,8 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         remoteChannel = ch;
                         ch.pipeline().addLast(new ReadAllBytebufInboundHandler());
-                        ch.pipeline().addLast(new ChannelOutboundHandlerAdapter(){
-                            @Override
-                            public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-                                ByteBuf buf=(ByteBuf)msg;
-                                buf.writeBytes(Config.requestEndMark().getBytes());
-                                super.write(ctx, msg, promise);
-                            }
-                        });
-                        ch.pipeline().addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,true,true, Unpooled.wrappedBuffer(Config.requestEndMark().getBytes())));
+                        ch.pipeline().addLast(new AppendDelimiterOutboundHandler());
+                        ch.pipeline().addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,true,true, Unpooled.wrappedBuffer(Config.delimiter().getBytes())));
                         if (ClientProxyBootStrap.crypto) {
                             ch.pipeline().addLast(new EncryptHandler());
                             ch.pipeline().addLast(new DecryptHandler());
