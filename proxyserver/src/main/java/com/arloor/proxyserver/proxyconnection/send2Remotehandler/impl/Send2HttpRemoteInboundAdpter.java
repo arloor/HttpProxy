@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class Send2HttpRemoteInboundAdpter extends Send2RemoteAdapter {
     private static Logger logger= LoggerFactory.getLogger(Send2HttpRemoteInboundAdpter.class);
 

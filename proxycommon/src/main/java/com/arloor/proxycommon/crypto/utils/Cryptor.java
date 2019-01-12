@@ -1,9 +1,12 @@
-package com.arloor.proxycommon.filter.crypto.utils;
+package com.arloor.proxycommon.crypto.utils;
 
 import com.arloor.proxycommon.Config;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public interface Cryptor {
     Logger logger= LoggerFactory.getLogger(Cryptor.class);
@@ -15,12 +18,10 @@ public interface Cryptor {
 
     static Cryptor simple(){
         return new Cryptor() {
-
             private void qufan(ByteBuf buf){
                 int lengh=buf.writerIndex();
                 byte[] bytes=new byte[lengh];
                 buf.readBytes(bytes);
-                System.out.println("读到： "+new String(bytes));
                 for (int i = 0; i <lengh ; i++) {
                     bytes[i]=(byte) ~bytes[i];
                 }

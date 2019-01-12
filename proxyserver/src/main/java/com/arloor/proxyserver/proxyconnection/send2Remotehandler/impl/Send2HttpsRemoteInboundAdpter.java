@@ -11,6 +11,8 @@ import io.netty.channel.socket.SocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class Send2HttpsRemoteInboundAdpter extends Send2RemoteAdapter {
     private static Logger logger= LoggerFactory.getLogger(Send2HttpRemoteInboundAdpter.class);
 

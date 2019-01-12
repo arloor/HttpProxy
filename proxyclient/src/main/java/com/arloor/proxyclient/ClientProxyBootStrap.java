@@ -1,6 +1,7 @@
 package com.arloor.proxyclient;
 
 import com.arloor.proxycommon.Config;
+import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
@@ -11,10 +12,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Properties;
 
 public class ClientProxyBootStrap {
 
@@ -54,6 +51,7 @@ public class ClientProxyBootStrap {
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 1024)
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 1000)
+                    .childOption(ChannelOption.AUTO_READ,false)//等到连接到代理服务器再设为true
                     .childHandler(MyChannelInitializer.instance);
             ChannelFuture future = bootstrap.bind(ClientProxyBootStrap.clientPort).sync();
             logger.info("开启代理 端口:"+ClientProxyBootStrap.clientPort);
@@ -73,6 +71,8 @@ public class ClientProxyBootStrap {
 
         @Override
         protected void initChannel(SocketChannel channel) throws Exception {
+            channel.pipeline().addLast(new ReadAllBytebufInboundHandler());
+            channel.pipeline().addLast(new FastJsonHttpMessageDecoder());
             channel.pipeline().addLast(new ProxyConnenctionHandler(channel));
         }
     }
