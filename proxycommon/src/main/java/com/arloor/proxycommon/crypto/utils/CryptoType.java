@@ -1,4 +1,4 @@
-package com.arloor.proxycommon.filter.crypto.utils;
+package com.arloor.proxycommon.crypto.utils;
 
 public enum CryptoType {
     SIMPLE,AES;

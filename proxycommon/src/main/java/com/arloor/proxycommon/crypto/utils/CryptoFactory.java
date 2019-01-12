@@ -1,6 +1,6 @@
-package com.arloor.proxycommon.filter.crypto.utils;
+package com.arloor.proxycommon.crypto.utils;
 
-import com.arloor.proxycommon.filter.crypto.utils.cryptoimpl.AES128;
+import com.arloor.proxycommon.crypto.utils.cryptoimpl.AES128;
 
 import java.util.HashMap;
 import java.util.function.Supplier;

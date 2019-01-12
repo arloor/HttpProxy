@@ -1,10 +1,9 @@
-package com.arloor.proxyserver.requestdecoder;
+package com.arloor.proxycommon.Handler;
 
 ;
 import com.arloor.proxycommon.httpentity.HttpRequest;
 import com.arloor.proxycommon.util.ExceptionUtil;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
@@ -20,7 +19,6 @@ import java.util.List;
  */
 public abstract class HttpMessageDecoder extends ChannelInboundHandlerAdapter {
     private static Logger logger= LoggerFactory.getLogger(HttpMessageDecoder.class);
-    private final ByteBuf content = Unpooled.buffer();
 
     private HttpRequest decodeRequest(ByteBuf msg) {
         byte[] buff = new byte[msg.readableBytes()];
@@ -118,7 +116,6 @@ public abstract class HttpMessageDecoder extends ChannelInboundHandlerAdapter {
         }catch (Exception e){
             logger.error(ExceptionUtil.getMessage(e));
         }
-
         return httpRequestHeaders;
     }
 
@@ -131,20 +128,13 @@ public abstract class HttpMessageDecoder extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        //暂存内容  //发现每次channelRead只读1024字节
-        content.writeBytes((ByteBuf) msg);
-        ReferenceCountUtil.release(msg);
-    }
-
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        //如果的确读到了内容,则处理请求
+        ByteBuf content=(ByteBuf)msg;
         if (content.writerIndex() != 0) {
-            HttpRequest request = decodeRequest((ByteBuf) content);
+            HttpRequest request = decodeRequest(content);
             processRequest(ctx, request);
-            //清空内容
-            content.clear();
         }
+        ReferenceCountUtil.release(content);
     }
 
-    abstract void processRequest(ChannelHandlerContext ctx ,HttpRequest request);
+    abstract public void processRequest(ChannelHandlerContext ctx ,HttpRequest request);
 }

@@ -1,5 +1,7 @@
 package com.arloor.proxycommon.httpentity;
 
+import com.arloor.proxycommon.util.Base64;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;

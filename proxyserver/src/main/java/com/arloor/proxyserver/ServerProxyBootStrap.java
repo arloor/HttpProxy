@@ -2,14 +2,12 @@ package com.arloor.proxyserver;
 
 
 import com.arloor.proxycommon.Config;
-import com.arloor.proxycommon.filter.crypto.handler.CryptoHandler;
-import com.arloor.proxycommon.filter.crypto.handler.DecryptHandler;
-import com.arloor.proxycommon.filter.crypto.handler.EncryptHandler;
-import com.arloor.proxycommon.filter.crypto.utils.CryptoType;
-import com.arloor.proxyserver.requestdecoder.DefaultHttpMessageDecoderAdapter;
-import com.arloor.proxyserver.proxyconnection.ProxyConnectionHandler;
+import com.arloor.proxycommon.Handler.AppendDelimiterOutboundHandler;
+import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
+import com.arloor.proxycommon.crypto.handler.DecryptHandler;
+import com.arloor.proxycommon.crypto.handler.EncryptHandler;
+import com.arloor.proxyserver.requestdecoder.Byte2JSONObjectDecoder;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -18,8 +16,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
 
 
 public class ServerProxyBootStrap {
@@ -69,26 +65,17 @@ public class ServerProxyBootStrap {
 
         @Override
         protected void initChannel(SocketChannel channel) throws Exception {
+            channel.pipeline().addLast(new ReadAllBytebufInboundHandler());
+            channel.pipeline().addLast(new AuthVerifyInboundhandler());
+            channel.pipeline().addLast(new AppendDelimiterOutboundHandler());
+            channel.pipeline().addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,true,true, Unpooled.wrappedBuffer(Config.delimiter().getBytes())));
             if(crypto){
-                if(!CryptoHandler.cryptoType.equals( CryptoType.SIMPLE)){
-                    channel.pipeline().addLast(new DelimiterBasedFrameDecoder(65536,true,true, Unpooled.copiedBuffer(Config.delimiter().getBytes())));
-                    channel.pipeline().addLast(new ChannelOutboundHandlerAdapter(){
-                        @Override
-                        public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
-                            if (msg instanceof ByteBuf) {
-                                ByteBuf buf = (ByteBuf) msg;
-                                buf.writeBytes(Config.delimiter().getBytes());
-                            }
-
-                            super.write(ctx, msg, promise);
-                        }
-                    });
-                }
                 channel.pipeline().addLast(new EncryptHandler());
                 channel.pipeline().addLast(new DecryptHandler());
             }
-            channel.pipeline().addLast(new DefaultHttpMessageDecoderAdapter());
-            channel.pipeline().addLast(new ProxyConnectionHandler(channel));
+            channel.pipeline().addLast(new Byte2JSONObjectDecoder());
+//            channel.pipeline().addLast(new DefaultHttpMessageDecoderAdapter());
+            channel.pipeline().addLast(new NewProxyConnectionHandler(channel));
         }
     }
 }
