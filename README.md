@@ -39,6 +39,7 @@ crypto.key=你想用我的代理吗？？？
 
 ## 在vps上运行情况
 
+可以翻墙，且跑满家里带宽。经过一个多月的使用，可以说十分稳定了。
 
 ```jshelllanguage
 2018-11-18 08:44:54.446 [nioEventLoopGroup-4-1] INFO  c.a.p.r.DefaultHttpMessageDecoderAdapter - 处理请求 HttpRequest{body='null', method='CONNECT', host='adservice.google.co.jp', port=443, path=adservice.google.co.jp:443}
