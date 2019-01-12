@@ -30,7 +30,7 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
     private int port = 80;
     private boolean isTunnel = false;
     private ChannelFuture hostConnectFuture;
-    private static Logger logger = LoggerFactory.getLogger(ProxyConnectionHandler.class);
+    private static Logger logger = LoggerFactory.getLogger(NewProxyConnectionHandler.class);
 
     public NewProxyConnectionHandler(SocketChannel channel) {
         localChannel = channel;
@@ -58,7 +58,6 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
         //检查这个请求是否有效
         if (host != null) {
             if (remoteChannel != null) {
-                logger.info("复用连接 写");
                 write2Target(request);
             } else {
                 if (hostConnectFuture == null) {//进行连接
@@ -67,7 +66,6 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
                 if(!HttpMethod.CONNECT.toString().equals(request.getString("method"))){
                     hostConnectFuture.addListener(future -> {
                         if(future.isSuccess()){
-                            logger.info("初次连接 写");
                             write2Target(request);
                         }
                     });
@@ -119,7 +117,6 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
         buf.resetReaderIndex();
         remoteChannel.writeAndFlush(buf).addListener(future -> {
             if(future.isSuccess()){
-                logger.info("成功");
             }else{
                 logger.warn(ExceptionUtil.getMessage(future.cause()));
             }

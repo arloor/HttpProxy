@@ -31,6 +31,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
     private SocketChannel localChannel;
     private SocketChannel remoteChannel;
     private String host = null;
+    private int port=80;
     private boolean isTunnel = false;
 
     @Override
@@ -104,6 +105,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
             //设置一些信息
             if(host==null&&object.containsKey("host")){
                 host=object.getString("host");
+                port=object.getInteger("port");
                 if(object.containsKey("method")){
                     isTunnel=HttpMethod.CONNECT.toString().equals(object.getString("method"));
                 }
