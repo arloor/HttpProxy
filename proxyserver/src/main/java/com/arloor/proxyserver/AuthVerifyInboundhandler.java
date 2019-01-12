@@ -33,7 +33,7 @@ public class AuthVerifyInboundhandler extends ChannelInboundHandlerAdapter {
             ctx.pipeline().remove(this.getClass());
         }else{
             logger.info("验证失败,关闭channel。可能遭到嗅探");
-            ctx.writeAndFlush(PooledByteBufAllocator.DEFAULT.buffer().writeBytes(HttpResponse.ERROR404()));
+            //ctx.writeAndFlush(PooledByteBufAllocator.DEFAULT.buffer().writeBytes(HttpResponse.ERROR404()));
             ctx.channel().close();
             return;
         }
