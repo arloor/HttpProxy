@@ -1,7 +1,7 @@
 package com.arloor.proxycommon;
 
-import com.arloor.proxycommon.filter.crypto.handler.CryptoHandler;
-import com.arloor.proxycommon.filter.crypto.utils.CryptoType;
+import com.arloor.proxycommon.crypto.handler.CryptoHandler;
+import com.arloor.proxycommon.crypto.utils.CryptoType;
 
 import java.io.IOException;
 import java.io.InputStream;
