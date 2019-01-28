@@ -14,7 +14,7 @@ import java.util.Arrays;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class AES128 implements Cryptor {
+public class AES128ECB implements Cryptor {
 
     private static final Charset CHARSET=UTF_8;//所有string转byte都使用UTF-8
 
