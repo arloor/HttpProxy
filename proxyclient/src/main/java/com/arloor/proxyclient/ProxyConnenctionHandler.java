@@ -170,9 +170,11 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
         @Override
         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
             if (localChannel != null && localChannel.isActive())
-                localChannel.close().addListener((future -> {
-                    logger.info("代理服务器关闭连接，因此关闭到浏览器的连接");
-                }));
+                localChannel.writeAndFlush(PooledByteBufAllocator.DEFAULT.buffer()).addListener(future -> {
+                    localChannel.close().addListener(future1 -> {
+                        logger.info("返回0字节：代理服务器关闭连接，因此关闭到browser连接");
+                    });
+                });
             super.channelInactive(ctx);
         }
 

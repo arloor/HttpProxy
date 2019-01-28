@@ -218,8 +218,10 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
         @Override
         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
             if (localChannel != null && localChannel.isActive()) {
-                localChannel.close().addListener(future -> {
-                    logger.info("webserver关闭连接，因此关闭到browser连接");
+                localChannel.writeAndFlush(PooledByteBufAllocator.DEFAULT.buffer()).addListener(future -> {
+                    localChannel.close().addListener(future1 -> {
+                        logger.info("返回0字节：webserver关闭连接，因此关闭到browser连接");
+                    });
                 });
             }
             super.channelInactive(ctx);
