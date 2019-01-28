@@ -20,7 +20,7 @@ public class AuthVerifyInboundhandler extends ChannelInboundHandlerAdapter {
         if(buf.readableBytes()<delimiter.length()){
             valid=false;
         }else{
-            ByteBuf slice=buf.slice(buf.readableBytes()-delimiter.length(),delimiter.length());
+            ByteBuf slice=buf.slice(buf.readableBytes()-delimiter.length(),2);
             byte[] sliceBytes=new byte[delimiter.length()];
             slice.readBytes(sliceBytes);
             if(!new String(sliceBytes).equals(delimiter)){
