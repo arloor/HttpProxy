@@ -1,12 +1,10 @@
 package com.arloor.proxyclient;
 
-import com.alibaba.fastjson.JSONObject;
 import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
 import com.arloor.proxycommon.Handler.length.MyLengthFieldBasedFrameDecoder;
 import com.arloor.proxycommon.Handler.length.MyLengthFieldPrepender;
 import com.arloor.proxycommon.crypto.handler.DecryptHandler;
 import com.arloor.proxycommon.crypto.handler.EncryptHandler;
-import com.arloor.proxycommon.httpentity.HttpMethod;
 import com.arloor.proxycommon.httpentity.HttpResponse;
 import com.arloor.proxycommon.util.ExceptionUtil;
 import io.netty.bootstrap.Bootstrap;
@@ -16,11 +14,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 
 public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
@@ -28,10 +24,6 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
     private EventLoopGroup remoteLoopGroup = ClientProxyBootStrap.REMOTEWORKER;
     private SocketChannel localChannel;
     private SocketChannel remoteChannel;
-    private String host = null;
-    private int port = 80;
-    private boolean isTunnel = false;
-
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
         boolean canWrite = ctx.channel().isWritable();
@@ -69,10 +61,6 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                         ch.pipeline().addLast(new MyLengthFieldBasedFrameDecoder());
                         ch.pipeline().addLast(new MyLengthFieldPrepender());
                         //=================================
-                        //delimiter的粘包解决
-//                        ch.pipeline().addLast(new AppendDelimiterOutboundHandler());
-//                        ch.pipeline().addLast(new MyDelimiterBasedFrameDeocder());
-                        //=================================
                         if (ClientProxyBootStrap.crypto) {
                             ch.pipeline().addLast(new EncryptHandler());
                             ch.pipeline().addLast(new DecryptHandler());
@@ -98,39 +86,14 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext localCtx, Object msg) throws Exception {
-        if (msg instanceof JSONObject) {
-            JSONObject object = (JSONObject) msg;
-            //设置一些信息
-            if (host == null && object.containsKey("host")) {
-                host = object.getString("host");
-                port = object.getInteger("port");
-                if (object.containsKey("method")) {
-                    isTunnel = HttpMethod.CONNECT.toString().equals(object.getString("method"));
-                }
-            }
-            //检查这个请求是否有效
-            if (host != null) {
-                //有效则向代理服务器发送
-                //将jsonString转成PooledBytebuf。记得release
-                ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
-                buf.writeBytes(object.toJSONString().getBytes(UTF_8));
-                remoteChannel.writeAndFlush(buf).addListener(future -> {
-                    if (future.isSuccess()) {
-                        logger.info("向代理服务器发送请求成功。host :" + host);
-                    } else {
-                        logger.info(ExceptionUtil.getMessage(future.cause()));
-                    }
-                    //这里竟然不需要release
-//                    ReferenceCountUtil.release(buf);
-                });
+        remoteChannel.writeAndFlush(msg).addListener(future -> {
+            if (future.isSuccess()) {
+                logger.info("向代理服务器发送请求成功。");
             } else {
-                ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
-                localChannel.writeAndFlush(buf.writeBytes(HttpResponse.ERROR503())).addListener(future -> {
-                    logger.warn("错误的第一次请求：没有指定host。关闭channel");
-                    ReferenceCountUtil.release(buf);
-                });
+                logger.info("向代理服务器发送请求失败。异常如下：");
+                logger.info(ExceptionUtil.getMessage(future.cause()));
             }
-        }
+        });
     }
 
     @Override
