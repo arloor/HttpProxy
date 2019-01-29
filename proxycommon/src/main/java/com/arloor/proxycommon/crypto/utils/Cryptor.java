@@ -26,7 +26,6 @@ public interface Cryptor {
                 int lengh = buf.writerIndex();
                 byte[] bytes = new byte[lengh];
                 buf.readBytes(bytes);
-                bytes = Base64.decode(bytes);
                 for (int i = 0; i < bytes.length; i++) {
                     bytes[i] = (byte) ~bytes[i];
                 }
@@ -43,7 +42,6 @@ public interface Cryptor {
                 for (int i = 0; i < lengh; i++) {
                     bytes[i] = (byte) ~bytes[i];
                 }
-                bytes = Base64.encode(bytes);
                 buf.clear();
                 buf.writeBytes(bytes);
             }
