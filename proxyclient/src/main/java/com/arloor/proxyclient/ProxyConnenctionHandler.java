@@ -5,6 +5,8 @@ import com.arloor.proxycommon.Config;
 import com.arloor.proxycommon.Handler.delimiter.AppendDelimiterOutboundHandler;
 import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
 import com.arloor.proxycommon.Handler.delimiter.MyDelimiterBasedFrameDeocder;
+import com.arloor.proxycommon.Handler.length.MyLengthFieldBasedFrameDecoder;
+import com.arloor.proxycommon.Handler.length.MyLengthFieldPrepender;
 import com.arloor.proxycommon.crypto.handler.DecryptHandler;
 import com.arloor.proxycommon.crypto.handler.EncryptHandler;
 import com.arloor.proxycommon.httpentity.HttpMethod;
@@ -66,9 +68,15 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         remoteChannel = ch;
                         ch.pipeline().addLast(new ReadAllBytebufInboundHandler());
-                        //delimiter的战报解决
-                        ch.pipeline().addLast(new AppendDelimiterOutboundHandler());
-                        ch.pipeline().addLast(new MyDelimiterBasedFrameDeocder());
+                        //======================
+                        //length的粘包解决
+                        ch.pipeline().addLast(new MyLengthFieldBasedFrameDecoder());
+                        ch.pipeline().addLast(new MyLengthFieldPrepender());
+                        //=================================
+                        //delimiter的粘包解决
+//                        ch.pipeline().addLast(new AppendDelimiterOutboundHandler());
+//                        ch.pipeline().addLast(new MyDelimiterBasedFrameDeocder());
+                        //=================================
                         if (ClientProxyBootStrap.crypto) {
                             ch.pipeline().addLast(new EncryptHandler());
                             ch.pipeline().addLast(new DecryptHandler());
