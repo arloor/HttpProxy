@@ -131,6 +131,7 @@ public abstract class HttpMessageDecoder extends ChannelInboundHandlerAdapter {
         ByteBuf content=(ByteBuf)msg;
         if (content.writerIndex() != 0) {
             HttpRequest request = decodeRequest(content);
+            request.reform();
             processRequest(ctx, request);
         }
         ReferenceCountUtil.release(content);

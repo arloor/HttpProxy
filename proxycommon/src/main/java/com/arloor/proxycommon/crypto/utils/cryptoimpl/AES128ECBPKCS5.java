@@ -52,7 +52,7 @@ public class AES128ECBPKCS5 implements Cryptor {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             SecretKeySpec keySpec=new SecretKeySpec(key, "AES");
             cipher.init(Cipher.ENCRYPT_MODE,keySpec );
-            return Base64.encode(cipher.doFinal(source));
+            return cipher.doFinal(source);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -69,7 +69,7 @@ public class AES128ECBPKCS5 implements Cryptor {
         try {
             Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"));
-            return cipher.doFinal(Base64.decode(encoded));
+            return cipher.doFinal(encoded);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
