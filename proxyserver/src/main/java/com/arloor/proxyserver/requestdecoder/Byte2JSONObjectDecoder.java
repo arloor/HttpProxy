@@ -14,7 +14,7 @@ public class Byte2JSONObjectDecoder extends SimpleChannelInboundHandler<ByteBuf>
     private static Logger logger= LoggerFactory.getLogger(Byte2JSONObjectDecoder.class);
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf byteBuf) throws Exception {
-        if(byteBuf.readableBytes()==0){
+        if(byteBuf.readableBytes()==0){//如果是0字节，则直接返回
             return;
         }
         byte[] bytes = new byte[byteBuf.readableBytes()];
