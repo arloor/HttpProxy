@@ -77,7 +77,7 @@ public class ServerProxyBootStrap {
                 channel.pipeline().addLast(new DecryptHandler());
             }
 //            //打印内容，debug用而已
-            channel.pipeline().addLast(new PrintByteBufHandler());
+//            channel.pipeline().addLast(new PrintByteBufHandler());
             channel.pipeline().addLast(new DefaultHttpRequestDecoder());
             channel.pipeline().addLast(new NewProxyConnectionHandler(channel));
         }
