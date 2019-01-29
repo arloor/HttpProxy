@@ -2,8 +2,9 @@ package com.arloor.proxyserver;
 
 
 import com.arloor.proxycommon.Config;
-import com.arloor.proxycommon.Handler.AppendDelimiterOutboundHandler;
+import com.arloor.proxycommon.Handler.delimiter.AppendDelimiterOutboundHandler;
 import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
+import com.arloor.proxycommon.Handler.delimiter.MyDelimiterBasedFrameDeocder;
 import com.arloor.proxycommon.crypto.handler.DecryptHandler;
 import com.arloor.proxycommon.crypto.handler.EncryptHandler;
 import com.arloor.proxyserver.requestdecoder.Byte2JSONObjectDecoder;
@@ -67,8 +68,10 @@ public class ServerProxyBootStrap {
         protected void initChannel(SocketChannel channel) throws Exception {
             channel.pipeline().addLast(new ReadAllBytebufInboundHandler());
             channel.pipeline().addLast(new AuthVerifyInboundhandler());
+
+            //delimiter的zhanbao解决
             channel.pipeline().addLast(new AppendDelimiterOutboundHandler());
-            channel.pipeline().addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,true,true, Unpooled.wrappedBuffer(Config.delimiter().getBytes())));
+            channel.pipeline().addLast(new MyDelimiterBasedFrameDeocder());
             if(crypto){
                 channel.pipeline().addLast(new EncryptHandler());
                 channel.pipeline().addLast(new DecryptHandler());
