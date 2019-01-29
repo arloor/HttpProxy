@@ -9,7 +9,6 @@ import io.netty.channel.ChannelHandlerContext;
 public class FastJsonHttpMessageDecoder extends HttpMessageDecoder {
     @Override
     public void processRequest(ChannelHandlerContext ctx, HttpRequest request) {
-        request.reform();
         JSONObject object=JSONObject.parseObject(JSON.toJSONString(request));
         ctx.fireChannelRead(object);
     }
