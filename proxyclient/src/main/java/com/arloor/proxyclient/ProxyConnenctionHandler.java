@@ -149,7 +149,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
     private class SendBack2ClientHandler extends SimpleChannelInboundHandler<ByteBuf> {
         @Override
         protected void channelRead0(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
-            if (byteBuf.readableBytes() > 0)//会返回0字节，这个就不返回了
+            if (byteBuf.readableBytes() > 0)//会返回0字节，这个就不返回了 返回0字节的原因是，关闭连接的事件前，会写0字节
                 localChannel.writeAndFlush(byteBuf.retain()).addListener(future -> {
                     if (future.isSuccess()) {
                         logger.info("返回响应 " + byteBuf.writerIndex() + "字节 " + channelHandlerContext.channel().remoteAddress());
