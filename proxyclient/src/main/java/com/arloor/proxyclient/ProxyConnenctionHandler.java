@@ -1,10 +1,7 @@
 package com.arloor.proxyclient;
 
 import com.alibaba.fastjson.JSONObject;
-import com.arloor.proxycommon.Config;
-import com.arloor.proxycommon.Handler.delimiter.AppendDelimiterOutboundHandler;
 import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
-import com.arloor.proxycommon.Handler.delimiter.MyDelimiterBasedFrameDeocder;
 import com.arloor.proxycommon.Handler.length.MyLengthFieldBasedFrameDecoder;
 import com.arloor.proxycommon.Handler.length.MyLengthFieldPrepender;
 import com.arloor.proxycommon.crypto.handler.DecryptHandler;
@@ -19,7 +16,6 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,7 +172,6 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
             localChannel.config().setAutoRead(canWrite);
             super.channelWritabilityChanged(ctx);
         }
-
 
         @Override
         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
