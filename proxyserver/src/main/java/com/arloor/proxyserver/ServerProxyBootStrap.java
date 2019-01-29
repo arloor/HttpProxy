@@ -2,18 +2,18 @@ package com.arloor.proxyserver;
 
 
 import com.arloor.proxycommon.Config;
-import com.arloor.proxycommon.Handler.AppendDelimiterOutboundHandler;
 import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
+import com.arloor.proxycommon.Handler.length.MyLengthFieldBasedFrameDecoder;
+import com.arloor.proxycommon.Handler.length.MyLengthFieldPrepender;
 import com.arloor.proxycommon.crypto.handler.DecryptHandler;
 import com.arloor.proxycommon.crypto.handler.EncryptHandler;
+import com.arloor.proxycommon.debug.PrintByteBufHandler;
 import com.arloor.proxyserver.requestdecoder.Byte2JSONObjectDecoder;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,9 +66,18 @@ public class ServerProxyBootStrap {
         @Override
         protected void initChannel(SocketChannel channel) throws Exception {
             channel.pipeline().addLast(new ReadAllBytebufInboundHandler());
-            channel.pipeline().addLast(new AuthVerifyInboundhandler());
-            channel.pipeline().addLast(new AppendDelimiterOutboundHandler());
-            channel.pipeline().addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,true,true, Unpooled.wrappedBuffer(Config.delimiter().getBytes())));
+//            channel.pipeline().addLast(new PrintByteBufHandler());
+            //======================
+            //length的粘包解决
+            channel.pipeline().addLast(new MyLengthFieldBasedFrameDecoder());
+            channel.pipeline().addLast(new MyLengthFieldPrepender());
+            //================================
+            //delimiter的粘包解决
+//            channel.pipeline().addLast(new AuthVerifyCheckDelimiterInboundhandler());
+//            channel.pipeline().addLast(new AppendDelimiterOutboundHandler());
+//            channel.pipeline().addLast(new MyDelimiterBasedFrameDeocder());
+            //================================
+
             if(crypto){
                 channel.pipeline().addLast(new EncryptHandler());
                 channel.pipeline().addLast(new DecryptHandler());
