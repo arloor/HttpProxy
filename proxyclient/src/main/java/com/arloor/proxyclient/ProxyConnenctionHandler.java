@@ -32,7 +32,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
     private SocketChannel localChannel;
     private SocketChannel remoteChannel;
     private String host = null;
-    private int port=80;
+    private int port = 80;
     private boolean isTunnel = false;
 
     @Override
@@ -68,7 +68,7 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                         remoteChannel = ch;
                         ch.pipeline().addLast(new ReadAllBytebufInboundHandler());
                         ch.pipeline().addLast(new AppendDelimiterOutboundHandler());
-                        ch.pipeline().addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,true,true, Unpooled.wrappedBuffer(Config.delimiter().getBytes())));
+                        ch.pipeline().addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE, true, true, Unpooled.wrappedBuffer(Config.delimiter().getBytes())));
                         if (ClientProxyBootStrap.crypto) {
                             ch.pipeline().addLast(new EncryptHandler());
                             ch.pipeline().addLast(new DecryptHandler());
@@ -94,33 +94,33 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext localCtx, Object msg) throws Exception {
-        if(msg instanceof JSONObject){
-            JSONObject object=(JSONObject)msg;
+        if (msg instanceof JSONObject) {
+            JSONObject object = (JSONObject) msg;
             //设置一些信息
-            if(host==null&&object.containsKey("host")){
-                host=object.getString("host");
-                port=object.getInteger("port");
-                if(object.containsKey("method")){
-                    isTunnel=HttpMethod.CONNECT.toString().equals(object.getString("method"));
+            if (host == null && object.containsKey("host")) {
+                host = object.getString("host");
+                port = object.getInteger("port");
+                if (object.containsKey("method")) {
+                    isTunnel = HttpMethod.CONNECT.toString().equals(object.getString("method"));
                 }
             }
             //检查这个请求是否有效
-            if(host!=null){
+            if (host != null) {
                 //有效则向代理服务器发送
                 //将jsonString转成PooledBytebuf。记得release
-                ByteBuf buf= PooledByteBufAllocator.DEFAULT.buffer();
+                ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
                 buf.writeBytes(object.toJSONString().getBytes(UTF_8));
                 remoteChannel.writeAndFlush(buf).addListener(future -> {
-                    if(future.isSuccess()){
-                        logger.info("向代理服务器发送请求成功。host :"+host);
-                    }else {
+                    if (future.isSuccess()) {
+                        logger.info("向代理服务器发送请求成功。host :" + host);
+                    } else {
                         logger.info(ExceptionUtil.getMessage(future.cause()));
                     }
                     //这里竟然不需要release
 //                    ReferenceCountUtil.release(buf);
                 });
-            }else{
-                ByteBuf buf=PooledByteBufAllocator.DEFAULT.buffer();
+            } else {
+                ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
                 localChannel.writeAndFlush(buf.writeBytes(HttpResponse.ERROR503())).addListener(future -> {
                     logger.warn("错误的第一次请求：没有指定host。关闭channel");
                     ReferenceCountUtil.release(buf);
@@ -149,14 +149,15 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
     private class SendBack2ClientHandler extends SimpleChannelInboundHandler<ByteBuf> {
         @Override
         protected void channelRead0(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
-            localChannel.writeAndFlush(byteBuf.retain()).addListener(future -> {
-                if (future.isSuccess()) {
-                    logger.info("返回响应 " + byteBuf.writerIndex() + "字节 " + channelHandlerContext.channel().remoteAddress());
-                } else {
-                    logger.warn("向" + remoteChannel.remoteAddress() + "写失败，异常信息如下：");
-                    logger.warn(ExceptionUtil.getMessage(future.cause()));
-                }
-            });
+            if (byteBuf.readableBytes() > 0)//会返回0字节，这个就不返回了
+                localChannel.writeAndFlush(byteBuf.retain()).addListener(future -> {
+                    if (future.isSuccess()) {
+                        logger.info("返回响应 " + byteBuf.writerIndex() + "字节 " + channelHandlerContext.channel().remoteAddress());
+                    } else {
+                        logger.warn("向" + remoteChannel.remoteAddress() + "写失败，异常信息如下：");
+                        logger.warn(ExceptionUtil.getMessage(future.cause()));
+                    }
+                });
         }
 
         @Override
