@@ -3,9 +3,9 @@ package com.arloor.proxycommon.crypto.utils.cryptoimpl;
 import com.arloor.proxycommon.crypto.utils.Cryptor;
 import com.arloor.proxycommon.util.Base64;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
 
 import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
@@ -14,7 +14,7 @@ import java.util.Arrays;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class AES128 implements Cryptor {
+public class AES128CFBNO implements Cryptor {
 
     private static final Charset CHARSET=UTF_8;//所有string转byte都使用UTF-8
 
@@ -49,9 +49,10 @@ public class AES128 implements Cryptor {
      */
     public byte[] encrypt(byte[] source) {
         try {
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            SecretKeySpec keySpec=new SecretKeySpec(key, "AES");
-            cipher.init(Cipher.ENCRYPT_MODE,keySpec );
+            byte[] iv = new byte[] { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF };
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+            Cipher cipher = Cipher.getInstance("AES/CFB/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), ivSpec);
             return Base64.encode(cipher.doFinal(source));
         } catch (Exception e) {
             e.printStackTrace();
@@ -67,8 +68,12 @@ public class AES128 implements Cryptor {
      */
     public byte[] decrypt(byte[] encoded) {
         try {
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"));
+            byte[] iv = new byte[] { 0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF };
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+            SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
+            Cipher cipher = Cipher.getInstance("AES/CFB/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, skeySpec, ivSpec);
             return cipher.doFinal(Base64.decode(encoded));
         } catch (Exception e) {
             e.printStackTrace();
