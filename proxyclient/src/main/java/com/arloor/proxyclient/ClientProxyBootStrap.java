@@ -72,7 +72,7 @@ public class ClientProxyBootStrap {
         @Override
         protected void initChannel(SocketChannel channel) throws Exception {
             channel.pipeline().addLast(new ReadAllBytebufInboundHandler());
-            channel.pipeline().addLast(new FastJsonHttpMessageDecoder());
+//            channel.pipeline().addLast(new FastJsonHttpMessageDecoder());
             channel.pipeline().addLast(new ProxyConnenctionHandler(channel));
         }
     }

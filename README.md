@@ -1,3 +1,8 @@
+[![](https://travis-ci.org/arloor/proxynew.svg?branch=master)](https://travis-ci.org/arloor/proxynew)
+[![](https://img.shields.io/github/release/arloor/proxynew.svg?style=flat)](https://github.com/arloor/proxynew/releases)
+[![](https://img.shields.io/github/last-commit/arloor/proxynew.svg?style=flat)](https://github.com/arloor/proxynew/commit/master)
+![](https://img.shields.io/github/languages/code-size/arloor/proxynew.svg?style=flat)
+
 # Proxynew 重新设计的基于netty的http代理
 
 项目地址[Proxynew](https://github.com/arloor/proxynew)

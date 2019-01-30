@@ -1,16 +1,14 @@
-package com.arloor.proxyserver;
+package com.arloor.proxycommon.Handler.delimiter;
 
 import com.arloor.proxycommon.Config;
-import com.arloor.proxycommon.httpentity.HttpResponse;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AuthVerifyInboundhandler extends ChannelInboundHandlerAdapter {
-    private static Logger logger= LoggerFactory.getLogger(AuthVerifyInboundhandler.class);
+public class AuthVerifyCheckDelimiterInboundhandler extends ChannelInboundHandlerAdapter {
+    private static Logger logger= LoggerFactory.getLogger(AuthVerifyCheckDelimiterInboundhandler.class);
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {

@@ -1,4 +1,4 @@
-package com.arloor.proxycommon.Handler;
+package com.arloor.proxycommon.Handler.delimiter;
 
 import com.arloor.proxycommon.Config;
 import io.netty.buffer.ByteBuf;

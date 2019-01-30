@@ -1,14 +1,10 @@
 package com.arloor.proxyclient;
 
-import com.alibaba.fastjson.JSONObject;
-import com.arloor.proxycommon.Config;
-import com.arloor.proxycommon.Handler.AppendDelimiterOutboundHandler;
 import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
-import com.arloor.proxycommon.crypto.handler.CryptoHandler;
+import com.arloor.proxycommon.Handler.length.MyLengthFieldBasedFrameDecoder;
+import com.arloor.proxycommon.Handler.length.MyLengthFieldPrepender;
 import com.arloor.proxycommon.crypto.handler.DecryptHandler;
 import com.arloor.proxycommon.crypto.handler.EncryptHandler;
-import com.arloor.proxycommon.crypto.utils.CryptoType;
-import com.arloor.proxycommon.httpentity.HttpMethod;
 import com.arloor.proxycommon.httpentity.HttpResponse;
 import com.arloor.proxycommon.util.ExceptionUtil;
 import io.netty.bootstrap.Bootstrap;
@@ -18,12 +14,9 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.DelimiterBasedFrameDecoder;
-import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 
 public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
@@ -31,10 +24,6 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
     private EventLoopGroup remoteLoopGroup = ClientProxyBootStrap.REMOTEWORKER;
     private SocketChannel localChannel;
     private SocketChannel remoteChannel;
-    private String host = null;
-    private int port=80;
-    private boolean isTunnel = false;
-
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
         boolean canWrite = ctx.channel().isWritable();
@@ -67,8 +56,11 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
                     protected void initChannel(SocketChannel ch) throws Exception {
                         remoteChannel = ch;
                         ch.pipeline().addLast(new ReadAllBytebufInboundHandler());
-                        ch.pipeline().addLast(new AppendDelimiterOutboundHandler());
-                        ch.pipeline().addLast(new DelimiterBasedFrameDecoder(Integer.MAX_VALUE,true,true, Unpooled.wrappedBuffer(Config.delimiter().getBytes())));
+                        //======================
+                        //length的粘包解决
+                        ch.pipeline().addLast(new MyLengthFieldBasedFrameDecoder());
+                        ch.pipeline().addLast(new MyLengthFieldPrepender());
+                        //=================================
                         if (ClientProxyBootStrap.crypto) {
                             ch.pipeline().addLast(new EncryptHandler());
                             ch.pipeline().addLast(new DecryptHandler());
@@ -94,39 +86,14 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext localCtx, Object msg) throws Exception {
-        if(msg instanceof JSONObject){
-            JSONObject object=(JSONObject)msg;
-            //设置一些信息
-            if(host==null&&object.containsKey("host")){
-                host=object.getString("host");
-                port=object.getInteger("port");
-                if(object.containsKey("method")){
-                    isTunnel=HttpMethod.CONNECT.toString().equals(object.getString("method"));
-                }
+        remoteChannel.writeAndFlush(msg).addListener(future -> {
+            if (future.isSuccess()) {
+                logger.info("向代理服务器发送请求成功。");
+            } else {
+                logger.info("向代理服务器发送请求失败。异常如下：");
+                logger.info(ExceptionUtil.getMessage(future.cause()));
             }
-            //检查这个请求是否有效
-            if(host!=null){
-                //有效则向代理服务器发送
-                //将jsonString转成PooledBytebuf。记得release
-                ByteBuf buf= PooledByteBufAllocator.DEFAULT.buffer();
-                buf.writeBytes(object.toJSONString().getBytes(UTF_8));
-                remoteChannel.writeAndFlush(buf).addListener(future -> {
-                    if(future.isSuccess()){
-                        logger.info("向代理服务器发送请求成功。host :"+host);
-                    }else {
-                        logger.info(ExceptionUtil.getMessage(future.cause()));
-                    }
-                    //这里竟然不需要release
-//                    ReferenceCountUtil.release(buf);
-                });
-            }else{
-                ByteBuf buf=PooledByteBufAllocator.DEFAULT.buffer();
-                localChannel.writeAndFlush(buf.writeBytes(HttpResponse.ERROR503())).addListener(future -> {
-                    logger.warn("错误的第一次请求：没有指定host。关闭channel");
-                    ReferenceCountUtil.release(buf);
-                });
-            }
-        }
+        });
     }
 
     @Override
@@ -137,9 +104,11 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         if (remoteChannel != null && remoteChannel.isActive())
-            remoteChannel.close().addListener((future -> {
-                logger.info("浏览器关闭连接，因此关闭到代理服务器的连接");
-            }));
+            remoteChannel.writeAndFlush(PooledByteBufAllocator.DEFAULT.buffer()).addListener(future -> {
+                remoteChannel.close().addListener((future1 -> {
+                    logger.info("返回 0字节：浏览器关闭连接，因此关闭到代理服务器的连接");
+                }));
+            });
         super.channelInactive(ctx);
     }
 
@@ -147,14 +116,15 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
     private class SendBack2ClientHandler extends SimpleChannelInboundHandler<ByteBuf> {
         @Override
         protected void channelRead0(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf) throws Exception {
-            localChannel.writeAndFlush(byteBuf.retain()).addListener(future -> {
-                if (future.isSuccess()) {
-                    logger.info("返回响应 " + byteBuf.writerIndex() + "字节 " + channelHandlerContext.channel().remoteAddress());
-                } else {
-                    logger.warn("向" + remoteChannel.remoteAddress() + "写失败，异常信息如下：");
-                    logger.warn(ExceptionUtil.getMessage(future.cause()));
-                }
-            });
+            if (byteBuf.readableBytes() > 0)//会返回0字节，这个就不返回了 返回0字节的原因是，关闭连接的事件前，会写0字节
+                localChannel.writeAndFlush(byteBuf.retain()).addListener(future -> {
+                    if (future.isSuccess()) {
+                        logger.info("返回响应 " + byteBuf.writerIndex() + "字节 " + channelHandlerContext.channel().remoteAddress());
+                    } else {
+                        logger.warn("向" + remoteChannel.remoteAddress() + "写失败，异常信息如下：");
+                        logger.warn(ExceptionUtil.getMessage(future.cause()));
+                    }
+                });
         }
 
         @Override
@@ -166,13 +136,14 @@ public class ProxyConnenctionHandler extends ChannelInboundHandlerAdapter {
             super.channelWritabilityChanged(ctx);
         }
 
-
         @Override
         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
             if (localChannel != null && localChannel.isActive())
-                localChannel.close().addListener((future -> {
-                    logger.info("代理服务器关闭连接，因此关闭到浏览器的连接");
-                }));
+                localChannel.writeAndFlush(PooledByteBufAllocator.DEFAULT.buffer()).addListener(future -> {
+                    localChannel.close().addListener(future1 -> {
+                        logger.info("返回0字节：代理服务器关闭连接，因此关闭到browser连接");
+                    });
+                });
             super.channelInactive(ctx);
         }
 

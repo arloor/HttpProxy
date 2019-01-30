@@ -1,9 +1,8 @@
 package com.arloor.proxyserver;
 
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.arloor.proxycommon.Handler.ReadAllBytebufInboundHandler;
 import com.arloor.proxycommon.httpentity.HttpMethod;
+import com.arloor.proxycommon.httpentity.HttpRequest;
 import com.arloor.proxycommon.httpentity.HttpResponse;
 import com.arloor.proxycommon.util.ExceptionUtil;
 import io.netty.bootstrap.Bootstrap;
@@ -16,7 +15,6 @@ import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Base64;
 import java.util.List;
 
 public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
@@ -44,13 +42,11 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
     }
 
     public void channelRead(ChannelHandlerContext localCtx, Object msg) throws Exception {
-        JSONObject request = (JSONObject) msg;
-        if (host == null && request.containsKey("host")) {
-            host = request.getString("host");
-            port = request.getInteger("port");
-            if (request.containsKey("method")) {
-                isTunnel = HttpMethod.CONNECT.toString().equals(request.getString("method"));
-            }
+        HttpRequest request = (HttpRequest) msg;
+        if (host == null && request.getHost()!=null&&!request.getHost().equals("")) {
+            host = request.getHost();
+            port = request.getPort();
+            isTunnel = HttpMethod.CONNECT.equals(request.getMethod());
         }
         //检查这个请求是否有效
         if (host != null) {
@@ -60,7 +56,7 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
                 if (hostConnectFuture == null) {//进行连接
                     hostConnectFuture = connectTarget();
                 }
-                if(!HttpMethod.CONNECT.toString().equals(request.getString("method"))){
+                if(!HttpMethod.CONNECT.equals(request.getMethod())){
                     hostConnectFuture.addListener(future -> {
                         if(future.isSuccess()){
                             write2Target(request);
@@ -77,33 +73,31 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void write2Target(JSONObject request) {
+    private void write2Target(HttpRequest request) {
         ByteBuf buf=PooledByteBufAllocator.DEFAULT.buffer();
         if(isTunnel){
-            String base64Body=request.getString("requestBody");
-            byte[] body= Base64.getDecoder().decode(base64Body);
+            byte[] body= request.getRequestBody();
             buf.writeBytes(body);
         }else{
             StringBuffer sb=new StringBuffer();
-            if(request.getString("requestLine")!=null){
-                sb.append(request.getString("requestLine"));
+            if(request.getRequestLine()!=null){
+                sb.append(request.getRequestLine());
                 sb.append("\r\n");
             }
-            JSONArray headers=request.getJSONArray("headers");
+            List<HttpRequest.HttpRequestHeader> headers=request.getHeaders();
             if(headers!=null){
                 for (int i = 0; i <headers.size() ; i++) {
-                    JSONObject header=headers.getJSONObject(i);
-                    sb.append(header.getString("key"));
+                    HttpRequest.HttpRequestHeader header=headers.get(i);
+                    sb.append(header.getKey());
                     sb.append(": ");
-                    sb.append(header.getString("value"));
+                    sb.append(header.getValue());
                     sb.append("\r\n");
                 }
                 sb.append("\r\n");
             }
             buf.writeBytes(sb.toString().getBytes());
-            if(request.getString("requestBody")!=null){
-                String base64Body=request.getString("requestBody");
-                byte[] body= Base64.getDecoder().decode(base64Body);
+            if(request.getRequestBody()!=null){
+                byte[] body= request.getRequestBody();
                 buf.writeBytes(body);
             }
         }
@@ -165,8 +159,10 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         if (remoteChannel != null && remoteChannel.isActive()) {
-            remoteChannel.close().addListener(future -> {
-                logger.info("browser关闭连接，因此关闭到webserver连接");
+            remoteChannel.writeAndFlush(PooledByteBufAllocator.DEFAULT.buffer()).addListener(future -> {
+                remoteChannel.close().addListener(future1 -> {
+                    logger.info("返回0字节：browser关闭连接，因此关闭到webserver连接");
+                });
             });
         }
         super.channelInactive(ctx);
@@ -218,8 +214,10 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
         @Override
         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
             if (localChannel != null && localChannel.isActive()) {
-                localChannel.close().addListener(future -> {
-                    logger.info("webserver关闭连接，因此关闭到browser连接");
+                localChannel.writeAndFlush(PooledByteBufAllocator.DEFAULT.buffer()).addListener(future -> {
+                    localChannel.close().addListener(future1 -> {
+                        logger.info("返回0字节：webserver关闭连接，因此关闭到browser连接");
+                    });
                 });
             }
             super.channelInactive(ctx);
