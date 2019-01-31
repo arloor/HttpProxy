@@ -175,7 +175,7 @@ public class HttpRequest {
                 ", method='" + method + '\'' +
                 ", host='" + host + '\'' +
                 ", serverport=" + port +
-                ", path=" + path +
+                ", path=\'" + path + '\'' +
                 "}";
     }
 
