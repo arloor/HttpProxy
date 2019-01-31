@@ -158,7 +158,8 @@ client.port=9091
 ## TODOLIST
 
 1. 增加多用户认证——优先级不高
-2. 学习开发安卓的代理客户端——有难度
+2. 编写go客户端——优先级较高
+3. 学习开发安卓的代理客户端——有难度
     - 研究了一下，安卓的代理客户端和这个项目相差很多，因为安卓提供的Vpnservice要传输的是ip数据报。
     - 初步思路见[安卓Vpn开发思路](http://arloor.com/posts/other/android-vpnservice-and-vpn-dev/)
 
