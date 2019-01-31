@@ -68,7 +68,6 @@ public class NewProxyConnectionHandler extends ChannelInboundHandlerAdapter {
             ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();
             localChannel.writeAndFlush(buf.writeBytes(HttpResponse.ERROR503())).addListener(future -> {
                 logger.warn("错误的第一次请求：没有指定host。关闭channel");
-                ReferenceCountUtil.release(buf);
             });
         }
     }
