@@ -1,9 +1,9 @@
-[![](https://travis-ci.org/arloor/proxynew.svg?branch=master)](https://travis-ci.org/arloor/proxynew)
-[![](https://img.shields.io/github/release/arloor/proxynew.svg?style=flat)](https://github.com/arloor/proxynew/releases)
-[![](https://img.shields.io/github/last-commit/arloor/proxynew.svg?style=flat)](https://github.com/arloor/proxynew/commit/master)
-![](https://img.shields.io/github/languages/code-size/arloor/proxynew.svg?style=flat)
+[![](https://travis-ci.org/arloor/HttpProxy.svg?branch=master)](https://travis-ci.org/arloor/HttpProxy)
+[![](https://img.shields.io/github/release/arloor/HttpProxy.svg?style=flat)](https://github.com/arloor/HttpProxy/releases)
+[![](https://img.shields.io/github/last-commit/arloor/HttpProxy.svg?style=flat)](https://github.com/arloor/HttpProxy/commit/master)
+![](https://img.shields.io/github/languages/code-size/arloor/HttpProxy.svg?style=flat)
 
-# Proxynew 基于netty的翻墙代理
+# HttpProxy 基于netty的翻墙代理
 
 这是一个稳定、轻量的http代理，仅仅依赖netty和日志框架，实现http中间人代理和https隧道代理，并通过加密，实现翻墙功能。google、youtube视频、测试代理速度、作为git的代理、作为docker的代理等场景都运行完美。
 
@@ -50,7 +50,7 @@
 2. 看了《Unix网络编程》，知道了socket编程相关的概念和通用的接口。在这之前还看了《Unix环境高级编程》，这也花了较长的时间。虽然苦于c语言编程的痛苦，看了这个并不能写成代理，但是也算是网络编程的入门了。
 3. 后来搜索引擎搜索shadowsocks的原理，明白了翻墙的核心就是转发http请求和加解密。知道了这些，加上知道socket编程的方法，心里就有数啦。
 4. 既然c语言socket编程痛苦，就看看java的网络编程。就买了《java网络编程》，学习了java NIO相关的只是，并在实践下写了[proxyme](https://github.com/aloor/proxyme)，这是一个纯基于java NIO的代理，功能都实现了，但是还是有不合理的地方，所以只能称为一个玩具。但是在这个过程中，也学习到了很多东西。
-5. 最后就是学习netty和最终写出这个proxynew啦。这个过程同样漫长，也写了好几个版本
+5. 最后就是学习netty和最终写出这个HttpProxy啦。这个过程同样漫长，也写了好几个版本
     1. 依赖ChannelReadComplete来解决粘包问题+使用字节取反进行加密===事实证明这个版本运行良好，也许也是所有版本中最高效的一种。但是他不合理
     2. 使用特定的分隔符结合DelimiterBasedDecoder+客户端解析http请求+fastjson序列化传输+AES加密后base64===事实证明，这个版本也运行良好，但是因为fastjson中对字节数组的base64和加密后的base64，浪费了大量的带宽，经测试大于1/3。所以这个版本也不合理。为什么加密后我要base64？因为base64可以使用64个可打印字符来表示所有字符，这样就可以挑选不会出现在64个字符内的字符作为分隔符，这也是base64的必要之处。为了丢弃base64和fastjson，有了第三版
     3. 使用LengthField来标志内容的长度从而解决粘包问题+服务器段解析http请求+AES加密不base64。这就是目前为止最为合理的版本。
