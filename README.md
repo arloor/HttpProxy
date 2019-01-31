@@ -5,7 +5,7 @@
 
 # HttpProxy 基于netty的翻墙代理
 
-这是一个稳定、轻量的http代理，仅仅依赖netty和日志框架，实现http中间人代理和https隧道代理，并通过加密，实现翻墙功能。google、youtube视频、测试代理速度、作为git的代理、作为docker的代理等场景都运行完美。
+这是一个轻量、稳定、高性能的http代理，仅仅依赖netty和日志框架，实现http中间人代理和https隧道代理，并通过加密，实现翻墙功能。google、youtube视频、测试代理速度、作为git的代理、作为docker的代理等场景都运行完美。
 
 客户端运行日志
 ```
