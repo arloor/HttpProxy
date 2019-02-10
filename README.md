@@ -80,7 +80,7 @@ server.host=proxy
 #默认为8081
 client.port=9091
 ```
-在这个配置下，代理客户端会运行在9091端口，服务器运行在proxy:9091。使用AES加密内容，key是“你想用我的代理吗？？？”经过SHA-256变换后取128位。
+在这个配置下，代理客户端会运行在9091端口，服务器运行在proxy:9090。使用AES加密内容，key是“你想用我的代理吗？？？”经过SHA-256变换后取128位。
 
 请注意`server.host=proxy`这一项配置，可以考虑自行将proxy改为localhost或者某个ip，当然也可以在hosts文件中增加proxy的ip。
 
