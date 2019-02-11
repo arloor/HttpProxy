@@ -88,9 +88,16 @@ client.port=9091
 
 在项目根目录下执行mvn package即可生成proxyclient-\*-jar-with-dependencies.jar和proxyserver-\*-jar-with-dependencies.jar。这两个jar包分别在proxyclient、proxyserver模块的target文件夹内，执行这两个jar包即运行成功。
 
-## 长期使用发现的问题
+## 在国外VPS上搭建此代理
 
-上面说了，代理的核心就是http请求解析、加密、转发。然而在核心之外，有些问题容易被忽略，在2个多月的使用中，才被我发现。
+除了以上的运行方式，为了日常使用方便，还提供了基于docker的快速安装方式，详情点击以下链接：
+
+[快速安装HttpProxy——另一种翻墙方式](http://arloor.com/posts/other/proxynew-docker-install/)
+
+
+## 长期使用发现并解决的问题
+
+上面说了，代理的核心就是http请求解析、加密、转发。然而在核心之外，有些问题容易被忽略，在2个多月的使用中，才被我发现和解决。
 
 如果有人会看我的代码，千万不要忽略下面所提及的代码。
 
@@ -155,9 +162,6 @@ client.port=9091
 
 通过setAutoRead来控制还读不读。这个问题的详细解读可以看[Netty直接内存溢出问题解决](http://arloor.com/posts/netty/netty-direct-memory-leak/)
 
-## 在国外VPS上搭建此代理
-
-[快速安装HttpProxy——另一种翻墙方式](http://arloor.com/posts/other/proxynew-docker-install/)
 
 ## TODOLIST
 
