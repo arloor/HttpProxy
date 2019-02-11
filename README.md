@@ -90,7 +90,7 @@ client.port=9091
 
 ## 在国外VPS上搭建此代理
 
-除了以上的运行方式，为了日常使用方便，还提供了基于docker的快速安装方式，详情点击以下链接：
+为了方便地在VPS上部署，还提供了基于docker的快速安装方式，提供了go语言编写的无界面客户端以方便日常使用。详情点击以下链接：
 
 [快速安装HttpProxy——另一种翻墙方式](http://arloor.com/posts/other/proxynew-docker-install/)
 
