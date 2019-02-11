@@ -155,7 +155,7 @@ client.port=9091
 
 通过setAutoRead来控制还读不读。这个问题的详细解读可以看[Netty直接内存溢出问题解决](http://arloor.com/posts/netty/netty-direct-memory-leak/)
 
-## 自己搭建此代理
+## 在国外VPS上搭建此代理
 
 [快速安装HttpProxy——另一种翻墙方式](http://arloor.com/posts/other/proxynew-docker-install/)
 
