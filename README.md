@@ -5,7 +5,7 @@
 
 # HttpProxy 基于netty的翻墙代理
 
-这是一个稳定、轻量的http代理，仅仅依赖netty和日志框架，实现http中间人代理和https隧道代理，并通过加密，实现翻墙功能。google、youtube视频、测试代理速度、作为git的代理、作为docker的代理等场景都运行完美。
+这是一个轻量、稳定、高性能的http代理，仅仅依赖netty和日志框架，实现http中间人代理和https隧道代理，并通过加密，实现翻墙功能。google、youtube视频、测试代理速度、作为git的代理、作为docker的代理等场景都运行完美。
 
 客户端运行日志
 ```
@@ -80,7 +80,7 @@ server.host=proxy
 #默认为8081
 client.port=9091
 ```
-在这个配置下，代理客户端会运行在9091端口，服务器运行在proxy:9091。使用AES加密内容，key是“你想用我的代理吗？？？”经过SHA-256变换后取128位。
+在这个配置下，代理客户端会运行在9091端口，服务器运行在proxy:9090。使用AES加密内容，key是“你想用我的代理吗？？？”经过SHA-256变换后取128位。
 
 请注意`server.host=proxy`这一项配置，可以考虑自行将proxy改为localhost或者某个ip，当然也可以在hosts文件中增加proxy的ip。
 
@@ -88,9 +88,16 @@ client.port=9091
 
 在项目根目录下执行mvn package即可生成proxyclient-\*-jar-with-dependencies.jar和proxyserver-\*-jar-with-dependencies.jar。这两个jar包分别在proxyclient、proxyserver模块的target文件夹内，执行这两个jar包即运行成功。
 
-## 长期使用发现的问题
+## 在国外VPS上搭建此代理
 
-上面说了，代理的核心就是http请求解析、加密、转发。然而在核心之外，有些问题容易被忽略，在2个多月的使用中，才被我发现。
+为了方便地在VPS上部署，提供了基于docker的服务端部署方式。并且开发了go语言编写的客户端以方便日常使用。详情点击以下链接：
+
+[快速安装HttpProxy——另一种翻墙方式](http://arloor.com/posts/other/proxynew-docker-install/)
+
+
+## 长期使用发现并解决的问题
+
+上面说了，代理的核心就是http请求解析、加密、转发。然而在核心之外，有些问题容易被忽略，在2个多月的使用中，才被我发现和解决。
 
 如果有人会看我的代码，千万不要忽略下面所提及的代码。
 
@@ -154,6 +161,7 @@ client.port=9091
 ```
 
 通过setAutoRead来控制还读不读。这个问题的详细解读可以看[Netty直接内存溢出问题解决](http://arloor.com/posts/netty/netty-direct-memory-leak/)
+
 
 ## TODOLIST
 

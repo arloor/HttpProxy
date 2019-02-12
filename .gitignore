@@ -38,3 +38,6 @@ crashlytics-build.properties
 fabric.properties
 
 *.jar
+
+log/
+logs/
