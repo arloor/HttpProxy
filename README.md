@@ -163,7 +163,7 @@ client.port=9091
 通过setAutoRead来控制还读不读。这个问题的详细解读可以看[Netty直接内存溢出问题解决](http://arloor.com/posts/netty/netty-direct-memory-leak/)
 
 
-## TODOLIST
+## TODO
 
 1. 增加多用户认证——优先级不高
 2. 编写go客户端——优先级较高
@@ -172,3 +172,8 @@ client.port=9091
     - 初步思路见[安卓Vpn开发思路](http://arloor.com/posts/other/android-vpnservice-and-vpn-dev/)
 
 
+## 电报群——参与讨论
+
+想要参与项目的开发、提出建议或者交流使用中的问题，可以点击下面的链接进入电报群一起探讨或者吐槽
+
+[New proxy for your choice](https://t.me/arloorproxy)
