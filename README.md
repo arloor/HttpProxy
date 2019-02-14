@@ -171,9 +171,10 @@ client.port=9091
     - 研究了一下，安卓的代理客户端和这个项目相差很多，因为安卓提供的Vpnservice要传输的是ip数据报。
     - 初步思路见[安卓Vpn开发思路](http://arloor.com/posts/other/android-vpnservice-and-vpn-dev/)
 
+## 电报群
 
-## 电报群——参与讨论
+[arloor's 翻墙代理](https://t.me/arloorproxy)
 
-想要参与项目的开发、提出建议或者交流使用中的问题，可以点击下面的链接进入电报群一起探讨或者吐槽
+安装、部署、使用过程中有什么任何槽点都欢迎加入电报群参与讨论
 
-[New proxy for your choice](https://t.me/arloorproxy)
+对实现和代码有疑问、建议同样欢迎参与讨论
