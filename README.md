@@ -17,7 +17,7 @@
        
 修改系统代理设置为PAC模式，PAC地址（URL）为： [http://arloor.com:9999/pac](http://arloor.com:9999/pac)。如果不是很理解如何操作，请查看[百度经验](https://jingyan.baidu.com/article/a948d6511057c20a2dcd2e0d.html)
        
-> PS:如果觉得试用还算满意，下面有介绍如何自部署这个翻墙服务。当然也可以付费使用我自己用的节点（当然不是5M带宽了），价格十分便宜，就当是合租了。有这个意愿的小伙伴也可以进[电报群](https://t.me/arloorproxy)交流，同样可以发送邮件到admin@arloor.com
+PS:如果觉得试用还算满意，下面有介绍如何自部署这个翻墙服务。当然也可以付费使用我自己用的节点（当然不是5M带宽了），价格十分便宜，就当是合租了。有这个意愿的小伙伴也可以进[电报群](https://t.me/arloorproxy)交流，同样可以发送邮件到admin@arloor.com
 
 ## 运行日志
 
