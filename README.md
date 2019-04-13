@@ -3,9 +3,9 @@
 [![](https://img.shields.io/github/last-commit/arloor/HttpProxy.svg?style=flat)](https://github.com/arloor/HttpProxy/commit/master)
 ![](https://img.shields.io/github/languages/code-size/arloor/HttpProxy.svg?style=flat)
 
-# HttpProxy 基于netty的翻墙代理
+# HttpProxy 基于netty的代理
 
-这是一个轻量、稳定、高性能的http代理，仅仅依赖netty和日志框架，实现http中间人代理和https隧道代理，并通过加密，实现翻墙功能。google、youtube视频、测试代理速度、作为git的代理、作为docker的代理等场景都运行完美。
+这是一个轻量、稳定、高性能的http代理，仅仅依赖netty和日志框架，实现http中间人代理和https隧道代理。google、youtube视频、测试代理速度、作为git的代理、作为docker的代理等场景都运行完美。
 
 ## 运行日志
 
@@ -41,24 +41,6 @@
 2019-01-30 22:53:37.551 [nioEventLoopGroup-4-1] INFO  c.a.p.NewProxyConnectionHandler$SendBack2ClientHandler - 返回响应 224字节 www.google.com/216.58.217.196:443
 2019-01-30 22:53:37.568 [nioEventLoopGroup-4-1] INFO  c.a.p.NewProxyConnectionHandler$SendBack2ClientHandler - 返回响应 576字节 lh3.googleusercontent.com/216.58.216.33:443
 ```
-
-## 初衷和过程
-
-最早接触的翻墙工具是shadowsocks，购买过付费的ss服务，也自己搭过shadowsocks服务器。就这样经历了商家跑路，自己搭的梯子被封的问题，于是，总感觉用得不爽，同时出于对翻墙原理的好奇，一直有一个夙愿去自己实现一个翻墙的代理。
-
-实现这个代理的道路可以说是超级漫长了，大概可以分为下面几个阶段
-
-1. 一无所知，无从下手
-2. 看了《Unix网络编程》，知道了socket编程相关的概念和通用的接口。在这之前还看了《Unix环境高级编程》，这也花了较长的时间。虽然苦于c语言编程的痛苦，看了这个并不能写成代理，但是也算是网络编程的入门了。
-3. 后来搜索引擎搜索shadowsocks的原理，明白了翻墙的核心就是转发http请求和加解密。知道了这些，加上知道socket编程的方法，心里就有数啦。
-4. 既然c语言socket编程痛苦，就看看java的网络编程。就买了《java网络编程》，学习了java NIO相关的只是，并在实践下写了[proxyme](https://github.com/arloor/proxyme)，这是一个纯基于java NIO的代理，功能都实现了，但是还是有不合理的地方，所以只能称为一个玩具。但是在这个过程中，也学习到了很多东西。
-5. 最后就是学习netty和最终写出这个HttpProxy啦。这个过程同样漫长，也写了好几个版本
-    1. 依赖ChannelReadComplete来解决粘包问题+使用字节取反进行加密===事实证明这个版本运行良好，也许也是所有版本中最高效的一种。但是他不合理
-    2. 使用特定的分隔符结合DelimiterBasedDecoder+客户端解析http请求+fastjson序列化传输+AES加密后base64===事实证明，这个版本也运行良好，但是因为fastjson中对字节数组的base64和加密后的base64，浪费了大量的带宽，经测试大于1/3。所以这个版本也不合理。为什么加密后我要base64？因为base64可以使用64个可打印字符来表示所有字符，这样就可以挑选不会出现在64个字符内的字符作为分隔符，这也是base64的必要之处。为了丢弃base64和fastjson，有了第三版
-    3. 使用LengthField来标志内容的长度从而解决粘包问题+服务器段解析http请求+AES加密不base64。这就是目前为止最为合理的版本。
-6. 在使用第五阶段各种版本的代码中，又发现了一些缺陷和bug，修复这些bug，让代理愈加合理。相关的缺陷和bug在后面还会有提及
-
-也算终于写了个东西真正有人愿意用，至少我愿意用，内心很是欢喜。从初次提交到目前为止（2019-01-30），为期两个月，完成了3年以来的一个愿望。
 
 
 ## 配置  编译  运行
@@ -172,11 +154,3 @@ client.port=9091
 3. 学习开发安卓的代理客户端——有难度
     - 研究了一下，安卓的代理客户端和这个项目相差很多，因为安卓提供的Vpnservice要传输的是ip数据报。
     - 初步思路见[安卓Vpn开发思路](http://arloor.com/posts/other/android-vpnservice-and-vpn-dev/)
-
-## 电报群
-
-[arloor's 翻墙代理](https://t.me/arloorproxy)
-
-安装、部署、使用过程中有什么任何槽点都欢迎加入电报群参与讨论
-
-对实现和代码有疑问、建议同样欢迎参与讨论
