@@ -15,6 +15,8 @@
  */
 package com.arloor.forwardproxy;
 
+import com.arloor.forwardproxy.crypto.ReadReverseHandler;
+import com.arloor.forwardproxy.crypto.WriteReverseHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -32,6 +34,11 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
     @Override
     public void initChannel(SocketChannel ch) {
         ChannelPipeline p = ch.pipeline();
+        if (System.getProperty("r") != null) {
+            p.addLast(new ReadReverseHandler());
+            p.addLast(new WriteReverseHandler());
+        }
+
         if (sslCtx != null) {
             p.addLast(sslCtx.newHandler(ch.alloc()));
         }

@@ -98,7 +98,10 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                         responseFuture.addListener(new ChannelFutureListener() {
                                             @Override
                                             public void operationComplete(ChannelFuture channelFuture) {
-                                                ctx.pipeline().remove(ChannelHandler.class);
+                                                ctx.pipeline().remove(HttpRequestDecoder.class);
+                                                ctx.pipeline().remove(HttpResponseEncoder.class);
+                                                ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
+                                                ctx.pipeline().remove(HttpProxyConnectHandler.class);
                                                 outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
                                                 ctx.pipeline().addLast(new RelayHandler(outboundChannel));
                                             }
