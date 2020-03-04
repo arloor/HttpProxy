@@ -26,6 +26,8 @@ import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.FutureListener;
 import io.netty.util.concurrent.Promise;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -36,7 +38,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERR
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
-    private static final byte[] CONTENT = {'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd'};
+    private static final Logger log= LoggerFactory.getLogger(HttpProxyConnectHandler.class);
 
     private final Bootstrap b = new Bootstrap();
 
@@ -55,14 +57,14 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
         if (msg instanceof HttpRequest) {
             final HttpRequest req = (HttpRequest) msg;
             request = req;
-            //todo log
-            System.out.println(req.method() + " " + req.uri());
+            String clientHostname=((InetSocketAddress)ctx.channel().remoteAddress()).getHostName();
             //获取Host和port
             String hostAndPortStr = req.headers().get("Host");
             String[] hostPortArray = hostAndPortStr.split(":");
             host = hostPortArray[0];
             String portStr = hostPortArray.length == 2 ? hostPortArray[1] : "80";
             port = Integer.parseInt(portStr);
+            log.info(clientHostname+" "+req.method() + " " + req.uri() +"  {"+host+"}");
         } else {
             //SimpleChannelInboundHandler会将HttpContent中的bytebuf Release，但是这个还会转给relayHandler，所以需要在这里预先retain
             ((HttpContent) msg).content().retain();
