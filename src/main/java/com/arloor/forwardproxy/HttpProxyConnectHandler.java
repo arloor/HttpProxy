@@ -100,9 +100,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                     if (future.isSuccess()) {
                                         ctx.pipeline().remove(HttpProxyConnectHandler.this);
                                         ctx.pipeline().remove(HttpResponseEncoder.class);
-                                        ctx.pipeline().addFirst(new LoggingHandler(LogLevel.INFO));
                                         outboundChannel.pipeline().addLast(new HttpRequestEncoder());
-                                        outboundChannel.pipeline().addFirst(new LoggingHandler(LogLevel.INFO));
                                         outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
                                         RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel);
                                         ctx.pipeline().addLast(clientEndtoRemoteHandler);
