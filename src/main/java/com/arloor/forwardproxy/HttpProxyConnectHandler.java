@@ -119,7 +119,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                             }
                                             request.setUri(url);
                                         } catch (Exception e) {
-                                            System.err.println("无法获取url："+request.uri()+ " "+host);
+                                            System.err.println("无法获取url：" + request.uri() + " " + host);
                                         }
 
 
@@ -127,9 +127,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                         clientEndtoRemoteHandler.channelRead(ctx, request);
                                         contents.forEach(content -> {
                                             try {
-                                                if (!content.equals(LastHttpContent.EMPTY_LAST_CONTENT)) {
-                                                    clientEndtoRemoteHandler.channelRead(ctx, content);
-                                                }
+                                                clientEndtoRemoteHandler.channelRead(ctx, content);
                                             } catch (Exception e) {
                                                 System.err.println("????????????");
                                                 e.printStackTrace();
