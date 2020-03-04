@@ -38,9 +38,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 
     private String host;
     private int port;
-
     private HttpRequest request;
-    private ArrayList<HttpContent> contents=new ArrayList<>();
+    private ArrayList<HttpContent> contents = new ArrayList<>();
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
@@ -51,7 +50,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
     public void channelRead0(final ChannelHandlerContext ctx, HttpObject msg) {
         if (msg instanceof HttpRequest) {
             final HttpRequest req = (HttpRequest) msg;
-            request=req;
+            request = req;
             //todo log
             System.out.println(req.method() + " " + req.uri());
             //获取Host和port
@@ -60,11 +59,13 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             host = hostPortArray[0];
             String portStr = hostPortArray.length == 2 ? hostPortArray[1] : "80";
             port = Integer.parseInt(portStr);
-        }else {
+        } else {
+            //SimpleChannelInboundHandler会将HttpContent中的bytebuf Release，但是这个还会转给relayHandler，所以需要在这里预先retain
+            ((HttpContent) msg).content().retain();
             contents.add((HttpContent) msg);
-            if(msg instanceof LastHttpContent){
+            if (msg instanceof LastHttpContent) {
                 Promise<Channel> promise = ctx.executor().newPromise();
-                if(request.method().equals(HttpMethod.CONNECT)){
+                if (request.method().equals(HttpMethod.CONNECT)) {
                     promise.addListener(
                             new FutureListener<Channel>() {
                                 @Override
@@ -90,7 +91,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                     }
                                 }
                             });
-                }else {
+                } else {
                     promise.addListener(
                             new FutureListener<Channel>() {
                                 @Override
@@ -99,28 +100,38 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                     if (future.isSuccess()) {
                                         ctx.pipeline().remove(HttpProxyConnectHandler.this);
                                         ctx.pipeline().remove(HttpResponseEncoder.class);
+                                        ctx.pipeline().addFirst(new LoggingHandler(LogLevel.INFO));
                                         outboundChannel.pipeline().addLast(new HttpRequestEncoder());
+                                        outboundChannel.pipeline().addFirst(new LoggingHandler(LogLevel.INFO));
                                         outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
                                         RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel);
                                         ctx.pipeline().addLast(clientEndtoRemoteHandler);
 
-                                        String proxyConnection=request.headers().get("Proxy-Connection");
-                                        if(Objects.nonNull(proxyConnection)){
-                                            request.headers().set("Connection",proxyConnection);
+                                        String proxyConnection = request.headers().get("Proxy-Connection");
+                                        if (Objects.nonNull(proxyConnection)) {
+                                            request.headers().set("Connection", proxyConnection);
                                             request.headers().remove("Proxy-Connection");
                                         }
-                                        String url=request.uri().split(host)[1];
-                                        if(url.startsWith(":"+port)){
-                                            url=url.replace(":"+port,"");
+                                        try {
+                                            String url = request.uri().split(host)[1];
+                                            if (url.startsWith(":" + port)) {
+                                                url = url.replace(":" + port, "");
+                                            }
+                                            request.setUri(url);
+                                        } catch (Exception e) {
+                                            System.err.println("无法获取url："+request.uri()+ " "+host);
                                         }
-                                        request.setUri(url);
+
 
                                         //出于未知的原因，不知道为什么fireChannelread不行
-                                        clientEndtoRemoteHandler.channelRead(ctx,request);
-                                        contents.forEach(content->{
+                                        clientEndtoRemoteHandler.channelRead(ctx, request);
+                                        contents.forEach(content -> {
                                             try {
-                                                clientEndtoRemoteHandler.channelRead(ctx,content);
+                                                if (!content.equals(LastHttpContent.EMPTY_LAST_CONTENT)) {
+                                                    clientEndtoRemoteHandler.channelRead(ctx, content);
+                                                }
                                             } catch (Exception e) {
+                                                System.err.println("????????????");
                                                 e.printStackTrace();
                                             }
                                         });
