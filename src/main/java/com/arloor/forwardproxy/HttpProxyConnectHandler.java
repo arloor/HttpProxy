@@ -68,7 +68,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             ((HttpContent) msg).content().retain();
             contents.add((HttpContent) msg);
             if (msg instanceof LastHttpContent) {
-                if(!request.uri().startsWith("http")){//如果url不是以http开头，认为是直接访问
+                if(request.uri().startsWith("/")){//如果url不是以http开头，认为是直接访问
                     String hostName ="";
                     SocketAddress socketAddress = ctx.channel().remoteAddress();
                     if(socketAddress instanceof InetSocketAddress){
