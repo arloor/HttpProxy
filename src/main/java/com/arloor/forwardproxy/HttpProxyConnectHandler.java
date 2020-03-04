@@ -16,15 +16,19 @@
 package com.arloor.forwardproxy;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.FutureListener;
 import io.netty.util.concurrent.Promise;
 
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -64,6 +68,22 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             ((HttpContent) msg).content().retain();
             contents.add((HttpContent) msg);
             if (msg instanceof LastHttpContent) {
+                if(!request.uri().startsWith("http")){//如果url不是以http开头，认为是直接访问
+                    String hostName ="";
+                    SocketAddress socketAddress = ctx.channel().remoteAddress();
+                    if(socketAddress instanceof InetSocketAddress){
+                        hostName = ((InetSocketAddress) socketAddress).getHostName();
+                    }
+
+                    final FullHttpResponse response = new DefaultFullHttpResponse(
+                            HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(hostName.getBytes()));
+                    response.headers().set("Server", "??????");
+                    ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                    // 这里需要将content全部release
+                    contents.forEach(ReferenceCountUtil::release);
+                    return;
+                }
+
                 Promise<Channel> promise = ctx.executor().newPromise();
                 if (request.method().equals(HttpMethod.CONNECT)) {
                     promise.addListener(
