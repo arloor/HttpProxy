@@ -1,0 +1,14 @@
+[Unit]
+Description=forwardproxy-Http代理
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+WorkingDirectory=/opt/forward
+ExecStart=/usr/bin/java -Dport=8080  -jar forwardproxy-1.0-jar-with-dependencies.jar
+LimitNOFILE=100000
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
