@@ -32,13 +32,15 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Objects;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
     private static final Logger log= LoggerFactory.getLogger(HttpProxyConnectHandler.class);
+    private static final String auth=System.getProperty("auth");
+    private static final String basicAuth=(auth==null?null:"Basic "+ Base64.getEncoder().encodeToString(auth.getBytes()));
 
     private final Bootstrap b = new Bootstrap();
 
@@ -69,8 +71,10 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             //SimpleChannelInboundHandler会将HttpContent中的bytebuf Release，但是这个还会转给relayHandler，所以需要在这里预先retain
             ((HttpContent) msg).content().retain();
             contents.add((HttpContent) msg);
+            //一个完整的Http请求被收到，开始处理该请求
             if (msg instanceof LastHttpContent) {
-                if(request.uri().startsWith("/")){//如果url不是以http开头，认为是直接访问
+                // 1. 如果url不是以http开头，则认为是直接请求，而不是代理请求
+                if(request.uri().startsWith("/")){
                     String hostName ="";
                     SocketAddress socketAddress = ctx.channel().remoteAddress();
                     if(socketAddress instanceof InetSocketAddress){
@@ -86,6 +90,24 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                     return;
                 }
 
+                //2. 检验auth
+                if(basicAuth!=null){
+                    String requestBasicAuth = request.headers().get("Proxy-Authorization");
+//                    request.headers().forEach(System.out::println);
+                    if(requestBasicAuth==null||!requestBasicAuth.equals(basicAuth)){
+                        String clientHostname=((InetSocketAddress)ctx.channel().remoteAddress()).getHostName();
+                        log.warn(clientHostname+" "+request.method() + " " + request.uri() +"  {"+host+"} {"+requestBasicAuth+"}");
+                        // 这里需要将content全部release
+                        contents.forEach(ReferenceCountUtil::release);
+                        ctx.channel().writeAndFlush(
+                                new DefaultHttpResponse(request.protocolVersion(), PROXY_AUTHENTICATION_REQUIRED)
+                        );
+                        SocksServerUtils.closeOnFlush(ctx.channel());
+                        return;
+                    }
+                }
+
+                //3. 这里进入代理请求处理，分为两种：CONNECT方法和其他HTTP方法
                 Promise<Channel> promise = ctx.executor().newPromise();
                 if (request.method().equals(HttpMethod.CONNECT)) {
                     promise.addListener(
@@ -130,6 +152,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                         RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel);
                                         ctx.pipeline().addLast(clientEndtoRemoteHandler);
 
+                                        request.headers().remove("Proxy-Authorization");
                                         String proxyConnection = request.headers().get("Proxy-Connection");
                                         if (Objects.nonNull(proxyConnection)) {
                                             request.headers().set("Connection", proxyConnection);
@@ -167,6 +190,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                 }
 
 
+                // 4.连接目标网站
                 final Channel inboundChannel = ctx.channel();
                 b.group(inboundChannel.eventLoop())
                         .channel(NioSocketChannel.class)
