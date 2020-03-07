@@ -117,7 +117,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                     final Channel outboundChannel = future.getNow();
                                     if (future.isSuccess()) {
                                         ChannelFuture responseFuture = ctx.channel().writeAndFlush(
-                                                new DefaultHttpResponse(request.protocolVersion(), OK));
+                                                new DefaultHttpResponse(request.protocolVersion(), new HttpResponseStatus(200,"Connection Established")));
 
                                         responseFuture.addListener(new ChannelFutureListener() {
                                             @Override
