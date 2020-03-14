@@ -10,3 +10,7 @@ wget -O /opt/forward/forwardproxy-1.0-jar-with-dependencies.jar http://cdn.arloo
 wget -O /lib/systemd/system/forward.service http://cdn.arloor.com/forward/forward.service
 systemctl start forward
 ```
+
+## 电报讨论组
+
+电报讨论组 https://t.me/popstary
