@@ -96,12 +96,12 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 //                    request.headers().forEach(System.out::println);
                     if(requestBasicAuth==null||!requestBasicAuth.equals(basicAuth)){
                         String clientHostname=((InetSocketAddress)ctx.channel().remoteAddress()).getHostName();
-                        log.warn(clientHostname+" "+request.method() + " " + request.uri() +"  {"+host+"} {"+requestBasicAuth+"}");
+                        log.warn(clientHostname+" "+request.method() + " " + request.uri() +"  {"+host+"} wrong_auth:{"+requestBasicAuth+"}");
                         // 这里需要将content全部release
                         contents.forEach(ReferenceCountUtil::release);
-                        ctx.channel().writeAndFlush(
-                                new DefaultHttpResponse(request.protocolVersion(), PROXY_AUTHENTICATION_REQUIRED)
-                        );
+                        DefaultHttpResponse responseAuthRequired=new DefaultHttpResponse(request.protocolVersion(), PROXY_AUTHENTICATION_REQUIRED);
+                        responseAuthRequired.headers().add("Proxy-Authenticate","Basic realm=\"netty forwardproxy\"");
+                        ctx.channel().writeAndFlush(responseAuthRequired);
                         SocksServerUtils.closeOnFlush(ctx.channel());
                         return;
                     }
