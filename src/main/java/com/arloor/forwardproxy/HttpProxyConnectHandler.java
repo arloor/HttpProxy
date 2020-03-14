@@ -78,12 +78,13 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                     String hostName ="";
                     SocketAddress socketAddress = ctx.channel().remoteAddress();
                     if(socketAddress instanceof InetSocketAddress){
-                        hostName = ((InetSocketAddress) socketAddress).getHostName();
+                        hostName = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
                     }
 
                     final FullHttpResponse response = new DefaultFullHttpResponse(
                             HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(hostName.getBytes()));
-                    response.headers().set("Server", "??????");
+                    response.headers().set("Server", "netty");
+                    response.headers().set("Content-Length",hostName.getBytes().length);
                     ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
                     // 这里需要将content全部release
                     contents.forEach(ReferenceCountUtil::release);
