@@ -15,6 +15,8 @@
  */
 package com.arloor.forwardproxy;
 
+import com.arloor.forwardproxy.ssl.SslContextFactory;
+import com.arloor.forwardproxy.vo.Config;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
@@ -22,6 +24,13 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * An HTTP server that sends back the content of the received HTTP request
@@ -29,38 +38,78 @@ import io.netty.handler.ssl.SslContext;
  */
 public final class HttpProxyServer {
 
-    static final boolean SSL = System.getProperty("ssl") != null;
-    static final int PORT = Integer.parseInt(System.getProperty("port", SSL? "443" : "8080"));
+    private static final Logger log = LoggerFactory.getLogger(HttpProxyServer.class);
 
 
     public static void main(String[] args) throws Exception {
-        // Configure SSL.
-        final SslContext sslCtx;
-        if (SSL) {
-            sslCtx= SslContextFactory.getSSLContext();
+        String propertiesPath = null;
+        if (args.length == 2 && args[0].equals("-c")) {
+            propertiesPath = args[1];
+        }
+        Properties properties = new Properties();
+        if (propertiesPath != null) {
+            properties.load(new FileReader(new File(propertiesPath)));
         } else {
-            sslCtx = null;
+            properties.load(HttpProxyServer.class.getClassLoader().getResourceAsStream("proxy.properties"));
         }
 
-        // Configure the server.
+        Config config = Config.parse(properties);
+        Config.Ssl ssl = config.ssl();
+        Config.Http http = config.http();
+
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
+
+
         try {
-            ServerBootstrap b = new ServerBootstrap();
-            b.option(ChannelOption.SO_BACKLOG, 1024);
-            b.group(bossGroup, workerGroup)
-             .channel(NioServerSocketChannel.class)
-             .childHandler(new HttpProxyServerInitializer(sslCtx));
-
-            Channel ch = b.bind(PORT).sync().channel();
-
-            System.err.println("Set your web browser proxy " +
-                    (SSL? "https" : "http") + "://127.0.0.1:" + PORT + '/');
-
-            ch.closeFuture().sync();
+            if(ssl!=null &&http!=null){
+                new Thread(()->{
+                   startSSl(bossGroup,workerGroup,ssl);
+                }).start();
+                startHttp(bossGroup,workerGroup,http);
+            }else if(ssl!=null){
+                startSSl(bossGroup,workerGroup,ssl);
+            }else if(http!=null){
+                startHttp(bossGroup,workerGroup,http);
+            }
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
+        }
+    }
+
+
+    private static void startHttp(EventLoopGroup bossGroup,EventLoopGroup workerGroup,Config.Http http){
+        try {
+            // Configure the server.
+            ServerBootstrap b = new ServerBootstrap();
+            b.option(ChannelOption.SO_BACKLOG, 1024);
+            b.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new HttpProxyServerInitializer(http));
+
+            Channel httpChannel = b.bind(http.getPort()).sync().channel();
+            log.info("http proxy@ port=" + http.getPort() + " auth=" + http.getAuth() + " reverseBit=" + http.getReverseBit());
+            httpChannel.closeFuture().sync();
+        } catch (Exception e) {
+            log.error("??", e);
+        }
+    }
+
+    private static void startSSl(EventLoopGroup bossGroup,EventLoopGroup workerGroup,Config.Ssl ssl){
+        try {
+            // Configure the server.
+            ServerBootstrap b = new ServerBootstrap();
+            b.option(ChannelOption.SO_BACKLOG, 1024);
+            b.group(bossGroup, workerGroup)
+                    .channel(NioServerSocketChannel.class)
+                    .childHandler(new HttpsProxyServerInitializer(ssl));
+
+            Channel sslChannel = b.bind(ssl.getPort()).sync().channel();
+            log.info("https proxy@ port=" + ssl.getPort() + " auth=" + ssl.getAuth());
+            sslChannel.closeFuture().sync();
+        } catch (Exception e) {
+            log.error("??", e);
         }
     }
 }

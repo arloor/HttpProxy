@@ -1,4 +1,4 @@
-package com.arloor.forwardproxy;
+package com.arloor.forwardproxy.ssl;
 
 import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
@@ -31,15 +31,11 @@ public class SslContextFactory {
         );
     }
 
-    public static SslContext getSSLContext() throws IOException, GeneralSecurityException {
+    public static SslContext getSSLContext(String rootCrt, String crt, String key) throws IOException, GeneralSecurityException {
         try {
-            final String privateKeyFile = "3_proxy.moontell.cn.key";
-            final String certificateFile = "2_proxy.moontell.cn.crt";
-            final String rootCAFile = "1_root_bundle.crt";
-
-            final PrivateKey privateKey = loadPrivateKey(privateKeyFile);
-            final X509Certificate certificate = loadX509Cert(certificateFile);
-            final X509Certificate rootCA = loadX509Cert(rootCAFile);
+            final PrivateKey privateKey = loadPrivateKey(key);
+            final X509Certificate certificate = loadX509Cert(crt);
+            final X509Certificate rootCA = loadX509Cert(rootCrt);
             //jdk8删除gcm加密
             List<String> ciphers = Arrays.asList("ECDHE-RSA-AES128-SHA", "ECDHE-RSA-AES256-SHA", "AES128-SHA", "AES256-SHA", "DES-CBC3-SHA");
 

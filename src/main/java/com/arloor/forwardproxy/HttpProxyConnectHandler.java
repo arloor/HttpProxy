@@ -39,8 +39,11 @@ import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
     private static final Logger log= LoggerFactory.getLogger(HttpProxyConnectHandler.class);
-    private static final String auth=System.getProperty("auth");
-    private static final String basicAuth=(auth==null?null:"Basic "+ Base64.getEncoder().encodeToString(auth.getBytes()));
+    private final String basicAuth;
+
+    public HttpProxyConnectHandler(String basicAuth) {
+        this.basicAuth=basicAuth;
+    }
 
     private final Bootstrap b = new Bootstrap();
 
