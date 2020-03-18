@@ -156,23 +156,6 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                         RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel);
                                         ctx.pipeline().addLast(clientEndtoRemoteHandler);
 
-                                        request.headers().remove("Proxy-Authorization");
-                                        String proxyConnection = request.headers().get("Proxy-Connection");
-                                        if (Objects.nonNull(proxyConnection)) {
-                                            request.headers().set("Connection", proxyConnection);
-                                            request.headers().remove("Proxy-Connection");
-                                        }
-                                        try {
-                                            String url = request.uri().split(host)[1];
-                                            if (url.startsWith(":" + port)) {
-                                                url = url.replace(":" + port, "");
-                                            }
-                                            request.setUri(url);
-                                        } catch (Exception e) {
-                                            System.err.println("无法获取url：" + request.uri() + " " + host);
-                                        }
-
-
                                         //出于未知的原因，不知道为什么fireChannelread不行
                                         clientEndtoRemoteHandler.channelRead(ctx, request);
                                         contents.forEach(content -> {
