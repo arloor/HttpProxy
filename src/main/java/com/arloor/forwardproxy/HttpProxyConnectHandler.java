@@ -76,6 +76,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             contents.add((HttpContent) msg);
             //一个完整的Http请求被收到，开始处理该请求
             if (msg instanceof LastHttpContent) {
+                ctx.channel().config().setAutoRead(false);
                 // 1. 如果url不是以http开头，则认为是直接请求，而不是代理请求
                 if(request.uri().startsWith("/")){
                     String hostName ="";
@@ -120,20 +121,27 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                 public void operationComplete(final Future<Channel> future) throws Exception {
                                     final Channel outboundChannel = future.getNow();
                                     if (future.isSuccess()) {
-                                        ChannelFuture responseFuture = ctx.channel().writeAndFlush(
-                                                new DefaultHttpResponse(request.protocolVersion(), new HttpResponseStatus(200,"Connection Established")));
-
-                                        responseFuture.addListener(new ChannelFutureListener() {
-                                            @Override
-                                            public void operationComplete(ChannelFuture channelFuture) {
-                                                ctx.pipeline().remove(HttpRequestDecoder.class);
-                                                ctx.pipeline().remove(HttpResponseEncoder.class);
-                                                ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
-                                                ctx.pipeline().remove(HttpProxyConnectHandler.class);
-                                                outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
-                                                ctx.pipeline().addLast(new RelayHandler(outboundChannel));
-                                            }
-                                        });
+                                        ctx.pipeline().remove(HttpRequestDecoder.class);
+                                        ctx.pipeline().remove(HttpResponseEncoder.class);
+                                        ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
+                                        ctx.pipeline().remove(HttpProxyConnectHandler.class);
+                                        outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
+                                        ctx.pipeline().addLast(new RelayHandler(outboundChannel));
+                                        ctx.channel().config().setAutoRead(true);
+//                                        ChannelFuture responseFuture = ctx.channel().writeAndFlush(
+//                                                new DefaultHttpResponse(request.protocolVersion(), new HttpResponseStatus(200,"Connection Established")));
+//
+//                                        responseFuture.addListener(new ChannelFutureListener() {
+//                                            @Override
+//                                            public void operationComplete(ChannelFuture channelFuture) {
+//                                                ctx.pipeline().remove(HttpRequestDecoder.class);
+//                                                ctx.pipeline().remove(HttpResponseEncoder.class);
+//                                                ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
+//                                                ctx.pipeline().remove(HttpProxyConnectHandler.class);
+//                                                outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
+//                                                ctx.pipeline().addLast(new RelayHandler(outboundChannel));
+//                                            }
+//                                        });
                                     } else {
                                         ctx.channel().writeAndFlush(
                                                 new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR)
