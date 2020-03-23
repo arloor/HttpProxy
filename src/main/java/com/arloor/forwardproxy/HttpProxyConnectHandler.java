@@ -38,17 +38,18 @@ import java.util.Objects;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
-    private static final Logger log= LoggerFactory.getLogger(HttpProxyConnectHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(HttpProxyConnectHandler.class);
     private final String basicAuth;
 
     public HttpProxyConnectHandler(String basicAuth) {
-        this.basicAuth=basicAuth;
+        this.basicAuth = basicAuth;
     }
 
     private final Bootstrap b = new Bootstrap();
 
     private String host;
     private int port;
+    private boolean replyEstablishInfo = true;
     private HttpRequest request;
     private ArrayList<HttpContent> contents = new ArrayList<>();
 
@@ -62,14 +63,22 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
         if (msg instanceof HttpRequest) {
             final HttpRequest req = (HttpRequest) msg;
             request = req;
-            String clientHostname=((InetSocketAddress)ctx.channel().remoteAddress()).getHostName();
+            String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostName();
+            // 我的一个单独的客户端，需要做调整
+            String userAgent = req.headers().get("User-Agent");
+            if ("some-client".equals(userAgent)) {
+                replyEstablishInfo = false;
+            }
             //获取Host和port
             String hostAndPortStr = req.headers().get("Host");
+            if (hostAndPortStr == null) {
+                SocksServerUtils.closeOnFlush(ctx.channel());
+            }
             String[] hostPortArray = hostAndPortStr.split(":");
             host = hostPortArray[0];
             String portStr = hostPortArray.length == 2 ? hostPortArray[1] : "80";
             port = Integer.parseInt(portStr);
-            log.info(clientHostname+" "+req.method() + " " + req.uri() +"  {"+host+"}");
+            log.info(clientHostname + " " + req.method() + " " + req.uri() + "  {" + host + "}");
         } else {
             //SimpleChannelInboundHandler会将HttpContent中的bytebuf Release，但是这个还会转给relayHandler，所以需要在这里预先retain
             ((HttpContent) msg).content().retain();
@@ -78,17 +87,17 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             if (msg instanceof LastHttpContent) {
                 ctx.channel().config().setAutoRead(false);
                 // 1. 如果url不是以http开头，则认为是直接请求，而不是代理请求
-                if(request.uri().startsWith("/")){
-                    String hostName ="";
+                if (request.uri().startsWith("/")) {
+                    String hostName = "";
                     SocketAddress socketAddress = ctx.channel().remoteAddress();
-                    if(socketAddress instanceof InetSocketAddress){
+                    if (socketAddress instanceof InetSocketAddress) {
                         hostName = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
                     }
 
                     final FullHttpResponse response = new DefaultFullHttpResponse(
                             HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(hostName.getBytes()));
                     response.headers().set("Server", "netty");
-                    response.headers().set("Content-Length",hostName.getBytes().length);
+                    response.headers().set("Content-Length", hostName.getBytes().length);
                     ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
                     // 这里需要将content全部release
                     contents.forEach(ReferenceCountUtil::release);
@@ -96,16 +105,16 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                 }
 
                 //2. 检验auth
-                if(basicAuth!=null){
+                if (basicAuth != null && replyEstablishInfo) {
                     String requestBasicAuth = request.headers().get("Proxy-Authorization");
 //                    request.headers().forEach(System.out::println);
-                    if(requestBasicAuth==null||!requestBasicAuth.equals(basicAuth)){
-                        String clientHostname=((InetSocketAddress)ctx.channel().remoteAddress()).getHostName();
-                        log.warn(clientHostname+" "+request.method() + " " + request.uri() +"  {"+host+"} wrong_auth:{"+requestBasicAuth+"}");
+                    if (requestBasicAuth == null || !requestBasicAuth.equals(basicAuth)) {
+                        String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostName();
+                        log.warn(clientHostname + " " + request.method() + " " + request.uri() + "  {" + host + "} wrong_auth:{" + requestBasicAuth + "}");
                         // 这里需要将content全部release
                         contents.forEach(ReferenceCountUtil::release);
-                        DefaultHttpResponse responseAuthRequired=new DefaultHttpResponse(request.protocolVersion(), PROXY_AUTHENTICATION_REQUIRED);
-                        responseAuthRequired.headers().add("Proxy-Authenticate","Basic realm=\"netty forwardproxy\"");
+                        DefaultHttpResponse responseAuthRequired = new DefaultHttpResponse(request.protocolVersion(), PROXY_AUTHENTICATION_REQUIRED);
+                        responseAuthRequired.headers().add("Proxy-Authenticate", "Basic realm=\"netty forwardproxy\"");
                         ctx.channel().writeAndFlush(responseAuthRequired);
                         SocksServerUtils.closeOnFlush(ctx.channel());
                         return;
@@ -121,31 +130,37 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                 public void operationComplete(final Future<Channel> future) throws Exception {
                                     final Channel outboundChannel = future.getNow();
                                     if (future.isSuccess()) {
-                                        ctx.pipeline().remove(HttpRequestDecoder.class);
-                                        ctx.pipeline().remove(HttpResponseEncoder.class);
-                                        ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
-                                        ctx.pipeline().remove(HttpProxyConnectHandler.class);
-                                        outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
-                                        ctx.pipeline().addLast(new RelayHandler(outboundChannel));
-                                        ctx.channel().config().setAutoRead(true);
-//                                        ChannelFuture responseFuture = ctx.channel().writeAndFlush(
-//                                                new DefaultHttpResponse(request.protocolVersion(), new HttpResponseStatus(200,"Connection Established")));
-//
-//                                        responseFuture.addListener(new ChannelFutureListener() {
-//                                            @Override
-//                                            public void operationComplete(ChannelFuture channelFuture) {
-//                                                ctx.pipeline().remove(HttpRequestDecoder.class);
-//                                                ctx.pipeline().remove(HttpResponseEncoder.class);
-//                                                ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
-//                                                ctx.pipeline().remove(HttpProxyConnectHandler.class);
-//                                                outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
-//                                                ctx.pipeline().addLast(new RelayHandler(outboundChannel));
-//                                            }
-//                                        });
+                                        System.out.println();
+                                        if (!replyEstablishInfo) {
+                                            ctx.pipeline().remove(HttpRequestDecoder.class);
+                                            ctx.pipeline().remove(HttpResponseEncoder.class);
+                                            ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
+                                            ctx.pipeline().remove(HttpProxyConnectHandler.class);
+                                            outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
+                                            ctx.pipeline().addLast(new RelayHandler(outboundChannel));
+                                            ctx.channel().config().setAutoRead(true);
+                                        } else {
+                                            ChannelFuture responseFuture = ctx.channel().writeAndFlush(
+                                                    new DefaultHttpResponse(request.protocolVersion(), new HttpResponseStatus(200, "Connection Established")));
+                                            responseFuture.addListener(new ChannelFutureListener() {
+                                                @Override
+                                                public void operationComplete(ChannelFuture channelFuture) {
+                                                    ctx.pipeline().remove(HttpRequestDecoder.class);
+                                                    ctx.pipeline().remove(HttpResponseEncoder.class);
+                                                    ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
+                                                    ctx.pipeline().remove(HttpProxyConnectHandler.class);
+                                                    outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
+                                                    ctx.pipeline().addLast(new RelayHandler(outboundChannel));
+                                                    ctx.channel().config().setAutoRead(true);
+                                                }
+                                            });
+                                        }
                                     } else {
-                                        ctx.channel().writeAndFlush(
-                                                new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR)
-                                        );
+                                        if (replyEstablishInfo) {
+                                            ctx.channel().writeAndFlush(
+                                                    new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR)
+                                            );
+                                        }
                                         SocksServerUtils.closeOnFlush(ctx.channel());
                                     }
                                 }
@@ -202,9 +217,11 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         } else {
                             // Close the connection if the connection attempt has failed.
                             //返回500，并关闭连接
-                            ctx.channel().writeAndFlush(
-                                    new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR)
-                            );
+                            if (replyEstablishInfo) {
+                                ctx.channel().writeAndFlush(
+                                        new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR)
+                                );
+                            }
                             SocksServerUtils.closeOnFlush(ctx.channel());
                         }
                     }
