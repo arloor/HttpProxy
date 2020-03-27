@@ -38,7 +38,7 @@ public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChanne
 
     public HttpsProxyServerInitializer(Config.Ssl ssl) throws IOException, GeneralSecurityException {
         this.ssl = ssl;
-        this.sslCtx=SslContextFactory.getSSLContext(ssl.getRootCrt(),ssl.getCrt(),ssl.getKey());
+        this.sslCtx=SslContextFactory.getSSLContext(ssl.getFullchain(),ssl.getPrivkey());
     }
 
     @Override

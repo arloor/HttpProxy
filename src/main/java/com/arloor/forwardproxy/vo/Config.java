@@ -26,10 +26,10 @@ public class Config {
             Integer port = Integer.parseInt(httpsPortStr);
             String auth = properties.getProperty("https.auth");
             auth = auth==null?auth:"Basic " + Base64.getEncoder().encodeToString(auth.getBytes());
-            String rootCrt = properties.getProperty("https.rootCrt");
-            String crt = properties.getProperty("https.crt");
-            String key = properties.getProperty("https.key");
-            Ssl ssl = new Ssl(port, auth, rootCrt, crt, key);
+            String fullchain = properties.getProperty("https.fullchain.pem");
+            String cert = properties.getProperty("https.cert.pem");
+            String privkey = properties.getProperty("https.privkey.pem");
+            Ssl ssl = new Ssl(port, auth, fullchain,cert, privkey);
             config.ssl = ssl;
         }
 
@@ -88,16 +88,16 @@ public class Config {
     public static class Ssl {
         private Integer port;
         private String auth;
-        private String rootCrt;
-        private String crt;
-        private String key;
+        private String fullchain;
+        private String cert;
+        private String privkey;
 
-        public Ssl(Integer port, String auth, String rootCrt, String crt, String key) {
+        public Ssl(Integer port, String auth, String fullchain, String cert, String privkey) {
             this.port = port;
             this.auth = auth;
-            this.rootCrt = rootCrt;
-            this.crt = crt;
-            this.key = key;
+            this.fullchain = fullchain;
+            this.cert = cert;
+            this.privkey = privkey;
         }
 
         public Integer getPort() {
@@ -116,28 +116,28 @@ public class Config {
             this.auth = auth;
         }
 
-        public String getRootCrt() {
-            return rootCrt;
+        public String getFullchain() {
+            return fullchain;
         }
 
-        public void setRootCrt(String rootCrt) {
-            this.rootCrt = rootCrt;
+        public void setFullchain(String fullchain) {
+            this.fullchain = fullchain;
         }
 
-        public String getCrt() {
-            return crt;
+        public String getCert() {
+            return cert;
         }
 
-        public void setCrt(String crt) {
-            this.crt = crt;
+        public void setCert(String cert) {
+            this.cert = cert;
         }
 
-        public String getKey() {
-            return key;
+        public String getPrivkey() {
+            return privkey;
         }
 
-        public void setKey(String key) {
-            this.key = key;
+        public void setPrivkey(String privkey) {
+            this.privkey = privkey;
         }
     }
 }

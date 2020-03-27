@@ -63,7 +63,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
         if (msg instanceof HttpRequest) {
             final HttpRequest req = (HttpRequest) msg;
             request = req;
-            String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostName();
+            String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostString();
             // 我的一个单独的客户端，需要做调整
             String userAgent = req.headers().get("User-Agent");
             if ("some-client".equals(userAgent)) {
