@@ -130,7 +130,6 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                 public void operationComplete(final Future<Channel> future) throws Exception {
                                     final Channel outboundChannel = future.getNow();
                                     if (future.isSuccess()) {
-                                        System.out.println();
                                         if (!replyEstablishInfo) {
                                             ctx.pipeline().remove(HttpRequestDecoder.class);
                                             ctx.pipeline().remove(HttpResponseEncoder.class);
