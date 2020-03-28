@@ -15,6 +15,7 @@
  */
 package com.arloor.forwardproxy;
 
+import com.arloor.forwardproxy.vo.Config;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
@@ -32,8 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Objects;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
@@ -113,8 +112,13 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         log.warn(clientHostname + " " + request.method() + " " + request.uri() + "  {" + host + "} wrong_auth:{" + requestBasicAuth + "}");
                         // 这里需要将content全部release
                         contents.forEach(ReferenceCountUtil::release);
-                        DefaultHttpResponse responseAuthRequired = new DefaultHttpResponse(request.protocolVersion(), PROXY_AUTHENTICATION_REQUIRED);
-                        responseAuthRequired.headers().add("Proxy-Authenticate", "Basic realm=\"netty forwardproxy\"");
+                        DefaultHttpResponse responseAuthRequired;
+                        if (Config.ask4Authcate) {
+                            responseAuthRequired = new DefaultHttpResponse(request.protocolVersion(), PROXY_AUTHENTICATION_REQUIRED);
+                            responseAuthRequired.headers().add("Proxy-Authenticate", "Basic realm=\"netty forwardproxy\"");
+                        } else {
+                            responseAuthRequired = new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR);
+                        }
                         ctx.channel().writeAndFlush(responseAuthRequired);
                         SocksServerUtils.closeOnFlush(ctx.channel());
                         return;

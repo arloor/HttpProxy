@@ -6,6 +6,7 @@ import java.util.Properties;
 public class Config {
     private static final String TRUE = "true";
 
+    public static boolean ask4Authcate=false;
     private Ssl ssl;
     private Http http;
 
@@ -20,6 +21,8 @@ public class Config {
     public static Config parse(Properties properties) {
 
         Config config = new Config();
+        ask4Authcate =TRUE.equals(properties.getProperty("ask4Authcate"));
+
         String httpsEnable = properties.getProperty("https.enable");
         if (TRUE.equals(httpsEnable)) {
             String httpsPortStr = properties.getProperty("https.port");
