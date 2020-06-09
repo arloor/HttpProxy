@@ -113,7 +113,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         // 这里需要将content全部release
                         contents.forEach(ReferenceCountUtil::release);
                         DefaultHttpResponse responseAuthRequired;
-                        if (Config.ask4Authcate) {
+                        if (Config.ask4Authcate && !request.method().equals(HttpMethod.OPTIONS)) {
                             responseAuthRequired = new DefaultHttpResponse(request.protocolVersion(), PROXY_AUTHENTICATION_REQUIRED);
                             responseAuthRequired.headers().add("Proxy-Authenticate", "Basic realm=\"netty forwardproxy\"");
                         } else {
