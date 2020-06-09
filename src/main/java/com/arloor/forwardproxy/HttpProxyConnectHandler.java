@@ -85,7 +85,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             //一个完整的Http请求被收到，开始处理该请求
             if (msg instanceof LastHttpContent) {
                 ctx.channel().config().setAutoRead(false);
-                // 1. 如果url不是以http开头，则认为是直接请求，而不是代理请求
+                // 1. 如果url以 / 开头，则认为是直接请求，而不是代理请求
                 if (request.uri().startsWith("/")) {
                     String hostName = "";
                     SocketAddress socketAddress = ctx.channel().remoteAddress();
@@ -113,7 +113,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         // 这里需要将content全部release
                         contents.forEach(ReferenceCountUtil::release);
                         DefaultHttpResponse responseAuthRequired;
-                        if (Config.ask4Authcate && !request.method().equals(HttpMethod.OPTIONS)) {
+                        if (Config.ask4Authcate && !request.method().equals(HttpMethod.OPTIONS) && !request.method().equals(HttpMethod.HEAD)) {
                             responseAuthRequired = new DefaultHttpResponse(request.protocolVersion(), PROXY_AUTHENTICATION_REQUIRED);
                             responseAuthRequired.headers().add("Proxy-Authenticate", "Basic realm=\"netty forwardproxy\"");
                         } else {
