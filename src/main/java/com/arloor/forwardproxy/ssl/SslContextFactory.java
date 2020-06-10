@@ -41,7 +41,7 @@ public class SslContextFactory {
                     .sslProvider(SslProvider.OPENSSL)
                     .clientAuth(ClientAuth.NONE)
                     .trustManager(new File(fullchainFile))
-                    .ciphers(ciphers)
+//                    .ciphers(ciphers)
                     .build();
 
         } catch (IOException e) {
@@ -57,13 +57,13 @@ public class SslContextFactory {
             final X509Certificate certificate = loadX509Cert(crt);
             final X509Certificate rootCA = loadX509Cert(rootCrt);
             //jdk8删除gcm加密
-            List<String> ciphers = Arrays.asList("ECDHE-RSA-AES128-SHA", "ECDHE-RSA-AES256-SHA", "AES128-SHA", "AES256-SHA", "DES-CBC3-SHA");
+            //List<String> ciphers = Arrays.asList("ECDHE-RSA-AES128-SHA", "ECDHE-RSA-AES256-SHA", "AES128-SHA", "AES256-SHA", "DES-CBC3-SHA");
 
             return SslContextBuilder.forServer(privateKey,certificate,rootCA)
                     .sslProvider(SslProvider.OPENSSL)
                     .clientAuth(ClientAuth.NONE)
                     .trustManager(rootCA)
-                    .ciphers(ciphers)
+//                    .ciphers(ciphers)
                     .build();
 
         } catch (IOException | GeneralSecurityException e) {
