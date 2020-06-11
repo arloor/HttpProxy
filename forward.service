@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 WorkingDirectory=/opt/forward
-ExecStart=/usr/bin/java -Dport=8080  -jar /opt/forward/forwardproxy-1.0-jar-with-dependencies.jar
+ExecStart=/usr/bin/java -jar forwardproxy-1.0-jar-with-dependencies.jar -c /opt/forward/proxy.properties
 LimitNOFILE=100000
 Restart=always
 RestartSec=30
