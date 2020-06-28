@@ -188,8 +188,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                             try {
                                                 clientEndtoRemoteHandler.channelRead(ctx, content);
                                             } catch (Exception e) {
-                                                System.err.println("????????????");
-                                                e.printStackTrace();
+                                                log.error("处理非CONNECT方法的代理请求失败！",e);
                                             }
                                         });
                                     } else {
@@ -235,7 +234,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
+        log.info("netty Exception "+ cause.getMessage());
         ctx.close();
     }
 }
