@@ -1,5 +1,10 @@
 package com.arloor.forwardproxy.vo;
 
+import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+
 import java.util.Base64;
 import java.util.Properties;
 
@@ -7,8 +12,24 @@ public class Config {
     private static final String TRUE = "true";
 
     public static boolean ask4Authcate=false;
+
+    // linux使用epoll，而非java原生的selector
+    public static final boolean isLinux = getOSMatches("Linux") || getOSMatches("LINUX");
+    public static final Class clazzServerSocketChannel = (isLinux? EpollServerSocketChannel.class: NioServerSocketChannel.class);
+    public static final Class clazzSocketChannel = (isLinux? EpollSocketChannel.class: NioSocketChannel.class);
+
     private Ssl ssl;
     private Http http;
+
+
+    private static boolean getOSMatches(String osNamePrefix) {
+        String os = System.getProperty("os.name");
+
+        if (os == null) {
+            return false;
+        }
+        return os.startsWith(osNamePrefix);
+    }
 
     public Ssl ssl() {
         return ssl;

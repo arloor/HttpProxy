@@ -21,6 +21,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.ssl.SslContext;
@@ -31,6 +32,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
+
+import static com.arloor.forwardproxy.vo.Config.clazzServerSocketChannel;
 
 /**
  * An HTTP server that sends back the content of the received HTTP request
@@ -58,8 +61,8 @@ public final class HttpProxyServer {
         Config.Ssl ssl = config.ssl();
         Config.Http http = config.http();
 
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        EventLoopGroup bossGroup = Config.isLinux ? new EpollEventLoopGroup(1) : new NioEventLoopGroup(1);
+        EventLoopGroup workerGroup = Config.isLinux ? new EpollEventLoopGroup() : new NioEventLoopGroup();
 
 
         try {
@@ -86,7 +89,7 @@ public final class HttpProxyServer {
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 1024);
             b.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
+                    .channel(clazzServerSocketChannel)
                     .childHandler(new HttpProxyServerInitializer(http));
 
             Channel httpChannel = b.bind(http.getPort()).sync().channel();
@@ -103,7 +106,7 @@ public final class HttpProxyServer {
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 1024);
             b.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
+                    .channel(clazzServerSocketChannel)
                     .childHandler(new HttpsProxyServerInitializer(ssl));
 
             Channel sslChannel = b.bind(ssl.getPort()).sync().channel();

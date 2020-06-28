@@ -104,7 +104,7 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        log.info("netty Exception "+ cause.getMessage());
+        log.info("netty Exception: "+ cause.getMessage());
         ctx.close();
     }
 }
