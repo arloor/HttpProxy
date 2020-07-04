@@ -29,6 +29,7 @@ public class SslContextFactory {
             List<String> ciphers = Arrays.asList("ECDHE-RSA-AES128-SHA", "ECDHE-RSA-AES256-SHA", "AES128-SHA", "AES256-SHA", "DES-CBC3-SHA");
 
             return SslContextBuilder.forServer(new File(fullchainFile),new File(privkeyFile))
+                    .protocols("TLSv1.3", "TLSv1.2")
                     .sslProvider(SslProvider.OPENSSL)
                     .clientAuth(ClientAuth.NONE)
                     .trustManager(new File(fullchainFile))
