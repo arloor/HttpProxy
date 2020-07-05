@@ -235,7 +235,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        log.info("netty Exception "+ cause.getMessage());
+        log.info("[EXCEPTION] "+ cause.getMessage());
         ctx.close();
     }
 }
