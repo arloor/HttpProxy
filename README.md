@@ -40,6 +40,38 @@ https.privkey.pem 是私钥
 
 以腾讯云上的免费ssl证书为例，nginx文件夹中的`1_xxx.com_bundle.crt`是fullchain，`2_xxx.com.key`是privkey，相信代码从业者能够从这里举一反三，从而知道从其他途径签发的证书应该如何配置。
 
+## 日志
+
+```shell
+2020-07-05 00:15:29.558 INFO  - 120.232.163.69 CONNECT www.google.com:443  {www.google.com}
+2020-07-05 00:15:29.569 INFO  - 120.232.163.69 CONNECT android.clients.google.com:443  {android.clients.google.com}
+2020-07-05 00:15:30.471 INFO  - 120.232.163.69 CONNECT www.googleapis.com:443  {www.googleapis.com}
+2020-07-05 00:15:31.035 INFO  - 120.232.163.69 CONNECT clients4.google.com:443  {clients4.google.com}
+2020-07-05 00:15:31.040 INFO  - 120.232.163.69 CONNECT oauthaccountmanager.googleapis.com:443  {oauthaccountmanager.googleapis.com}
+2020-07-05 00:15:31.961 INFO  - 120.232.163.69 CONNECT accounts.google.com:443  {accounts.google.com}
+2020-07-05 00:15:32.731 INFO  - 120.232.163.69 CONNECT www.google.com:443  {www.google.com}
+2020-07-05 00:15:32.798 INFO  - 120.232.163.69 CONNECT lh5.googleusercontent.com:443  {lh5.googleusercontent.com}
+2020-07-05 00:15:33.216 INFO  - 120.232.163.69 CONNECT www.google.com.hk:443  {www.google.com.hk}
+2020-07-05 00:15:33.239 INFO  - 120.232.163.69 CONNECT www.google.com.hk:443  {www.google.com.hk}
+2020-07-05 00:15:33.368 INFO  - 120.232.163.69 CONNECT www.google.com.hk:443  {www.google.com.hk}
+2020-07-05 00:15:35.114 INFO  - 120.232.163.69 CONNECT www.gstatic.com:443  {www.gstatic.com}
+2020-07-05 00:15:35.337 INFO  - 120.232.163.69 CONNECT adservice.google.com.hk:443  {adservice.google.com.hk}
+2020-07-05 00:15:38.482 INFO  - 120.232.163.69 CONNECT github.githubassets.com:443  {github.githubassets.com}
+2020-07-05 00:15:38.489 INFO  - 120.232.163.69 CONNECT github.com:443  {github.com}
+2020-07-05 00:15:38.509 INFO  - 120.232.163.69 CONNECT github.com:443  {github.com}
+2020-07-05 00:15:40.441 INFO  - 120.232.163.69 CONNECT avatars0.githubusercontent.com:443  {avatars0.githubusercontent.com}
+2020-07-05 00:15:40.444 INFO  - 120.232.163.69 CONNECT avatars3.githubusercontent.com:443  {avatars3.githubusercontent.com}
+2020-07-05 00:15:40.636 INFO  - 120.232.163.69 CONNECT content-autofill.googleapis.com:443  {content-autofill.googleapis.com}
+2020-07-05 00:15:40.807 INFO  - 120.232.163.69 CONNECT www.google-analytics.com:443  {www.google-analytics.com}
+2020-07-05 00:15:40.827 INFO  - 120.232.163.69 CONNECT github.com:443  {github.com}
+2020-07-05 00:15:40.835 INFO  - 120.232.163.69 CONNECT github.com:443  {github.com}
+2020-07-05 00:15:41.187 INFO  - 120.232.163.69 CONNECT alive.github.com:443  {alive.github.com}
+2020-07-05 00:15:42.195 INFO  - 120.232.163.69 CONNECT api.github.com:443  {api.github.com}
+2020-07-05 00:15:44.031 INFO  - 120.232.163.69 CONNECT avatars3.githubusercontent.com:443  {avatars3.githubusercontent.com}
+2020-07-05 00:15:44.039 INFO  - 120.232.163.69 CONNECT avatars0.githubusercontent.com:443  {avatars0.githubusercontent.com}
+2020-07-05 00:15:44.042 INFO  - 120.232.163.69 CONNECT avatars2.githubusercontent.com:443  {avatars2.githubusercontent.com}
+```
+
 ## 电报讨论组
 
 电报讨论组 https://t.me/popstary
