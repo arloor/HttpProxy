@@ -11,7 +11,7 @@
 ask4Authcate=true
 ```
 
-这是防止主动嗅探的开关，true则会主动要求客户端发送用户密码，会存在被主动嗅探的风险
+这是防止主动嗅探的开关，true则会主动要求客户端发送用户密码，会存在被主动嗅探的风险。所以建议设置为false，除非是直接通过SwitchyOmega(chrome插件)使用
 
 ```shell script
 # http代理配置
