@@ -235,7 +235,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        log.info("[EXCEPTION] "+ cause.getMessage());
+        String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostString();
+        log.info("[EXCEPTION]["+clientHostname+"] "+ cause.getMessage());
         ctx.close();
     }
 }

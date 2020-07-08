@@ -26,6 +26,7 @@ import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetSocketAddress;
 import java.util.Objects;
 
 public final class RelayHandler extends ChannelInboundHandlerAdapter {
@@ -104,7 +105,8 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        log.info("[EXCEPTION] "+ cause.getMessage());
+        String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostString();
+        log.info("[EXCEPTION]["+clientHostname+"] "+ cause.getMessage());
         ctx.close();
     }
 }
