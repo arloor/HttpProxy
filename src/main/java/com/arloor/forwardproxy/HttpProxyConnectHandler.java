@@ -185,6 +185,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                         outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
                                         RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel);
                                         ctx.pipeline().addLast(clientEndtoRemoteHandler);
+//                                        ctx.channel().config().setAutoRead(true);
 
                                         //出于未知的原因，不知道为什么fireChannelread不行
                                         clientEndtoRemoteHandler.channelRead(ctx, request);
