@@ -85,7 +85,10 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             contents.add((HttpContent) msg);
             //一个完整的Http请求被收到，开始处理该请求
             if (msg instanceof LastHttpContent) {
-                ctx.channel().config().setAutoRead(false);
+                // bugfix:当且仅当为connect请求时，暂停读，防止跟随的内容被忽略
+                if(request.method().equals(HttpMethod.CONNECT)){
+                    ctx.channel().config().setAutoRead(false);
+                }
                 // 1. 如果url以 / 开头，则认为是直接请求，而不是代理请求
                 if (request.uri().startsWith("/")) {
                     String hostName = "";
