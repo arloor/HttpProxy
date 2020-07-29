@@ -86,9 +86,9 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             //一个完整的Http请求被收到，开始处理该请求
             if (msg instanceof LastHttpContent) {
                 // bugfix:当且仅当为connect请求时，暂停读，防止跟随的内容被忽略
-                if(request.method().equals(HttpMethod.CONNECT)){
-                    ctx.channel().config().setAutoRead(false);
-                }
+//                if(request.method().equals(HttpMethod.CONNECT)){
+//                    ctx.channel().config().setAutoRead(false);
+//                }
                 // 1. 如果url以 / 开头，则认为是直接请求，而不是代理请求
                 if (request.uri().startsWith("/")) {
                     String hostName = "";
@@ -145,7 +145,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                             ctx.pipeline().remove(HttpProxyConnectHandler.class);
                                             outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
                                             ctx.pipeline().addLast(new RelayHandler(outboundChannel));
-                                            ctx.channel().config().setAutoRead(true);
+//                                            ctx.channel().config().setAutoRead(true);
                                         } else {
                                             ChannelFuture responseFuture = ctx.channel().writeAndFlush(
                                                     new DefaultHttpResponse(request.protocolVersion(), new HttpResponseStatus(200, "Connection Established")));
@@ -158,7 +158,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                                     ctx.pipeline().remove(HttpProxyConnectHandler.class);
                                                     outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
                                                     ctx.pipeline().addLast(new RelayHandler(outboundChannel));
-                                                    ctx.channel().config().setAutoRead(true);
+//                                                    ctx.channel().config().setAutoRead(true);
                                                 }
                                             });
                                         }
