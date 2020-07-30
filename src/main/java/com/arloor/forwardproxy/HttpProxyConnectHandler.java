@@ -77,7 +77,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             host = hostPortArray[0];
             String portStr = hostPortArray.length == 2 ? hostPortArray[1] : "80";
             port = Integer.parseInt(portStr);
-            log.info(clientHostname + " " + req.method() + " " + req.uri() + "  {" + host + "}");
+//          压测时不打印日志，防止IOwait占用cpu时间
+//            log.info(clientHostname + " " + req.method() + " " + req.uri() + "  {" + host + "}");
         } else {
             //SimpleChannelInboundHandler会将HttpContent中的bytebuf Release，但是这个还会转给relayHandler，所以需要在这里预先retain
             ((HttpContent) msg).content().retain();
