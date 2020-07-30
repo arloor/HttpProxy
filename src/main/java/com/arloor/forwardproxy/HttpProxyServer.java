@@ -28,9 +28,11 @@ import io.netty.handler.ssl.SslContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 
@@ -45,6 +47,10 @@ public final class HttpProxyServer {
 
 
     public static void main(String[] args) throws Exception {
+        // get name representing the running Java virtual machine.
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        String pid = name.split("@")[0];
+        log.info("该进程pid= " + pid);
         String propertiesPath = null;
         if (args.length == 2 && args[0].equals("-c")) {
             propertiesPath = args[1];
