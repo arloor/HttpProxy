@@ -57,7 +57,7 @@ public final class HttpProxyServer {
         }
 
         Config config = Config.parse(properties);
-        log.info("防止嗅探"+(Config.ask4Authcate?"diabled":"enabled"));
+        log.info("主动要求验证："+Config.ask4Authcate);
         Config.Ssl ssl = config.ssl();
         Config.Http http = config.http();
 
