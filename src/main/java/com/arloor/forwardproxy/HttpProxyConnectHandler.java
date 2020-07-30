@@ -34,7 +34,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.ArrayList;
 
-import static com.arloor.forwardproxy.vo.Config.clazzSocketChannel;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
@@ -210,7 +209,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                 // 4.连接目标网站
                 final Channel inboundChannel = ctx.channel();
                 b.group(inboundChannel.eventLoop())
-                        .channel(clazzSocketChannel)
+                        .channel(Config.socketChannelClazz)
                         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                         .option(ChannelOption.SO_KEEPALIVE, true)
                         .handler(new LoggingHandler(LogLevel.INFO))

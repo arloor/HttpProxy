@@ -33,7 +33,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 
-import static com.arloor.forwardproxy.vo.Config.clazzServerSocketChannel;
+
 
 /**
  * An HTTP server that sends back the content of the received HTTP request
@@ -61,8 +61,8 @@ public final class HttpProxyServer {
         Config.Ssl ssl = config.ssl();
         Config.Http http = config.http();
 
-        EventLoopGroup bossGroup = Config.isLinux ? new EpollEventLoopGroup(1) : new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = Config.isLinux ? new EpollEventLoopGroup() : new NioEventLoopGroup();
+        EventLoopGroup bossGroup = Config.buildEventGroup(1);
+        EventLoopGroup workerGroup = Config.buildEventGroup();
 
 
         try {
@@ -87,9 +87,9 @@ public final class HttpProxyServer {
         try {
             // Configure the server.
             ServerBootstrap b = new ServerBootstrap();
-            b.option(ChannelOption.SO_BACKLOG, 1024);
+            b.option(ChannelOption.SO_BACKLOG, 10240);
             b.group(bossGroup, workerGroup)
-                    .channel(clazzServerSocketChannel)
+                    .channel(Config.serverSocketChannelClazz)
                     .childHandler(new HttpProxyServerInitializer(http));
 
             Channel httpChannel = b.bind(http.getPort()).sync().channel();
@@ -104,9 +104,9 @@ public final class HttpProxyServer {
         try {
             // Configure the server.
             ServerBootstrap b = new ServerBootstrap();
-            b.option(ChannelOption.SO_BACKLOG, 1024);
+            b.option(ChannelOption.SO_BACKLOG, 10240);
             b.group(bossGroup, workerGroup)
-                    .channel(clazzServerSocketChannel)
+                    .channel(Config.serverSocketChannelClazz)
                     .childHandler(new HttpsProxyServerInitializer(ssl));
 
             Channel sslChannel = b.bind(ssl.getPort()).sync().channel();

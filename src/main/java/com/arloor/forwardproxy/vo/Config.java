@@ -1,30 +1,79 @@
 package com.arloor.forwardproxy.vo;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
+import io.netty.channel.kqueue.KQueueEventLoopGroup;
+import io.netty.channel.kqueue.KQueueServerSocketChannel;
+import io.netty.channel.kqueue.KQueueSocketChannel;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Base64;
 import java.util.Properties;
 
 public class Config {
     private static final String TRUE = "true";
+    private static final Logger log = LoggerFactory.getLogger(Config.class);
 
     public static boolean ask4Authcate=false;
+    public static final String os = System.getProperty("os.name");
 
     // linux使用epoll，而非java原生的selector
     public static final boolean isLinux = getOSMatches("Linux") || getOSMatches("LINUX");
-    public static final Class clazzServerSocketChannel = (isLinux? EpollServerSocketChannel.class: NioServerSocketChannel.class);
-    public static final Class clazzSocketChannel = (isLinux? EpollSocketChannel.class: NioSocketChannel.class);
+    public static final boolean isMac = getOSMatches("Mac") || getOSMatches("MAC");
+    public static final Class serverSocketChannelClazz =serverSocketChannelClazz();
+    public static final Class socketChannelClazz =socketChannelClazz();
 
     private Ssl ssl;
     private Http http;
 
+    private static final Class serverSocketChannelClazz(){
+        if(isMac){
+            return KQueueServerSocketChannel.class;
+        }else if(isLinux){
+            return EpollServerSocketChannel.class;
+        }else {
+            return NioServerSocketChannel.class;
+        }
+    }
+
+    private static final Class socketChannelClazz(){
+        if(isMac){
+            return KQueueSocketChannel.class;
+        }else if(isLinux){
+            return EpollSocketChannel.class;
+        }else {
+            return NioSocketChannel.class;
+        }
+    }
+
+    public static final EventLoopGroup buildEventGroup(int num){
+        if(isMac){
+            return new KQueueEventLoopGroup(num);
+        }else if(isLinux){
+            return new EpollEventLoopGroup(num);
+        }else {
+            return new NioEventLoopGroup(num);
+        }
+    }
+
+    public static final EventLoopGroup buildEventGroup(){
+        if(isMac){
+            return new KQueueEventLoopGroup();
+        }else if(isLinux){
+            return new EpollEventLoopGroup();
+        }else {
+            return new NioEventLoopGroup();
+        }
+    }
+
 
     private static boolean getOSMatches(String osNamePrefix) {
-        String os = System.getProperty("os.name");
-
         if (os == null) {
             return false;
         }
