@@ -45,7 +45,6 @@ public final class HttpProxyServer {
 
     private static final Logger log = LoggerFactory.getLogger(HttpProxyServer.class);
 
-
     public static void main(String[] args) throws Exception {
         // get name representing the running Java virtual machine.
         String name = ManagementFactory.getRuntimeMXBean().getName();
@@ -67,8 +66,8 @@ public final class HttpProxyServer {
         Config.Ssl ssl = config.ssl();
         Config.Http http = config.http();
 
-        EventLoopGroup bossGroup = Config.buildEventGroup(1);
-        EventLoopGroup workerGroup = Config.buildEventGroup();
+        EventLoopGroup bossGroup = OsHelper.os.eventLoopBuilder.apply(1);
+        EventLoopGroup workerGroup = OsHelper.os.eventLoopBuilder.apply(0);
 
 
         try {
@@ -95,7 +94,7 @@ public final class HttpProxyServer {
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 10240);
             b.group(bossGroup, workerGroup)
-                    .channel(Config.serverSocketChannelClazz)
+                    .channel(OsHelper.os.serverSocketChannelClazz)
                     .childHandler(new HttpProxyServerInitializer(http));
 
             Channel httpChannel = b.bind(http.getPort()).sync().channel();
@@ -112,7 +111,7 @@ public final class HttpProxyServer {
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 10240);
             b.group(bossGroup, workerGroup)
-                    .channel(Config.serverSocketChannelClazz)
+                    .channel(OsHelper.os.serverSocketChannelClazz)
                     .childHandler(new HttpsProxyServerInitializer(ssl));
 
             Channel sslChannel = b.bind(ssl.getPort()).sync().channel();

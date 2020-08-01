@@ -78,7 +78,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             String portStr = hostPortArray.length == 2 ? hostPortArray[1] : "80";
             port = Integer.parseInt(portStr);
 //          压测时不打印日志，防止IOwait占用cpu时间
-//            log.info(clientHostname + " " + req.method() + " " + req.uri() + "  {" + host + "}");
+            log.info(clientHostname + " " + req.method() + " " + req.uri() + "  {" + host + "}");
         } else {
             //SimpleChannelInboundHandler会将HttpContent中的bytebuf Release，但是这个还会转给relayHandler，所以需要在这里预先retain
             ((HttpContent) msg).content().retain();
@@ -210,7 +210,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                 // 4.连接目标网站
                 final Channel inboundChannel = ctx.channel();
                 b.group(inboundChannel.eventLoop())
-                        .channel(Config.socketChannelClazz)
+                        .channel(OsHelper.os.socketChannelClazz)
                         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                         .option(ChannelOption.SO_KEEPALIVE, true)
                         .handler(new LoggingHandler(LogLevel.INFO))
