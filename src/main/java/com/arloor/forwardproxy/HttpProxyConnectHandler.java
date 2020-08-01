@@ -48,7 +48,6 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 
     private String host;
     private int port;
-    private boolean replyEstablishInfo = true;
     private HttpRequest request;
     private ArrayList<HttpContent> contents = new ArrayList<>();
 
@@ -63,11 +62,6 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             final HttpRequest req = (HttpRequest) msg;
             request = req;
             String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostString();
-            // 我的一个单独的客户端，需要做调整
-            String userAgent = req.headers().get("User-Agent");
-            if ("some-client".equals(userAgent)) {
-                replyEstablishInfo = false;
-            }
             //获取Host和port
             String hostAndPortStr = req.headers().get("Host");
             if (hostAndPortStr == null) {
@@ -108,7 +102,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                 }
 
                 //2. 检验auth
-                if (basicAuth != null && replyEstablishInfo) {
+                if (basicAuth != null) {
                     String requestBasicAuth = request.headers().get("Proxy-Authorization");
 //                    request.headers().forEach(System.out::println);
                     if (requestBasicAuth == null || !requestBasicAuth.equals(basicAuth)) {
@@ -153,11 +147,9 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                             }
                                         });
                                     } else {
-                                        if (replyEstablishInfo) {
-                                            ctx.channel().writeAndFlush(
-                                                    new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR)
-                                            );
-                                        }
+                                        ctx.channel().writeAndFlush(
+                                                new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR)
+                                        );
                                         SocksServerUtils.closeOnFlush(ctx.channel());
                                     }
                                 }
@@ -213,12 +205,9 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                             // Connection established use handler provided results
                         } else {
                             // Close the connection if the connection attempt has failed.
-                            //返回500，并关闭连接
-                            if (replyEstablishInfo) {
-                                ctx.channel().writeAndFlush(
-                                        new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR)
-                                );
-                            }
+                            ctx.channel().writeAndFlush(
+                                    new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR)
+                            );
                             SocksServerUtils.closeOnFlush(ctx.channel());
                         }
                     }
