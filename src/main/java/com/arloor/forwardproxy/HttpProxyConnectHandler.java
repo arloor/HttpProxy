@@ -80,9 +80,9 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             //一个完整的Http请求被收到，开始处理该请求
             if (msg instanceof LastHttpContent) {
                 // bugfix:当且仅当为connect请求时，暂停读，防止跟随的内容被忽略
-                if (request.method().equals(HttpMethod.CONNECT)) {
-                    ctx.channel().config().setAutoRead(false);
-                }
+//                if (request.method().equals(HttpMethod.CONNECT)) {
+//                    ctx.channel().config().setAutoRead(false);
+//                }
                 // 1. 如果url以 / 开头，则认为是直接请求，而不是代理请求
                 if (request.uri().startsWith("/")) {
                     String hostName = "";
@@ -137,13 +137,19 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                         responseFuture.addListener(new ChannelFutureListener() {
                                             @Override
                                             public void operationComplete(ChannelFuture channelFuture) {
-                                                ctx.pipeline().remove(HttpRequestDecoder.class);
-                                                ctx.pipeline().remove(HttpResponseEncoder.class);
-                                                ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
-                                                ctx.pipeline().remove(HttpProxyConnectHandler.class);
-                                                outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
-                                                ctx.pipeline().addLast(new RelayHandler(outboundChannel));
-                                                ctx.channel().config().setAutoRead(true);
+                                                if(channelFuture.isSuccess()){
+                                                    ctx.pipeline().remove(HttpRequestDecoder.class);
+                                                    ctx.pipeline().remove(HttpResponseEncoder.class);
+                                                    ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
+                                                    ctx.pipeline().remove(HttpProxyConnectHandler.class);
+                                                    outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
+                                                    ctx.pipeline().addLast(new RelayHandler(outboundChannel));
+//                                                    ctx.channel().config().setAutoRead(true);
+                                                }else {
+                                                    log.info("reply tunnel established Failed: "+ ctx.channel().remoteAddress() +" "+request.method() + " " + request.uri());
+                                                    SocksServerUtils.closeOnFlush(ctx.channel());
+                                                    SocksServerUtils.closeOnFlush(outboundChannel);
+                                                }
                                             }
                                         });
                                     } else {
