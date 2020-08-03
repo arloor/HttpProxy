@@ -167,6 +167,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                 public void operationComplete(final Future<Channel> future) throws Exception {
                                     final Channel outboundChannel = future.getNow();
                                     if (future.isSuccess()) {
+                                        // 这里有几率抛出NoSuchElementException，原因是连接target host完成时，客户端已经关闭连接。
+                                        // 考虑到是比较小的几率，不catch。注：该异常没有啥影响。
                                         ctx.pipeline().remove(HttpProxyConnectHandler.this);
                                         ctx.pipeline().remove(HttpResponseEncoder.class);
                                         outboundChannel.pipeline().addLast(new HttpRequestEncoder());
