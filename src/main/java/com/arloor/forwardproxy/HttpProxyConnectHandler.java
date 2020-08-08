@@ -32,13 +32,34 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.nio.ch.Net;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
+
+    private static byte[] favicon=null;
+
+    static {
+        URL url = HttpProxyServer.class.getClassLoader().getResource("favicon.ico");
+        try {
+            favicon = Files.readAllBytes(Paths.get(URI.create(url.toString())));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static final Logger log = LoggerFactory.getLogger(HttpProxyConnectHandler.class);
     private final String basicAuth;
 
@@ -60,6 +81,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, HttpObject msg) {
+
+
         if (msg instanceof HttpRequest) {
             final HttpRequest req = (HttpRequest) msg;
             request = req;
@@ -93,8 +116,15 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         hostName = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
                     }
 
-
-                    if(OsHelper.os.equals(OsHelper.OS.Unix)){
+                    if(request.uri().equals("/favicon.ico")){
+                        ByteBuf buffer = ctx.alloc().buffer();
+                        buffer.writeBytes(favicon);
+                        final FullHttpResponse response = new DefaultFullHttpResponse(
+                                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
+                        response.headers().set("Server", "netty");
+                        response.headers().set("Content-Length", favicon.length);
+                        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                    }else if (OsHelper.os.equals(OsHelper.OS.Unix)){
                         String html = NetStats.html();
                         ByteBuf buffer = ctx.alloc().buffer();
                         buffer.writeBytes(html.getBytes());
