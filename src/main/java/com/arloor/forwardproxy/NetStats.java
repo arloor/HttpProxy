@@ -113,7 +113,7 @@ public class NetStats {
 
     private static final List<YValue> buildYvalues(){
         List<YValue> YValues=new ArrayList<>();
-        outSpeedMap.entrySet().forEach(entry->{
+        inSpeedMap.entrySet().forEach(entry->{
             String eth =entry.getKey();
             List<Double> speeds=entry.getValue();
             YValue yValue =new YValue(eth+"入",speeds);
