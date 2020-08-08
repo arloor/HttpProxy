@@ -60,7 +60,9 @@ public class NetStats {
         if(file.exists()){
             try {
                 List<String> lines = Files.readAllLines(Paths.get(file.toURI()));
-                interfaces= lines.stream().skip(2).map(line->line.replaceAll("(\\s)+", ",").split(",")[1]).flatMap(eth->{
+                interfaces= lines.stream().skip(2).map(line->line.replaceAll("(\\s)+", ",").split(",")[1])
+                        .filter(eth->!eth.startsWith("lo:"))
+                        .flatMap(eth->{
                     ArrayList<String> objects = new ArrayList<>();
                     objects.add(eth+"入");
                     objects.add(eth+"出");
@@ -77,6 +79,9 @@ public class NetStats {
                         line = line.replaceAll("(\\s)+", ",");
                         String[] split=line.split(",");
                         String eth = split[1];
+                        if(eth.startsWith("lo:")){
+                            return;
+                        }
                         long in = Long.parseLong(split[2]);
                         long out = Long.parseLong(split[10]);
                         long oldOut = interOut.getOrDefault(eth, (long) 0);
