@@ -1,6 +1,8 @@
 package com.arloor.forwardproxy;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +15,7 @@ public class NetStats {
     private static final String filename="/proc/net/dev";
     private static List<String> interfaces =new ArrayList<>();
     private static List<String> xScales =new ArrayList<>();
-    private static final int seconds =120;
+    private static final int seconds =180;
     static {
         for (int i = 1; i <=seconds ; i++) {
             xScales.add(String.valueOf(i));
@@ -24,10 +26,21 @@ public class NetStats {
         List<Double> data;
         String type="line";
         boolean smooth=false;
+        List<String> color= Lists.newArrayList("#b111f6");//#90EC7D
+        Map<String,List<Map>> markPoint= ImmutableMap.of("data", Lists.newArrayList(ImmutableMap.of("type","max","name","最大值")));
+        Map<String,List<Map>> markLine= ImmutableMap.of("data", Lists.newArrayList(ImmutableMap.of("type","average","name","平均值")));
+
+        public Map<String, List<Map>> getMarkLine() {
+            return markLine;
+        }
 
         public YValue(String name, List<Double> data) {
             this.name = name;
             this.data = data;
+        }
+
+        public Map<String, List<Map>> getMarkPoint() {
+            return markPoint;
         }
 
         public String getName() {
@@ -144,7 +157,7 @@ public class NetStats {
                 "<html lang=\"en\">\n" +
                 "<head>\n" +
                 "    <meta charset=\"UTF-8\">\n" +
-                "    <title>server_status</title>\n" +
+                "    <title>你说这是啥</title>\n" +
                 "    <script src=\"https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js\"></script>\n" +
                 "</head>\n" +
                 "<body>\n" +
@@ -155,7 +168,7 @@ public class NetStats {
                 "    // 指定图表的配置项和数据\n" +
                 "    var option = {\n" +
                 "        title: {\n" +
-                "            text: '网卡网速（KB/s）'\n" +
+                "            text: '网卡网速|KB/s'\n" +
                 "        },\n" +
                 "        tooltip: {\n" +
                 "            trigger: 'axis'\n" +
