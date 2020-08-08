@@ -6,10 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class NetStats {
@@ -89,14 +86,14 @@ public class NetStats {
                         long outChange = out - oldOut;
                         long inChange = in -oldIn;
                         if(oldIn!=0){
-                            inSpeedMap.computeIfAbsent(eth, s -> new ArrayList<Double>());
+                            inSpeedMap.computeIfAbsent(eth, s -> new LinkedList<>());
                             inSpeedMap.get(eth).add((double)(inChange/1024));
                             if(inSpeedMap.get(eth).size()>seconds){
                                 inSpeedMap.get(eth).remove(0);
                             }
                         }
                         if(oldOut!=0){
-                            outSpeedMap.computeIfAbsent(eth, s -> new ArrayList<Double>());
+                            outSpeedMap.computeIfAbsent(eth, s -> new LinkedList<Double>());
                             outSpeedMap.get(eth).add((double)(outChange/1024));
                             if(outSpeedMap.get(eth).size()>seconds){
                                 outSpeedMap.get(eth).remove(0);
