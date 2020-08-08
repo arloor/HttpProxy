@@ -26,7 +26,7 @@ public class NetStats {
         String name;
         List<Double> data;
         String type="line";
-        boolean smooth=true;
+        boolean smooth=false;
 
         public YValue(String name, List<Double> data) {
             this.name = name;
@@ -85,14 +85,14 @@ public class NetStats {
                         long inChange = in -oldIn;
                         if(oldIn!=0){
                             inSpeedMap.computeIfAbsent(eth, s -> new ArrayList<Double>());
-                            inSpeedMap.get(eth).add((double)inChange/1024);
+                            inSpeedMap.get(eth).add((double)(inChange/1024));
                             if(inSpeedMap.get(eth).size()>seconds){
                                 inSpeedMap.get(eth).remove(0);
                             }
                         }
                         if(oldOut!=0){
                             outSpeedMap.computeIfAbsent(eth, s -> new ArrayList<Double>());
-                            outSpeedMap.get(eth).add((double)outChange/1024);
+                            outSpeedMap.get(eth).add((double)(outChange/1024));
                             if(outSpeedMap.get(eth).size()>seconds){
                                 outSpeedMap.get(eth).remove(0);
                             }
