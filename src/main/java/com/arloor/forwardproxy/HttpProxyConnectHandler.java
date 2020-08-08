@@ -17,6 +17,7 @@ package com.arloor.forwardproxy;
 
 import com.arloor.forwardproxy.vo.Config;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -29,14 +30,43 @@ import io.netty.util.concurrent.FutureListener;
 import io.netty.util.concurrent.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.nio.ch.Net;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
+
+    private static byte[] favicon=null;
+
+    static {
+        try (InputStream stream = HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")){
+            byte b[] = new byte[6518];
+            int len = 0;
+            int temp = 0; //全部读取的内容都使用temp接收
+            while ((temp = stream.read()) != -1) { //当没有读取完时，继续读取
+                b[len] = (byte) temp;
+                len++;
+            } stream .close();
+            favicon=Arrays.copyOf(b,len);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private static final Logger log = LoggerFactory.getLogger(HttpProxyConnectHandler.class);
     private final String basicAuth;
 
@@ -58,6 +88,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, HttpObject msg) {
+
+
         if (msg instanceof HttpRequest) {
             final HttpRequest req = (HttpRequest) msg;
             request = req;
@@ -91,11 +123,30 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         hostName = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
                     }
 
-                    final FullHttpResponse response = new DefaultFullHttpResponse(
-                            HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(hostName.getBytes()));
-                    response.headers().set("Server", "netty");
-                    response.headers().set("Content-Length", hostName.getBytes().length);
-                    ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                    if(request.uri().equals("/favicon.ico")){
+                        ByteBuf buffer = ctx.alloc().buffer();
+                        buffer.writeBytes(favicon);
+                        final FullHttpResponse response = new DefaultFullHttpResponse(
+                                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
+                        response.headers().set("Server", "netty");
+                        response.headers().set("Content-Length", favicon.length);
+                        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                    }else if (OsHelper.os.equals(OsHelper.OS.Unix)){
+                        String html = NetStats.html();
+                        ByteBuf buffer = ctx.alloc().buffer();
+                        buffer.writeBytes(html.getBytes());
+                        final FullHttpResponse response = new DefaultFullHttpResponse(
+                                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
+                        response.headers().set("Server", "netty");
+                        response.headers().set("Content-Length", html.getBytes().length);
+                        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                    }else {
+                        final FullHttpResponse response = new DefaultFullHttpResponse(
+                                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(hostName.getBytes()));
+                        response.headers().set("Server", "netty");
+                        response.headers().set("Content-Length", hostName.getBytes().length);
+                        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                    }
                     // 这里需要将content全部release
                     contents.forEach(ReferenceCountUtil::release);
                     return;
@@ -137,7 +188,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                         responseFuture.addListener(new ChannelFutureListener() {
                                             @Override
                                             public void operationComplete(ChannelFuture channelFuture) {
-                                                if(channelFuture.isSuccess()){
+                                                if (channelFuture.isSuccess()) {
                                                     ctx.pipeline().remove(HttpRequestDecoder.class);
                                                     ctx.pipeline().remove(HttpResponseEncoder.class);
                                                     ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
@@ -145,8 +196,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                                     outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
                                                     ctx.pipeline().addLast(new RelayHandler(outboundChannel));
 //                                                    ctx.channel().config().setAutoRead(true);
-                                                }else {
-                                                    log.info("reply tunnel established Failed: "+ ctx.channel().remoteAddress() +" "+request.method() + " " + request.uri());
+                                                } else {
+                                                    log.info("reply tunnel established Failed: " + ctx.channel().remoteAddress() + " " + request.method() + " " + request.uri());
                                                     SocksServerUtils.closeOnFlush(ctx.channel());
                                                     SocksServerUtils.closeOnFlush(outboundChannel);
                                                 }

@@ -46,6 +46,7 @@ public final class HttpProxyServer {
     private static final Logger log = LoggerFactory.getLogger(HttpProxyServer.class);
 
     public static void main(String[] args) throws Exception {
+        NetStats.start();
         // get name representing the running Java virtual machine.
         String name = ManagementFactory.getRuntimeMXBean().getName();
         String pid = name.split("@")[0];
