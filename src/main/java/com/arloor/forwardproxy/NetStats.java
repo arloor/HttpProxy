@@ -157,7 +157,7 @@ public class NetStats {
                 "<html lang=\"en\">\n" +
                 "<head>\n" +
                 "    <meta charset=\"UTF-8\">\n" +
-                "    <title>你说这是啥</title>\n" +
+                "    <title>谁在跑流量</title>\n" +
                 "    <script src=\"https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js\"></script>\n" +
                 "</head>\n" +
                 "<body>\n" +
