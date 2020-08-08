@@ -153,7 +153,7 @@ public class NetStats {
                 "    // 指定图表的配置项和数据\n" +
                 "    var option = {\n" +
                 "        title: {\n" +
-                "            text: '网卡网速'\n" +
+                "            text: '网卡网速（KB/s）'\n" +
                 "        },\n" +
                 "        tooltip: {\n" +
                 "            trigger: 'axis'\n" +
