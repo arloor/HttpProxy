@@ -44,6 +44,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
@@ -52,9 +53,15 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
     private static byte[] favicon=null;
 
     static {
-        URL url = HttpProxyServer.class.getClassLoader().getResource("favicon.ico");
-        try {
-            favicon = Files.readAllBytes(Paths.get(URI.create(url.toString())));
+        try (InputStream stream = HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")){
+            byte b[] = new byte[6518];
+            int len = 0;
+            int temp = 0; //全部读取的内容都使用temp接收
+            while ((temp = stream.read()) != -1) { //当没有读取完时，继续读取
+                b[len] = (byte) temp;
+                len++;
+            } stream .close();
+            favicon=Arrays.copyOf(b,len);
         } catch (IOException e) {
             e.printStackTrace();
         }
