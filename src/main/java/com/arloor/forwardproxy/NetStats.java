@@ -12,23 +12,25 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class NetStats {
-    private static final String filename="/proc/net/dev";
-    private static List<String> interfaces =new ArrayList<>();
-    private static List<String> xScales =new ArrayList<>();
-    private static final int seconds =180;
+    private static final String filename = "/proc/net/dev";
+    private static List<String> interfaces = new ArrayList<>();
+    private static List<String> xScales = new ArrayList<>();
+    private static final int seconds = 180;
+
     static {
-        for (int i = 1; i <=seconds ; i++) {
+        for (int i = 1; i <= seconds; i++) {
             xScales.add(String.valueOf(i));
         }
     }
+
     private static class YValue {
         String name;
         List<Double> data;
-        String type="line";
-        boolean smooth=false;
-        List<String> color= Lists.newArrayList("#b111f6");//#90EC7D
-        Map<String,List<Map>> markPoint= ImmutableMap.of("data", Lists.newArrayList(ImmutableMap.of("type","max","name","最大值")));
-        Map<String,List<Map>> markLine= ImmutableMap.of("data", Lists.newArrayList(ImmutableMap.of("type","average","name","平均值")));
+        String type = "line";
+        boolean smooth = false;
+        List<String> color = Lists.newArrayList("#b111f6");//#90EC7D
+        Map<String, List<Map>> markPoint = ImmutableMap.of("data", Lists.newArrayList(ImmutableMap.of("type", "max", "name", "最大值")));
+        Map<String, List<Map>> markLine = ImmutableMap.of("data", Lists.newArrayList(ImmutableMap.of("type", "average", "name", "平均值")));
 
         public Map<String, List<Map>> getMarkLine() {
             return markLine;
@@ -60,36 +62,36 @@ public class NetStats {
         }
     }
 
-    private static final Map<String, List<Double>> inSpeedMap =new HashMap<>();
-    private static final Map<String, List<Double>> outSpeedMap =new HashMap<>();
-    private static final Map<String, Long> interIn=new HashMap<>();
-    private static final Map<String, Long> interOut=new HashMap<>();
+    private static final Map<String, List<Double>> inSpeedMap = new HashMap<>();
+    private static final Map<String, List<Double>> outSpeedMap = new HashMap<>();
+    private static final Map<String, Long> interIn = new HashMap<>();
+    private static final Map<String, Long> interOut = new HashMap<>();
 
     public static Runnable task = () -> {
-        File file =new File(filename);
-        if(file.exists()){
+        File file = new File(filename);
+        if (file.exists()) {
             try {
                 List<String> lines = Files.readAllLines(Paths.get(file.toURI()));
-                interfaces= lines.stream().skip(2).map(line->line.replaceAll("(\\s)+", ",").split(",")[1])
-                        .filter(eth->!eth.startsWith("lo:"))
-                        .flatMap(eth->{
-                    ArrayList<String> objects = new ArrayList<>();
-                    objects.add(eth+"入");
-                    objects.add(eth+"出");
-                    return objects.stream();
-                }).collect(Collectors.toList());
+                interfaces = lines.stream().skip(2).map(line -> line.replaceAll("(\\s)+", ",").split(",")[1])
+                        .filter(eth -> !eth.startsWith("lo:"))
+                        .flatMap(eth -> {
+                            ArrayList<String> objects = new ArrayList<>();
+                            objects.add(eth + "入");
+                            objects.add(eth + "出");
+                            return objects.stream();
+                        }).collect(Collectors.toList());
 //                interfaces.stream().forEach(System.out::println);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            while (true){
+            while (true) {
                 try {
                     List<String> lines = Files.readAllLines(Paths.get(file.toURI()));
-                    lines.stream().skip(2).forEach((line)->{
+                    lines.stream().skip(2).forEach((line) -> {
                         line = line.replaceAll("(\\s)+", ",");
-                        String[] split=line.split(",");
+                        String[] split = line.split(",");
                         String eth = split[1];
-                        if(eth.startsWith("lo:")){
+                        if (eth.startsWith("lo:")) {
                             return;
                         }
                         long in = Long.parseLong(split[2]);
@@ -97,23 +99,23 @@ public class NetStats {
                         long oldOut = interOut.getOrDefault(eth, (long) 0);
                         long oldIn = interIn.getOrDefault(eth, (long) 0);
                         long outChange = out - oldOut;
-                        long inChange = in -oldIn;
-                        if(oldIn!=0){
+                        long inChange = in - oldIn;
+                        if (oldIn != 0) {
                             inSpeedMap.computeIfAbsent(eth, s -> new LinkedList<>());
-                            inSpeedMap.get(eth).add((double)(inChange/1024));
-                            if(inSpeedMap.get(eth).size()>seconds){
+                            inSpeedMap.get(eth).add((double) (inChange / 1024));
+                            if (inSpeedMap.get(eth).size() > seconds) {
                                 inSpeedMap.get(eth).remove(0);
                             }
                         }
-                        if(oldOut!=0){
+                        if (oldOut != 0) {
                             outSpeedMap.computeIfAbsent(eth, s -> new LinkedList<Double>());
-                            outSpeedMap.get(eth).add((double)(outChange/1024));
-                            if(outSpeedMap.get(eth).size()>seconds){
+                            outSpeedMap.get(eth).add((double) (outChange / 1024));
+                            if (outSpeedMap.get(eth).size() > seconds) {
                                 outSpeedMap.get(eth).remove(0);
                             }
                         }
-                        interIn.put(eth,in);
-                        interOut.put(eth,out);
+                        interIn.put(eth, in);
+                        interOut.put(eth, out);
                     });
                     Thread.sleep(1000);
                 } catch (IOException e) {
@@ -126,34 +128,34 @@ public class NetStats {
 
     };
 
-    private static final List<YValue> buildYvalues(){
-        List<YValue> YValues=new ArrayList<>();
+    private static final List<YValue> buildYvalues() {
+        List<YValue> YValues = new ArrayList<>();
 //        inSpeedMap.entrySet().forEach(entry->{
 //            String eth =entry.getKey();
 //            List<Double> speeds=entry.getValue();
 //            YValue yValue =new YValue(eth+"入",speeds);
 //            YValues.add(yValue);
 //        });
-        outSpeedMap.entrySet().forEach(entry->{
-            String eth =entry.getKey();
-            List<Double> speeds=entry.getValue();
-            YValue yValue =new YValue(eth+"出",speeds);
+        outSpeedMap.entrySet().forEach(entry -> {
+            String eth = entry.getKey();
+            List<Double> speeds = entry.getValue();
+            YValue yValue = new YValue(eth + "出", speeds);
             YValues.add(yValue);
         });
         return YValues;
     }
 
-    public static final void start(){
+    public static final void start() {
         new Thread(NetStats.task).start();
     }
 
-    public static final String html(){
+    public static final String html() {
         List<YValue> yValues = buildYvalues();
         String legends = JSONObject.toJSONString(interfaces);
         String scales = JSONObject.toJSONString(xScales);
-        String series=JSONObject.toJSONString(yValues);
+        String series = JSONObject.toJSONString(yValues);
 
-        String template="<!DOCTYPE html>\n" +
+        String template = "<!DOCTYPE html>\n" +
                 "<html lang=\"en\">\n" +
                 "<head>\n" +
                 "    <meta charset=\"UTF-8\">\n" +
@@ -174,7 +176,7 @@ public class NetStats {
                 "            trigger: 'axis'\n" +
                 "        },\n" +
                 "        legend: {\n" +
-                "            data: "+legends+"\n" +
+                "            data: " + legends + "\n" +
                 "        },\n" +
                 "        toolbox: {\n" +
                 "            feature: {\n" +
@@ -188,12 +190,12 @@ public class NetStats {
                 "        xAxis: {\n" +
                 "            type: 'category',\n" +
                 "            boundaryGap: false,\n" +
-                "            data: "+scales+"\n" +
+                "            data: " + scales + "\n" +
                 "        },\n" +
                 "        yAxis: {\n" +
                 "            type: \"value\"\n" +
                 "        },\n" +
-                "        series: "+series+"\n" +
+                "        series: " + series + "\n" +
                 "    };\n" +
                 "    // 使用刚指定的配置项和数据显示图表。\n" +
                 "    myChart.setOption(option);\n" +
