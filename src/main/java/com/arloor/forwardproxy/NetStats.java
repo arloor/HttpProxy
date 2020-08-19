@@ -15,7 +15,7 @@ public class NetStats {
     private static final String filename = "/proc/net/dev";
     private static List<String> interfaces = new ArrayList<>();
     private static List<String> xScales = new ArrayList<>();
-    private static final int seconds = 180;
+    private static final int seconds = 600;
 
     static {
         for (int i = 1; i <= seconds; i++) {
