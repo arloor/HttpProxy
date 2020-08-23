@@ -48,9 +48,6 @@ public final class HttpProxyServer {
     public static void main(String[] args) throws Exception {
         NetStats.start();
         // get name representing the running Java virtual machine.
-        String name = ManagementFactory.getRuntimeMXBean().getName();
-        String pid = name.split("@")[0];
-        log.info("该进程pid= " + pid);
         String propertiesPath = null;
         if (args.length == 2 && args[0].equals("-c")) {
             propertiesPath = args[1];
@@ -67,8 +64,8 @@ public final class HttpProxyServer {
         Config.Ssl ssl = config.ssl();
         Config.Http http = config.http();
 
-        EventLoopGroup bossGroup = OsHelper.os.eventLoopBuilder.apply(1);
-        EventLoopGroup workerGroup = OsHelper.os.eventLoopBuilder.apply(0);
+        EventLoopGroup bossGroup = OsHelper.buildEventLoopGroup(1);
+        EventLoopGroup workerGroup =  OsHelper.buildEventLoopGroup(0);
 
 
         try {
@@ -95,7 +92,7 @@ public final class HttpProxyServer {
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 10240);
             b.group(bossGroup, workerGroup)
-                    .channel(OsHelper.os.serverSocketChannelClazz)
+                    .channel(OsHelper.serverSocketChannelClazz())
                     .childHandler(new HttpProxyServerInitializer(http));
 
             Channel httpChannel = b.bind(http.getPort()).sync().channel();
@@ -112,7 +109,7 @@ public final class HttpProxyServer {
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 10240);
             b.group(bossGroup, workerGroup)
-                    .channel(OsHelper.os.serverSocketChannelClazz)
+                    .channel(OsHelper.serverSocketChannelClazz())
                     .childHandler(new HttpsProxyServerInitializer(ssl));
 
             Channel sslChannel = b.bind(ssl.getPort()).sync().channel();

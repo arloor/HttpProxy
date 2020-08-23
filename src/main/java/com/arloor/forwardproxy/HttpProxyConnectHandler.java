@@ -131,7 +131,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         response.headers().set("Server", "netty");
                         response.headers().set("Content-Length", favicon.length);
                         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                    }else if (OsHelper.os.equals(OsHelper.OS.Unix)){
+                    }else if (OsHelper.isUnix()){
                         String html = NetStats.html();
                         ByteBuf buffer = ctx.alloc().buffer();
                         buffer.writeBytes(html.getBytes());
@@ -251,7 +251,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                 // 4.连接目标网站
                 final Channel inboundChannel = ctx.channel();
                 b.group(inboundChannel.eventLoop())
-                        .channel(OsHelper.os.socketChannelClazz)
+                        .channel(OsHelper.socketChannelClazz())
                         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                         .option(ChannelOption.SO_KEEPALIVE, true)
                         .handler(new LoggingHandler(LogLevel.INFO))

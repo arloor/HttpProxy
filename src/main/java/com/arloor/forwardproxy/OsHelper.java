@@ -13,13 +13,34 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.management.ManagementFactory;
 import java.util.Optional;
 import java.util.function.Function;
 
 public class OsHelper {
     private static final Logger logger = LoggerFactory.getLogger(OsHelper.class);
-    public static final OS os =parseOS();
-    public enum OS {
+    private static final OS os =parseOS();
+
+
+    public static Class serverSocketChannelClazz(){
+        return os.serverSocketChannelClazz;
+    }
+
+    public static Class socketChannelClazz(){
+        return os.socketChannelClazz;
+    }
+
+    public static EventLoopGroup buildEventLoopGroup(int num){
+        return os.eventLoopBuilder.apply(num);
+    }
+
+    public static boolean isUnix(){
+        return os.equals(OS.Unix);
+    }
+
+
+
+    private enum OS {
         MacOS("mac", KQueueServerSocketChannel.class, KQueueSocketChannel.class, threadNum -> new KQueueEventLoopGroup(threadNum)),
         Unix("unix", EpollServerSocketChannel.class, EpollSocketChannel.class, threadNum -> new EpollEventLoopGroup(threadNum)),
         Windows("windows", NioServerSocketChannel.class, NioSocketChannel.class, threadNum -> new NioEventLoopGroup(threadNum)),
@@ -38,9 +59,12 @@ public class OsHelper {
         }
     }
 
-    public static OsHelper.OS parseOS() {
+    private static OsHelper.OS parseOS() {
         String osName = System.getProperty("os.name");
         logger.info("当前系统为： "+osName);
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        String pid = name.split("@")[0];
+        logger.info("该进程pid= " + pid);
         osName = Optional.ofNullable(osName).orElse("").toLowerCase();
         if ((osName.indexOf("win") >= 0)) {
             return OS.Windows;
