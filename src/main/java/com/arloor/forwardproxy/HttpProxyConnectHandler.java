@@ -46,6 +46,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
+import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
@@ -130,8 +132,9 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
                         response.headers().set("Server", "netty");
                         response.headers().set("Content-Length", favicon.length);
+                        response.headers().set(CONNECTION, CLOSE);
                         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                    }else if (true){
+                    }else if (request.uri().equals("/")){
                         String html = GlobalTrafficMonitor.html();
                         ByteBuf buffer = ctx.alloc().buffer();
                         buffer.writeBytes(html.getBytes());
@@ -139,12 +142,14 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
                         response.headers().set("Server", "netty");
                         response.headers().set("Content-Length", html.getBytes().length);
+                        response.headers().set(CONNECTION, CLOSE);
                         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
                     }else {
                         final FullHttpResponse response = new DefaultFullHttpResponse(
                                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(hostName.getBytes()));
                         response.headers().set("Server", "netty");
                         response.headers().set("Content-Length", hostName.getBytes().length);
+                        response.headers().set(CONNECTION, CLOSE);
                         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
                     }
                     // 这里需要将content全部release
