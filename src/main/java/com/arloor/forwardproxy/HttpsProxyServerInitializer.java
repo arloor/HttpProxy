@@ -44,6 +44,7 @@ public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChanne
     @Override
     public void initChannel(SocketChannel ch) {
         ChannelPipeline p = ch.pipeline();
+        p.addLast(GlobalTrafficMonitor.getInstance());
         if (sslCtx != null) {
             p.addLast(sslCtx.newHandler(ch.alloc()));
         }

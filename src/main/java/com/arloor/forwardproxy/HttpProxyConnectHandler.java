@@ -131,8 +131,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         response.headers().set("Server", "netty");
                         response.headers().set("Content-Length", favicon.length);
                         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                    }else if (OsHelper.isUnix()){
-                        String html = NetStats.html();
+                    }else if (true){
+                        String html = GlobalTrafficMonitor.html();
                         ByteBuf buffer = ctx.alloc().buffer();
                         buffer.writeBytes(html.getBytes());
                         final FullHttpResponse response = new DefaultFullHttpResponse(

@@ -24,9 +24,11 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslContext;
+import io.netty.handler.traffic.GlobalTrafficShapingHandler;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.concurrent.Executors;
 
 public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel> {
 
@@ -39,6 +41,7 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
     @Override
     public void initChannel(SocketChannel ch) {
         ChannelPipeline p = ch.pipeline();
+        p.addLast(GlobalTrafficMonitor.getInstance());
         if (http.getReverseBit()) {
             p.addLast(new ReadReverseHandler());
             p.addLast(new WriteReverseHandler());
