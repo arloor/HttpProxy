@@ -235,7 +235,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                 "    },\n" +
                 "    {\n" +
                 "        itemStyle:{\n" +
-                "            color: '#4d94ff',\n" +
+                "            color: '#abc',\n" +
                 "        },\n" +
                 "        \"data\": [(${seriesDown})],\n" +
                 "        \"markLine\": {\n" +
