@@ -22,7 +22,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
         return instance;
     }
 
-    private static final int seconds = 600;
+    private static final int seconds = 300;
     private static List<String> xScales = new ArrayList<>();
     private static List<Double> yScalesUp = new LinkedList<>();
     private static List<Double> yScalesDown = new LinkedList<>();
