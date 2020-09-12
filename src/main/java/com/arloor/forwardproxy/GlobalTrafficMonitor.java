@@ -106,7 +106,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             "                value[0].value = (value[0].value / Math.pow(k, c)).toPrecision(4) + ' ' + sizes[c];\n" +
             "            }\n" +
             "            //这里的value[0].name就是每次显示的name\n" +
-            "            return value[0].name + \"<br/>\" + \"流量为:\" + value[0].value;\n" +
+            "            return value[0].name + \"<br/>\" + \"网速为: \" + value[0].value;\n" +
             "        }\n" +
             "    },\n" +
             "    legend: {\n" +
@@ -156,7 +156,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             "                    var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];\n" +
             "                    //这里是取自然对数，也就是log（k）（value），求出以k为底的多少次方是value\n" +
             "                    var c = Math.floor(Math.log(value) / Math.log(k));\n" +
-            "                    value = (value / Math.pow(k, c)).toPrecision(4) + ' ' + sizes[c];\n" +
+            "                    value = (value / Math.pow(k, c)) + ' ' + sizes[c];\n" +
             "                }\n" +
             "                //这里的value[0].name就是每次显示的name\n" +
             "                return value;\n" +
