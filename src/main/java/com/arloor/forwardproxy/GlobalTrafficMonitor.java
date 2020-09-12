@@ -214,7 +214,8 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             "        \"smooth\": false,\n" +
             "        \"type\": \"line\"\n" +
             "    }],\n" +
-            "    animationDuration: 10\n" +
+            "    animation:false,"+
+            "    animationDuration: 5\n" +
             "};" +
             "    // 使用刚指定的配置项和数据显示图表。\n" +
             "    myChart.setOption(option);\n" +
