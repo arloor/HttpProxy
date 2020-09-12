@@ -156,7 +156,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             "                    var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];\n" +
             "                    //这里是取自然对数，也就是log（k）（value），求出以k为底的多少次方是value\n" +
             "                    var c = Math.floor(Math.log(value) / Math.log(k));\n" +
-            "                    value = (value / Math.pow(k, c)).toPrecision(3) + ' ' + sizes[c];\n" +
+            "                    value = (value / Math.pow(k, c)).toPrecision(4) + ' ' + sizes[c];\n" +
             "                }\n" +
             "                //这里的value[0].name就是每次显示的name\n" +
             "                return value;\n" +
@@ -179,7 +179,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             "                        var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];\n" +
             "                        //这里是取自然对数，也就是log（k）（value），求出以k为底的多少次方是value\n" +
             "                        var c = Math.floor(Math.log(value.value) / Math.log(k));\n" +
-            "                        value = (value.value / Math.pow(k, c)).toPrecision(3) + ' ' + sizes[c];\n" +
+            "                        value = (value.value / Math.pow(k, c)).toPrecision(4) + ' ' + sizes[c];\n" +
             "                    }\n" +
             "                    //这里的value[0].name就是每次显示的name\n" +
             "                    return value;\n" +
@@ -202,7 +202,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             "                        var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];\n" +
             "                        //这里是取自然对数，也就是log（k）（value），求出以k为底的多少次方是value\n" +
             "                        var c = Math.floor(Math.log(value.value) / Math.log(k));\n" +
-            "                        value = (value.value / Math.pow(k, c)).toPrecision(3) + ' ' + sizes[c];\n" +
+            "                        value = (value.value / Math.pow(k, c)).toPrecision(4) + ' ' + sizes[c];\n" +
             "                    }\n" +
             "                    //这里的value[0].name就是每次显示的name\n" +
             "                    return value;\n" +
