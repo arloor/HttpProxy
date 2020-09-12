@@ -103,7 +103,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             "                var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];\n" +
             "                //这里是取自然对数，也就是log（k）（value[0].value），求出以k为底的多少次方是value[0].value\n" +
             "                var c = Math.floor(Math.log(value[0].value) / Math.log(k));\n" +
-            "                value[0].value = (value[0].value / Math.pow(k, c)).toPrecision(3) + ' ' + sizes[c];\n" +
+            "                value[0].value = (value[0].value / Math.pow(k, c)).toPrecision(4) + ' ' + sizes[c];\n" +
             "            }\n" +
             "            //这里的value[0].name就是每次显示的name\n" +
             "            return value[0].name + \"<br/>\" + \"流量为:\" + value[0].value;\n" +
