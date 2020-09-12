@@ -40,17 +40,15 @@ https.privkey.pem 是私钥
 
 以腾讯云上的免费ssl证书为例，nginx文件夹中的`1_xxx.com_bundle.crt`是fullchain，`2_xxx.com.key`是privkey，相信代码从业者能够从这里举一反三，从而知道从其他途径签发的证书应该如何配置。
 
+## 客户端说明
+
+1. 可以使用支持https的软件，例如：surge、shadowrocket、clash
+2. chrome浏览器可以通过[SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件使用本代理（不推荐，会存在被嗅探的风险）
+3. Java开发人员可以使用[connect](https://github.com/arloor/connect)项目
+
 ## 日志
 
 ```shell
-2020-07-05 00:15:29.558 INFO  - xx.xx.xx.xx CONNECT www.google.com:443  {www.google.com}
-2020-07-05 00:15:29.569 INFO  - xx.xx.xx.xx CONNECT android.clients.google.com:443  {android.clients.google.com}
-2020-07-05 00:15:30.471 INFO  - xx.xx.xx.xx CONNECT www.googleapis.com:443  {www.googleapis.com}
-2020-07-05 00:15:31.035 INFO  - xx.xx.xx.xx CONNECT clients4.google.com:443  {clients4.google.com}
-2020-07-05 00:15:31.040 INFO  - xx.xx.xx.xx CONNECT oauthaccountmanager.googleapis.com:443  {oauthaccountmanager.googleapis.com}
-2020-07-05 00:15:31.961 INFO  - xx.xx.xx.xx CONNECT accounts.google.com:443  {accounts.google.com}
-2020-07-05 00:15:32.731 INFO  - xx.xx.xx.xx CONNECT www.google.com:443  {www.google.com}
-2020-07-05 00:15:32.798 INFO  - xx.xx.xx.xx CONNECT lh5.googleusercontent.com:443  {lh5.googleusercontent.com}
 2020-07-05 00:15:33.216 INFO  - xx.xx.xx.xx CONNECT www.google.com.hk:443  {www.google.com.hk}
 2020-07-05 00:15:33.239 INFO  - xx.xx.xx.xx CONNECT www.google.com.hk:443  {www.google.com.hk}
 2020-07-05 00:15:33.368 INFO  - xx.xx.xx.xx CONNECT www.google.com.hk:443  {www.google.com.hk}
@@ -71,6 +69,14 @@ https.privkey.pem 是私钥
 2020-07-05 00:15:44.039 INFO  - xx.xx.xx.xx CONNECT avatars0.githubusercontent.com:443  {avatars0.githubusercontent.com}
 2020-07-05 00:15:44.042 INFO  - xx.xx.xx.xx CONNECT avatars2.githubusercontent.com:443  {avatars2.githubusercontent.com}
 ```
+
+## 网速监控
+
+如果直接通过http(s)访问运行代理的端口，则可以看到上行网速，如下图所示
+
+![](traffic_monitor.jpg)
+
+这是一台30Mbps的服务器，在观看4k视频时的网速表现。
 
 ## 电报讨论组
 
