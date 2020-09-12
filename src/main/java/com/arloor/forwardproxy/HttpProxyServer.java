@@ -46,7 +46,7 @@ public final class HttpProxyServer {
     private static final Logger log = LoggerFactory.getLogger(HttpProxyServer.class);
 
     public static void main(String[] args) throws Exception {
-        NetStats.start();
+//        NetStats.start();
         // get name representing the running Java virtual machine.
         String propertiesPath = null;
         if (args.length == 2 && args[0].equals("-c")) {
