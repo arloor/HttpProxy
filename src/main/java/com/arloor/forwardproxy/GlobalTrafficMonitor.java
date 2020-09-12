@@ -80,6 +80,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             "<head>\n" +
             "    <meta charset=\"UTF-8\">\n" +
             "    <title>Netty-Server</title>\n" +
+            "<meta http-equiv=\"refresh\" content=\"3\">"+
             "    <script src=\"https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js\"></script>\n" +
             "</head>\n" +
             "<body>\n" +
