@@ -71,7 +71,6 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     }
 
     public static final String html() {
-        String legend = "上行网速";
         String legends = JSONObject.toJSONString(Lists.newArrayList("上行网速","下行网速"));
         String scales = JSONObject.toJSONString(xScales);
         String seriesUp = JSONObject.toJSONString(yScalesUp);
