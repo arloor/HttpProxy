@@ -134,6 +134,15 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         response.headers().set(CONNECTION, CLOSE);
                         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
                     }else if (request.uri().equals("/")){
+                        ByteBuf buffer = ctx.alloc().buffer();
+                        buffer.writeBytes(hostName.getBytes());
+                        final FullHttpResponse response = new DefaultFullHttpResponse(
+                                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
+                        response.headers().set("Server", "netty");
+                        response.headers().set("Content-Length", hostName.getBytes().length);
+                        response.headers().set(CONNECTION, CLOSE);
+                        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                    }else if (request.uri().equals("/net")){
                         String html = GlobalTrafficMonitor.html();
                         ByteBuf buffer = ctx.alloc().buffer();
                         buffer.writeBytes(html.getBytes());
@@ -144,10 +153,13 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         response.headers().set(CONNECTION, CLOSE);
                         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
                     }else {
+                        String notFound="404 not found";
+                        ByteBuf buffer = ctx.alloc().buffer();
+                        buffer.writeBytes(notFound.getBytes());
                         final FullHttpResponse response = new DefaultFullHttpResponse(
-                                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(hostName.getBytes()));
+                                HttpVersion.HTTP_1_1, NOT_FOUND, buffer);
                         response.headers().set("Server", "netty");
-                        response.headers().set("Content-Length", hostName.getBytes().length);
+                        response.headers().set("Content-Length", notFound.getBytes().length);
                         response.headers().set(CONNECTION, CLOSE);
                         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
                     }
