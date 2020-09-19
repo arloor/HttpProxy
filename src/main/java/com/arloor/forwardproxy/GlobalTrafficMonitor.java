@@ -88,12 +88,13 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
         private static final String template = "<!DOCTYPE html>\n" +
                 "<html lang=\"en\">\n" +
                 "<head>\n" +
-                "    <meta charset=\"UTF-8\">\n" +
-                "    <title>Netty-Server</title>\n" +
-                "<meta http-equiv=\"refresh\" content=\"3\">    <script src=\"https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js\"></script>\n" +
+                "<meta charset=\"UTF-8\">\n" +
+                "<title>实时网速</title>\n" +
+                "<meta http-equiv=\"refresh\" content=\"3\">" +
+                "<script src=\"https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js\"></script>\n" +
                 "</head>\n" +
-                "<body>\n" +
-                "<div id=\"main\" style=\"width: 100%;height: 800px;\"></div>\n" +
+                "<body style=\"margin: 0;height:100%;\">\n" +
+                "<div id=\"main\" style=\"width: 100%;height: 100vh;\"></div>\n" +
                 "<script type=\"text/javascript\">\n" +
                 "    // 基于准备好的dom，初始化echarts实例\n" +
                 "    var myChart = echarts.init(document.getElementById('main'));\n" +
