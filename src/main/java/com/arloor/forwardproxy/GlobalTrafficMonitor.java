@@ -1,7 +1,6 @@
 package com.arloor.forwardproxy;
 
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
@@ -57,15 +56,17 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
 
     @Override
     protected void doAccounting(TrafficCounter counter) {
-        long lastWriteThroughput = counter.lastWriteThroughput();
-        yScalesUp.add((double) lastWriteThroughput);
-        if (yScalesUp.size() > seconds) {
-            yScalesUp.remove(0);
-        }
-        long lastReadThroughput = counter.lastReadThroughput();
-        yScalesDown.add((double)lastReadThroughput);
-        if(yScalesDown.size()>seconds){
-            yScalesDown.remove(0);
+        synchronized (this){
+            long lastWriteThroughput = counter.lastWriteThroughput();
+            yScalesUp.add((double) lastWriteThroughput);
+            if (yScalesUp.size() > seconds) {
+                yScalesUp.remove(0);
+            }
+            long lastReadThroughput = counter.lastReadThroughput();
+            yScalesDown.add((double)lastReadThroughput);
+            if(yScalesDown.size()>seconds){
+                yScalesDown.remove(0);
+            }
         }
         super.doAccounting(counter);
     }
