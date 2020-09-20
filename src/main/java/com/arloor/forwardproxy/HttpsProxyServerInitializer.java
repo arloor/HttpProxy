@@ -15,8 +15,6 @@
  */
 package com.arloor.forwardproxy;
 
-import com.arloor.forwardproxy.crypto.ReadReverseHandler;
-import com.arloor.forwardproxy.crypto.WriteReverseHandler;
 import com.arloor.forwardproxy.ssl.SslContextFactory;
 import com.arloor.forwardproxy.vo.Config;
 import io.netty.channel.ChannelInitializer;

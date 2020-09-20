@@ -15,20 +15,14 @@
  */
 package com.arloor.forwardproxy;
 
-import com.arloor.forwardproxy.crypto.ReadReverseHandler;
-import com.arloor.forwardproxy.crypto.WriteReverseHandler;
-import com.arloor.forwardproxy.ssl.SslContextFactory;
 import com.arloor.forwardproxy.vo.Config;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.traffic.GlobalTrafficShapingHandler;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.concurrent.Executors;
 
 public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel> {
 
@@ -42,10 +36,6 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
     public void initChannel(SocketChannel ch) {
         ChannelPipeline p = ch.pipeline();
         p.addLast(GlobalTrafficMonitor.getInstance());
-        if (http.getReverseBit()) {
-            p.addLast(new ReadReverseHandler());
-            p.addLast(new WriteReverseHandler());
-        }
         p.addLast(new HttpRequestDecoder());
         p.addLast(new HttpResponseEncoder());
         p.addLast(new HttpServerExpectContinueHandler());

@@ -57,9 +57,7 @@ public class Config {
             Integer port = Integer.parseInt(httpPortStr);
             String auth = properties.getProperty("http.auth");
             auth = auth==null?auth:"Basic " + Base64.getEncoder().encodeToString(auth.getBytes());
-            String reverseBitStr = properties.getProperty("http.reverseBit");
-            Boolean reverseBit = TRUE.equals(reverseBitStr);
-            Http http = new Http(port, reverseBit, auth);
+            Http http = new Http(port, auth);
             config.http = http;
         }
 
@@ -69,12 +67,10 @@ public class Config {
 
     public static class Http {
         private Integer port;
-        private Boolean reverseBit;
         private String auth;
 
-        public Http(Integer port, Boolean reverseBit, String auth) {
+        public Http(Integer port, String auth) {
             this.port = port;
-            this.reverseBit = reverseBit;
             this.auth = auth;
         }
 
@@ -84,14 +80,6 @@ public class Config {
 
         public void setPort(Integer port) {
             this.port = port;
-        }
-
-        public Boolean getReverseBit() {
-            return reverseBit;
-        }
-
-        public void setReverseBit(Boolean reverseBit) {
-            this.reverseBit = reverseBit;
         }
 
         public String getAuth() {
