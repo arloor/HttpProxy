@@ -19,7 +19,6 @@ ask4Authcate=true
 # http代理配置
 http.enable=true
 http.port=80
-http.reverseBit=false
 http.auth=arloor:httpforarloor
 ```
 
