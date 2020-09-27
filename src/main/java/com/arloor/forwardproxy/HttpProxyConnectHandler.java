@@ -16,8 +16,8 @@
 package com.arloor.forwardproxy;
 
 import com.arloor.forwardproxy.vo.Config;
+import com.arloor.forwardproxy.web.Dispatcher;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.logging.LogLevel;
@@ -29,37 +29,16 @@ import io.netty.util.concurrent.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Objects;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
-import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
+import static io.netty.handler.codec.http.HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED;
 
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
     private static final Logger log = LoggerFactory.getLogger(HttpProxyConnectHandler.class);
-    private static final Logger weblog = LoggerFactory.getLogger("web");
-    private static byte[] favicon = new byte[0];
-
-    static {
-        try (BufferedInputStream stream = new BufferedInputStream(Objects.requireNonNull(HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")))) {
-            byte[] bytes = new byte[stream.available()];
-            int read = stream.read(bytes);
-            favicon = bytes;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }catch (NullPointerException e){
-            log.error("缺少favicon.ico");
-        }
-    }
-
-
     private final Map<String, String> auths;
-
     public HttpProxyConnectHandler(Map<String, String> auths) {
         this.auths = auths;
     }
@@ -79,17 +58,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, HttpObject msg) {
         if (msg instanceof HttpRequest) {
-            final HttpRequest req = (HttpRequest) msg;
-            request = req;
-            //获取Host和port
-            String hostAndPortStr = req.headers().get("Host");
-            if (hostAndPortStr == null) {
-                SocksServerUtils.closeOnFlush(ctx.channel());
-            }
-            String[] hostPortArray = hostAndPortStr.split(":");
-            host = hostPortArray[0];
-            String portStr = hostPortArray.length == 2 ? hostPortArray[1] : "80";
-            port = Integer.parseInt(portStr);
+            request = (HttpRequest) msg;
+            setHostPort(ctx);
         } else {
             //SimpleChannelInboundHandler会将HttpContent中的bytebuf Release，但是这个还会转给relayHandler，所以需要在这里预先retain
             ((HttpContent) msg).content().retain();
@@ -103,64 +73,18 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 //                }
                 // 1. 如果url以 / 开头，则认为是直接请求，而不是代理请求
                 if (request.uri().startsWith("/")) {
-                    weblog.info("{} {} {} {}", clientHostname, request.method(), request.uri(), String.format("{%s:%s}", host, port));
-
-                    if (request.uri().equals("/favicon.ico")) {
-                        ByteBuf buffer = ctx.alloc().buffer();
-                        buffer.writeBytes(favicon);
-                        final FullHttpResponse response = new DefaultFullHttpResponse(
-                                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
-                        response.headers().set("Server", "netty");
-                        response.headers().set("Content-Length", favicon.length);
-                        response.headers().set(CONNECTION, CLOSE);
-                        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                    } else if (request.uri().equals("/")) {
-                        ByteBuf buffer = ctx.alloc().buffer();
-                        buffer.writeBytes(clientHostname.getBytes());
-                        final FullHttpResponse response = new DefaultFullHttpResponse(
-                                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
-                        response.headers().set("Server", "netty");
-                        response.headers().set("Content-Length", clientHostname.getBytes().length);
-                        response.headers().set(CONNECTION, CLOSE);
-                        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                    } else if (request.uri().equals("/net")) {
-                        String html = GlobalTrafficMonitor.html();
-                        ByteBuf buffer = ctx.alloc().buffer();
-                        buffer.writeBytes(html.getBytes());
-                        final FullHttpResponse response = new DefaultFullHttpResponse(
-                                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
-                        response.headers().set("Server", "netty");
-                        response.headers().set("Content-Length", html.getBytes().length);
-                        response.headers().set(CONNECTION, CLOSE);
-                        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                    } else {
-                        String notFound = "404 not found";
-                        ByteBuf buffer = ctx.alloc().buffer();
-                        buffer.writeBytes(notFound.getBytes());
-                        final FullHttpResponse response = new DefaultFullHttpResponse(
-                                HttpVersion.HTTP_1_1, NOT_FOUND, buffer);
-                        response.headers().set("Server", "netty");
-                        response.headers().set("Content-Length", notFound.getBytes().length);
-                        response.headers().set(CONNECTION, CLOSE);
-                        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                    }
+                    Dispatcher.handle(request, ctx);
                     // 这里需要将content全部release
                     contents.forEach(ReferenceCountUtil::release);
                     return;
                 }
 
                 //2. 检验auth
-                String userName = "nouser";
-                String requestBasicAuth = request.headers().get("Proxy-Authorization");
-                if (requestBasicAuth != null && requestBasicAuth.length() != 0) {
-                    String raw = auths.get(requestBasicAuth);
-                    if (raw != null && raw.length() != 0) {
-                        userName = raw.split(":")[0];
-                    }
-                }
+                String basicAuth = request.headers().get("Proxy-Authorization");
+                String userName = getUserName(basicAuth, auths);
                 if (auths != null && auths.size() != 0) {
-                    if (requestBasicAuth == null || !auths.containsKey(requestBasicAuth)) {
-                        log.warn(clientHostname + " " + request.method() + " " + request.uri() + "  {" + host + "} wrong_auth:{" + requestBasicAuth + "}");
+                    if (basicAuth == null || !auths.containsKey(basicAuth)) {
+                        log.warn(clientHostname + " " + request.method() + " " + request.uri() + "  {" + host + "} wrong_auth:{" + basicAuth + "}");
                         // 这里需要将content全部release
                         contents.forEach(ReferenceCountUtil::release);
                         DefaultHttpResponse responseAuthRequired;
@@ -276,6 +200,28 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                 });
             }
         }
+    }
+
+    private String getUserName(String basicAuth, Map<String, String> auths) {
+        String userName = "nouser";
+        if (basicAuth != null && basicAuth.length() != 0) {
+            String raw = auths.get(basicAuth);
+            if (raw != null && raw.length() != 0) {
+                userName = raw.split(":")[0];
+            }
+        }
+        return userName;
+    }
+
+    private void setHostPort(ChannelHandlerContext ctx) {
+        String hostAndPortStr = request.headers().get("Host");
+        if (hostAndPortStr == null) {
+            SocksServerUtils.closeOnFlush(ctx.channel());
+        }
+        String[] hostPortArray = hostAndPortStr.split(":");
+        host = hostPortArray[0];
+        String portStr = hostPortArray.length == 2 ? hostPortArray[1] : "80";
+        port = Integer.parseInt(portStr);
     }
 
     @Override
