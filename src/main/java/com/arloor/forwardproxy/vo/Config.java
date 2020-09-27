@@ -14,13 +14,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 public class Config {
     private static final String TRUE = "true";
-    private static final Logger log = LoggerFactory.getLogger(Config.class);
 
-    public static boolean ask4Authcate=false;
+    public static boolean ask4Authcate = false;
 
     private Ssl ssl;
     private Http http;
@@ -36,18 +37,22 @@ public class Config {
     public static Config parse(Properties properties) {
 
         Config config = new Config();
-        ask4Authcate =TRUE.equals(properties.getProperty("ask4Authcate"));
+        ask4Authcate = TRUE.equals(properties.getProperty("ask4Authcate"));
 
         String httpsEnable = properties.getProperty("https.enable");
         if (TRUE.equals(httpsEnable)) {
             String httpsPortStr = properties.getProperty("https.port");
             Integer port = Integer.parseInt(httpsPortStr);
             String auth = properties.getProperty("https.auth");
-            auth = auth==null?auth:"Basic " + Base64.getEncoder().encodeToString(auth.getBytes());
+            Map<String, String> users = new HashMap<>();
+            if (auth != null && auth.length() != 0) {
+                for (String user : auth.split(",")) {
+                    users.computeIfAbsent("Basic " + Base64.getEncoder().encodeToString(auth.getBytes()), (cell) -> user);
+                }
+            }
             String fullchain = properties.getProperty("https.fullchain.pem");
-            String cert = properties.getProperty("https.cert.pem");
             String privkey = properties.getProperty("https.privkey.pem");
-            Ssl ssl = new Ssl(port, auth, fullchain,cert, privkey);
+            Ssl ssl = new Ssl(port, users, fullchain, privkey);
             config.ssl = ssl;
         }
 
@@ -56,8 +61,13 @@ public class Config {
             String httpPortStr = properties.getProperty("http.port");
             Integer port = Integer.parseInt(httpPortStr);
             String auth = properties.getProperty("http.auth");
-            auth = auth==null?auth:"Basic " + Base64.getEncoder().encodeToString(auth.getBytes());
-            Http http = new Http(port, auth);
+            Map<String, String> users = new HashMap<>();
+            if (auth != null && auth.length() != 0) {
+                for (String user : auth.split(",")) {
+                    users.computeIfAbsent("Basic " + Base64.getEncoder().encodeToString(auth.getBytes()), (cell) -> user);
+                }
+            }
+            Http http = new Http(port, users);
             config.http = http;
         }
 
@@ -67,9 +77,9 @@ public class Config {
 
     public static class Http {
         private Integer port;
-        private String auth;
+        private Map<String, String> auth; // base64 - raw
 
-        public Http(Integer port, String auth) {
+        public Http(Integer port, Map<String, String> auth) {
             this.port = port;
             this.auth = auth;
         }
@@ -78,31 +88,30 @@ public class Config {
             return port;
         }
 
-        public void setPort(Integer port) {
-            this.port = port;
+        public String getAuth(String base64Auth) {
+            return auth.get(base64Auth);
         }
 
-        public String getAuth() {
+        public Map<String, String> getAuthMap() {
             return auth;
         }
 
-        public void setAuth(String auth) {
-            this.auth = auth;
+        public boolean needAuth() {
+            return auth != null && auth.size() != 0;
         }
+
     }
 
     public static class Ssl {
         private Integer port;
-        private String auth;
+        private Map<String, String> auth; // base64 - raw
         private String fullchain;
-        private String cert;
         private String privkey;
 
-        public Ssl(Integer port, String auth, String fullchain, String cert, String privkey) {
+        public Ssl(Integer port, Map<String, String> auth, String fullchain, String privkey) {
             this.port = port;
             this.auth = auth;
             this.fullchain = fullchain;
-            this.cert = cert;
             this.privkey = privkey;
         }
 
@@ -110,40 +119,24 @@ public class Config {
             return port;
         }
 
-        public void setPort(Integer port) {
-            this.port = port;
+        public String getAuth(String base64Auth) {
+            return auth.get(base64Auth);
         }
 
-        public String getAuth() {
+        public Map<String, String> getAuthMap() {
             return auth;
-        }
-
-        public void setAuth(String auth) {
-            this.auth = auth;
         }
 
         public String getFullchain() {
             return fullchain;
         }
 
-        public void setFullchain(String fullchain) {
-            this.fullchain = fullchain;
-        }
-
-        public String getCert() {
-            return cert;
-        }
-
-        public void setCert(String cert) {
-            this.cert = cert;
-        }
-
         public String getPrivkey() {
             return privkey;
         }
 
-        public void setPrivkey(String privkey) {
-            this.privkey = privkey;
+        public boolean needAuth() {
+            return auth != null && auth.size() != 0;
         }
     }
 }

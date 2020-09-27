@@ -36,7 +36,6 @@ import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 
-
 /**
  * An HTTP server that sends back the content of the received HTTP request
  * in a pretty plaintext form.
@@ -60,32 +59,32 @@ public final class HttpProxyServer {
         }
 
         Config config = Config.parse(properties);
-        log.info("主动要求验证："+Config.ask4Authcate);
+        log.info("主动要求验证：" + Config.ask4Authcate);
         Config.Ssl ssl = config.ssl();
         Config.Http http = config.http();
 
         EventLoopGroup bossGroup = OsHelper.buildEventLoopGroup(1);
-        EventLoopGroup workerGroup =  OsHelper.buildEventLoopGroup(0);
+        EventLoopGroup workerGroup = OsHelper.buildEventLoopGroup(0);
 
 
         try {
-            if(ssl!=null &&http!=null){
+            if (ssl != null && http != null) {
                 Channel sslChannel = startSSl(bossGroup, workerGroup, ssl);
                 Channel httpChannel = startHttp(bossGroup, workerGroup, http);
-                if(httpChannel!=null){
+                if (httpChannel != null) {
                     httpChannel.closeFuture().sync();
                 }
-                if(sslChannel!=null){
+                if (sslChannel != null) {
                     sslChannel.closeFuture().sync();
                 }
-            }else if(ssl!=null){
+            } else if (ssl != null) {
                 Channel httpChannel = startSSl(bossGroup, workerGroup, ssl);
-                if(httpChannel!=null){
+                if (httpChannel != null) {
                     httpChannel.closeFuture().sync();
                 }
-            }else if(http!=null){
+            } else if (http != null) {
                 Channel sslChannel = startHttp(bossGroup, workerGroup, http);
-                if(sslChannel!=null){
+                if (sslChannel != null) {
                     sslChannel.closeFuture().sync();
                 }
             }
@@ -96,7 +95,7 @@ public final class HttpProxyServer {
     }
 
 
-    private static Channel startHttp(EventLoopGroup bossGroup,EventLoopGroup workerGroup,Config.Http http){
+    private static Channel startHttp(EventLoopGroup bossGroup, EventLoopGroup workerGroup, Config.Http http) {
         try {
             // Configure the server.
             ServerBootstrap b = new ServerBootstrap();
@@ -106,7 +105,7 @@ public final class HttpProxyServer {
                     .childHandler(new HttpProxyServerInitializer(http));
 
             Channel httpChannel = b.bind(http.getPort()).sync().channel();
-            log.info("http proxy@ port=" + http.getPort() + " auth=" + http.getAuth());
+            log.info("http proxy@ port=" + http.getPort() + " auth=" + http.needAuth());
             return httpChannel;
         } catch (Exception e) {
             log.error("无法启动Http Proxy", e);
@@ -114,7 +113,7 @@ public final class HttpProxyServer {
         return null;
     }
 
-    private static Channel startSSl(EventLoopGroup bossGroup,EventLoopGroup workerGroup,Config.Ssl ssl){
+    private static Channel startSSl(EventLoopGroup bossGroup, EventLoopGroup workerGroup, Config.Ssl ssl) {
         try {
             // Configure the server.
             ServerBootstrap b = new ServerBootstrap();
@@ -124,7 +123,7 @@ public final class HttpProxyServer {
                     .childHandler(new HttpsProxyServerInitializer(ssl));
 
             Channel sslChannel = b.bind(ssl.getPort()).sync().channel();
-            log.info("https proxy@ port=" + ssl.getPort() + " auth=" + ssl.getAuth());
+            log.info("https proxy@ port=" + ssl.getPort() + " auth=" + ssl.needAuth());
             return sslChannel;
         } catch (Exception e) {
             log.error("无法启动Https Proxy", e);

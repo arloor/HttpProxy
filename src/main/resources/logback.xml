@@ -27,6 +27,27 @@
             <charset>UTF-8</charset>
         </encoder>
     </appender>
+    <appender name="web" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/proxy/web.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${LOG_HOME}/proxy/web-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- each file should be at most 100MB, keep 60 days worth of history, but at most 20GB -->
+            <maxFileSize>200MB</maxFileSize>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>20GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符-->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <logger name="web" additivity="false" level="INFO">
+        <appender-ref ref="web"/>
+        <appender-ref ref="STDOUT"/>
+    </logger>
 
     <!-- 日志输出级别 -->
     <root level="INFO">

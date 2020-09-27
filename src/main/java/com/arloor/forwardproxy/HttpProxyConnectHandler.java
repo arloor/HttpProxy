@@ -45,6 +45,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
@@ -52,28 +53,30 @@ import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
 
-    private static byte[] favicon=null;
+    private static byte[] favicon = null;
 
     static {
-        try (InputStream stream = HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")){
+        try (InputStream stream = HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")) {
             byte b[] = new byte[6518];
             int len = 0;
             int temp = 0; //全部读取的内容都使用temp接收
             while ((temp = stream.read()) != -1) { //当没有读取完时，继续读取
                 b[len] = (byte) temp;
                 len++;
-            } stream .close();
-            favicon=Arrays.copyOf(b,len);
+            }
+            stream.close();
+            favicon = Arrays.copyOf(b, len);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     private static final Logger log = LoggerFactory.getLogger(HttpProxyConnectHandler.class);
-    private final String basicAuth;
+    private static final Logger weblog = LoggerFactory.getLogger("web");
+    private final Map<String, String> auths;
 
-    public HttpProxyConnectHandler(String basicAuth) {
-        this.basicAuth = basicAuth;
+    public HttpProxyConnectHandler(Map<String, String> auths) {
+        this.auths = auths;
     }
 
     private final Bootstrap b = new Bootstrap();
@@ -90,12 +93,9 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, HttpObject msg) {
-
-
         if (msg instanceof HttpRequest) {
             final HttpRequest req = (HttpRequest) msg;
             request = req;
-            String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostString();
             //获取Host和port
             String hostAndPortStr = req.headers().get("Host");
             if (hostAndPortStr == null) {
@@ -105,26 +105,22 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
             host = hostPortArray[0];
             String portStr = hostPortArray.length == 2 ? hostPortArray[1] : "80";
             port = Integer.parseInt(portStr);
-            log.info("{} {} {} {}",clientHostname,req.method(),req.uri(), HttpMethod.CONNECT.equals(req.method())?"":String.format("{%s}",hostAndPortStr));
         } else {
             //SimpleChannelInboundHandler会将HttpContent中的bytebuf Release，但是这个还会转给relayHandler，所以需要在这里预先retain
             ((HttpContent) msg).content().retain();
             contents.add((HttpContent) msg);
             //一个完整的Http请求被收到，开始处理该请求
             if (msg instanceof LastHttpContent) {
+                String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress();
                 // bugfix:当且仅当为connect请求时，暂停读，防止跟随的内容被忽略
 //                if (request.method().equals(HttpMethod.CONNECT)) {
 //                    ctx.channel().config().setAutoRead(false);
 //                }
                 // 1. 如果url以 / 开头，则认为是直接请求，而不是代理请求
                 if (request.uri().startsWith("/")) {
-                    String hostName = "";
-                    SocketAddress socketAddress = ctx.channel().remoteAddress();
-                    if (socketAddress instanceof InetSocketAddress) {
-                        hostName = ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
-                    }
+                    weblog.info("{} {} {} {}", clientHostname, request.method(), request.uri(), String.format("{%s:%s}", host, port));
 
-                    if(request.uri().equals("/favicon.ico")){
+                    if (request.uri().equals("/favicon.ico")) {
                         ByteBuf buffer = ctx.alloc().buffer();
                         buffer.writeBytes(favicon);
                         final FullHttpResponse response = new DefaultFullHttpResponse(
@@ -133,16 +129,16 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         response.headers().set("Content-Length", favicon.length);
                         response.headers().set(CONNECTION, CLOSE);
                         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                    }else if (request.uri().equals("/")){
+                    } else if (request.uri().equals("/")) {
                         ByteBuf buffer = ctx.alloc().buffer();
-                        buffer.writeBytes(hostName.getBytes());
+                        buffer.writeBytes(clientHostname.getBytes());
                         final FullHttpResponse response = new DefaultFullHttpResponse(
                                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
                         response.headers().set("Server", "netty");
-                        response.headers().set("Content-Length", hostName.getBytes().length);
+                        response.headers().set("Content-Length", clientHostname.getBytes().length);
                         response.headers().set(CONNECTION, CLOSE);
                         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                    }else if (request.uri().equals("/net")){
+                    } else if (request.uri().equals("/net")) {
                         String html = GlobalTrafficMonitor.html();
                         ByteBuf buffer = ctx.alloc().buffer();
                         buffer.writeBytes(html.getBytes());
@@ -152,8 +148,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         response.headers().set("Content-Length", html.getBytes().length);
                         response.headers().set(CONNECTION, CLOSE);
                         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-                    }else {
-                        String notFound="404 not found";
+                    } else {
+                        String notFound = "404 not found";
                         ByteBuf buffer = ctx.alloc().buffer();
                         buffer.writeBytes(notFound.getBytes());
                         final FullHttpResponse response = new DefaultFullHttpResponse(
@@ -169,11 +165,16 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                 }
 
                 //2. 检验auth
-                if (basicAuth != null) {
-                    String requestBasicAuth = request.headers().get("Proxy-Authorization");
-//                    request.headers().forEach(System.out::println);
-                    if (requestBasicAuth == null || !requestBasicAuth.equals(basicAuth)) {
-                        String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostName();
+                String userName = "nouser";
+                String requestBasicAuth = request.headers().get("Proxy-Authorization");
+                if (requestBasicAuth != null && requestBasicAuth.length() != 0) {
+                    String raw = auths.get(requestBasicAuth);
+                    if (raw != null && raw.length() != 0) {
+                        userName = raw.split(":")[0];
+                    }
+                }
+                if (auths != null && auths.size() != 0) {
+                    if (requestBasicAuth == null || !auths.containsKey(requestBasicAuth)) {
                         log.warn(clientHostname + " " + request.method() + " " + request.uri() + "  {" + host + "} wrong_auth:{" + requestBasicAuth + "}");
                         // 这里需要将content全部release
                         contents.forEach(ReferenceCountUtil::release);
@@ -191,6 +192,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                 }
 
                 //3. 这里进入代理请求处理，分为两种：CONNECT方法和其他HTTP方法
+                log.info("{}@{} {} {} {}", userName, clientHostname, request.method(), request.uri(), HttpMethod.CONNECT.equals(request.method()) ? "" : String.format("{%s:%s}", host, port));
                 Promise<Channel> promise = ctx.executor().newPromise();
                 if (request.method().equals(HttpMethod.CONNECT)) {
                     promise.addListener(
@@ -293,6 +295,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        cause.printStackTrace();
         String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostString();
         log.info("[EXCEPTION][" + clientHostname + "] " + cause.getMessage());
         ctx.close();

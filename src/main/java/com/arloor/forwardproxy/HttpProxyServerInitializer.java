@@ -39,6 +39,6 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
         p.addLast(new HttpRequestDecoder());
         p.addLast(new HttpResponseEncoder());
         p.addLast(new HttpServerExpectContinueHandler());
-        p.addLast(new HttpProxyConnectHandler(http.getAuth()));
+        p.addLast(new HttpProxyConnectHandler(http.getAuthMap()));
     }
 }
