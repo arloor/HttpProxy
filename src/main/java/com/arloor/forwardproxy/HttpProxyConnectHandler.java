@@ -18,9 +18,7 @@ package com.arloor.forwardproxy;
 import com.arloor.forwardproxy.vo.Config;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
@@ -30,49 +28,36 @@ import io.netty.util.concurrent.FutureListener;
 import io.netty.util.concurrent.Promise;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.nio.ch.Net;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
-
-    private static byte[] favicon = null;
+    private static final Logger log = LoggerFactory.getLogger(HttpProxyConnectHandler.class);
+    private static final Logger weblog = LoggerFactory.getLogger("web");
+    private static byte[] favicon = new byte[0];
 
     static {
-        try (InputStream stream = HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")) {
-            byte b[] = new byte[6518];
-            int len = 0;
-            int temp = 0; //全部读取的内容都使用temp接收
-            while ((temp = stream.read()) != -1) { //当没有读取完时，继续读取
-                b[len] = (byte) temp;
-                len++;
-            }
-            stream.close();
-            favicon = Arrays.copyOf(b, len);
+        try (BufferedInputStream stream = new BufferedInputStream(Objects.requireNonNull(HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")))) {
+            byte[] bytes = new byte[stream.available()];
+            int read = stream.read(bytes);
+            favicon = bytes;
         } catch (IOException e) {
             e.printStackTrace();
+        }catch (NullPointerException e){
+            log.error("缺少favicon.ico");
         }
     }
 
-    private static final Logger log = LoggerFactory.getLogger(HttpProxyConnectHandler.class);
-    private static final Logger weblog = LoggerFactory.getLogger("web");
+
     private final Map<String, String> auths;
 
     public HttpProxyConnectHandler(Map<String, String> auths) {
