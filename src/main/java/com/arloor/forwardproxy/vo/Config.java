@@ -47,7 +47,7 @@ public class Config {
             Map<String, String> users = new HashMap<>();
             if (auth != null && auth.length() != 0) {
                 for (String user : auth.split(",")) {
-                    users.computeIfAbsent("Basic " + Base64.getEncoder().encodeToString(auth.getBytes()), (cell) -> user);
+                    users.computeIfAbsent("Basic " + Base64.getEncoder().encodeToString(user.getBytes()), (cell) -> user);
                 }
             }
             String fullchain = properties.getProperty("https.fullchain.pem");
@@ -64,7 +64,7 @@ public class Config {
             Map<String, String> users = new HashMap<>();
             if (auth != null && auth.length() != 0) {
                 for (String user : auth.split(",")) {
-                    users.computeIfAbsent("Basic " + Base64.getEncoder().encodeToString(auth.getBytes()), (cell) -> user);
+                    users.computeIfAbsent("Basic " + Base64.getEncoder().encodeToString(user.getBytes()), (cell) -> user);
                 }
             }
             Http http = new Http(port, users);
