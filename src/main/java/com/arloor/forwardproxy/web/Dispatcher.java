@@ -1,8 +1,8 @@
 package com.arloor.forwardproxy.web;
 
-import com.arloor.forwardproxy.GlobalTrafficMonitor;
+import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
 import com.arloor.forwardproxy.HttpProxyServer;
-import com.arloor.forwardproxy.SocksServerUtils;
+import com.arloor.forwardproxy.util.SocksServerUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;

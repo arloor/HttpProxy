@@ -1,4 +1,4 @@
-package com.arloor.forwardproxy;
+package com.arloor.forwardproxy.monitor;
 
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.collect.ImmutableMap;
@@ -11,6 +11,9 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 网卡网速监控
+ */
 public class NetStats {
     private static final String filename = "/proc/net/dev";
     private static List<String> interfaces = new ArrayList<>();

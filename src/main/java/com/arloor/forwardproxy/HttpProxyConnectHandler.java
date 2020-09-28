@@ -15,6 +15,8 @@
  */
 package com.arloor.forwardproxy;
 
+import com.arloor.forwardproxy.util.OsHelper;
+import com.arloor.forwardproxy.util.SocksServerUtils;
 import com.arloor.forwardproxy.vo.Config;
 import com.arloor.forwardproxy.web.Dispatcher;
 import io.netty.bootstrap.Bootstrap;

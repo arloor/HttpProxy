@@ -15,8 +15,7 @@
  */
 package com.arloor.forwardproxy;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
+import com.arloor.forwardproxy.util.SocksServerUtils;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;

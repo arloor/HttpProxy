@@ -15,6 +15,7 @@
  */
 package com.arloor.forwardproxy;
 
+import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
 import com.arloor.forwardproxy.vo.Config;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;

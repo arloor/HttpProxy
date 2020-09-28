@@ -1,6 +1,7 @@
-package com.arloor.forwardproxy;
+package com.arloor.forwardproxy.monitor;
 
 import com.alibaba.fastjson.JSONObject;
+import com.arloor.forwardproxy.util.RenderUtil;
 import com.google.common.collect.Lists;
 import io.netty.channel.ChannelHandler;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
@@ -14,6 +15,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 @ChannelHandler.Sharable
+/**
+ * 该应用的网速监控
+ */
 public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     private static GlobalTrafficMonitor instance = new GlobalTrafficMonitor(Executors.newScheduledThreadPool(1), 1000);
 

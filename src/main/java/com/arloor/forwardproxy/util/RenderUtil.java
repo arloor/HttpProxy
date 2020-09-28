@@ -1,4 +1,4 @@
-package com.arloor.forwardproxy;
+package com.arloor.forwardproxy.util;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;

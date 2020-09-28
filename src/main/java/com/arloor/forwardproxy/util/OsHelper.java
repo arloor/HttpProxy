@@ -1,4 +1,4 @@
-package com.arloor.forwardproxy;
+package com.arloor.forwardproxy.util;
 
 
 import io.netty.channel.EventLoopGroup;
@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.management.ManagementFactory;
 import java.util.Optional;
-import java.util.function.Function;
 
 public class OsHelper {
     private static final Logger logger = LoggerFactory.getLogger(OsHelper.class);

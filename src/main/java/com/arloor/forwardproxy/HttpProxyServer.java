@@ -15,24 +15,17 @@
  */
 package com.arloor.forwardproxy;
 
-import com.arloor.forwardproxy.ssl.SslContextFactory;
+import com.arloor.forwardproxy.util.OsHelper;
 import com.arloor.forwardproxy.vo.Config;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.ssl.SslContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.plaf.synth.SynthTextAreaUI;
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 
