@@ -1,7 +1,7 @@
 package com.arloor.forwardproxy.web;
 
-import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
 import com.arloor.forwardproxy.HttpProxyServer;
+import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
 import com.arloor.forwardproxy.util.SocksServerUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
@@ -25,7 +25,11 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 public class Dispatcher {
     private static final Logger log = LoggerFactory.getLogger("web");
     private static byte[] favicon = new byte[0];
-    private static Map<String, BiConsumer<HttpRequest, ChannelHandlerContext>> handler = new HashMap<>();
+    private static Map<String, BiConsumer<HttpRequest, ChannelHandlerContext>> handler = new HashMap<String, BiConsumer<HttpRequest, ChannelHandlerContext>>() {{
+        put("/favicon.ico", Dispatcher::favicon);
+        put("/", Dispatcher::index);
+        put("/net", Dispatcher::net);
+    }};
 
     static {
         try (BufferedInputStream stream = new BufferedInputStream(Objects.requireNonNull(HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")))) {
@@ -37,10 +41,6 @@ public class Dispatcher {
         } catch (NullPointerException e) {
             log.error("缺少favicon.ico");
         }
-
-        handler.put("/favicon.ico", Dispatcher::favicon);
-        handler.put("/", Dispatcher::index);
-        handler.put("/net", Dispatcher::net);
     }
 
     public static void handle(HttpRequest request, ChannelHandlerContext ctx) {
