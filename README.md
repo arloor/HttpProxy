@@ -73,11 +73,9 @@ https.privkey.pem 是私钥
 
 ## 网速监控
 
-如果直接通过http(s)访问运行代理的端口，则可以看到上行网速，如下图所示
+`http(s)://host:port/net`用于网速监控，如下图所示
 
-![](traffic_monitor.jpg)
-
-这是一台30Mbps的服务器，在观看youtbe 4k视频时的网速表现，可以看到表现很稳定。
+![](traffic_monitor.png)
 
 ## 电报讨论组
 
