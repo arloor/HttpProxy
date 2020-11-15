@@ -165,13 +165,14 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                 "    },\n" +
                 "    yAxis: {\n" +
                 "        type: \"value\",\n" +
+                // start: 以1MB为分割
                 "        max: function(value) {\n" +
                 "            var k = 1024;\n" +
                 "            var c = Math.floor(Math.log(value.max) / Math.log(k));\n" +
                 "            interval = Math.pow(k, c);\n" +
                 "            return Math.ceil(value.max / interval) * interval;\n" +
                 "        },\n" +
-                "        interval: 1024 * 1024,\n" +
+                "        interval: 1024 * 1024,\n" + // 1MB
                 "        axisLabel: {\n" +
                 "            formatter: function(value, index) {\n" +
                 "                if (value <= 0) {\n" +
@@ -187,8 +188,13 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                 "                return value;\n" +
                 "            }\n" +
                 "        },\n" +
+                // end： 以1MB为分割
                 "    },\n" +
-                "    series: [{\n" +
+                "    series: [" +
+                "        {\n" +
+                "        itemStyle:{\n" +
+                "            color: '#abc',\n" + //上行流量 红色
+                "        },\n" +
                 "        \"data\": [(${seriesUp})],\n" +
                 "        \"markLine\": {\n" +
                 "            \"data\": [{\n" +
@@ -240,7 +246,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                 "    },\n" +
                 "    {\n" +
                 "        itemStyle:{\n" +
-                "            color: '#abc',\n" +
+                "            color: '#5bf',\n" + //下行流量 蓝色
                 "        },\n" +
                 "        \"data\": [(${seriesDown})],\n" +
                 "        \"markLine\": {\n" +
