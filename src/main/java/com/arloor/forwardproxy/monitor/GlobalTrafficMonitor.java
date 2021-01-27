@@ -29,6 +29,16 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     private static List<String> xScales = new ArrayList<>();
     private static List<Double> yScalesUp = new LinkedList<>();
     private static List<Double> yScalesDown = new LinkedList<>();
+    private static final String format =
+            "# HELP proxy_out out\n" +
+                    "# TYPE proxy_out counter\n" +
+                    "proxy_out{name=\"out\"} %s\n" +
+                    "# HELP proxy_in in\n" +
+                    "# TYPE proxy_in counter\n" +
+                    "proxy_in{name=\"in\"} %s";
+
+    long out = 0l;
+    long in = 0l;
 
     static {
         for (int i = 1; i <= seconds; i++) {
@@ -67,23 +77,29 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                 yScalesUp.remove(0);
             }
             long lastReadThroughput = counter.lastReadThroughput();
-            yScalesDown.add((double)lastReadThroughput);
-            if(yScalesDown.size()>seconds){
+            yScalesDown.add((double) lastReadThroughput);
+            if (yScalesDown.size() > seconds) {
                 yScalesDown.remove(0);
             }
+            out = counter.cumulativeWrittenBytes();
+            in = counter.cumulativeReadBytes();
         }
         super.doAccounting(counter);
     }
 
+    public static final String metrics() {
+        return String.format(format, getInstance().out, instance.in);
+    }
+
     public static final String html() {
-        String legends = JSONObject.toJSONString(Lists.newArrayList("上行网速","下行网速"));
+        String legends = JSONObject.toJSONString(Lists.newArrayList("上行网速", "下行网速"));
         String scales = JSONObject.toJSONString(xScales);
         String seriesUp = JSONObject.toJSONString(yScalesUp);
         String seriesDown = JSONObject.toJSONString(yScalesDown);
 
-        Map<String,Object> params=new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("legends", legends);
-        params.put( "scales", scales);
+        params.put("scales", scales);
         params.put("seriesUp", seriesUp);
         params.put("seriesDown",seriesDown);
 

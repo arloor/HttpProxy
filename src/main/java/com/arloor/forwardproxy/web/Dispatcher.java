@@ -33,12 +33,7 @@ public class Dispatcher {
     }};
 
     private static void metrics(HttpRequest httpRequest, ChannelHandlerContext ctx) {
-        String html = "# HELP testA_total aa\n" +
-                "# TYPE testA_total counter\n" +
-                "testA_total{a=\"a\",b=\"b\",} 2203.0\n" +
-                "# HELP testA_created aa\n" +
-                "# TYPE testA_created gauge\n" +
-                "testA_created{a=\"a\",b=\"b\",} 1.61175989861E9";
+        String html = GlobalTrafficMonitor.metrics();
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(html.getBytes());
         final FullHttpResponse response = new DefaultFullHttpResponse(
