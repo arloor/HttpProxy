@@ -193,7 +193,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                 "    series: [" +
                 "        {\n" +
                 "        itemStyle:{\n" +
-                "            color: '#b10',\n" + //上行流量 红色
+                "            color: '#fa4400',\n" + //上行流量 红色
                 "        },\n" +
                 "        \"data\": [(${seriesUp})],\n" +
                 "        \"markLine\": {\n" +
