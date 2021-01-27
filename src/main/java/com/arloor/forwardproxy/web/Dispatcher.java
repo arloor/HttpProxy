@@ -29,7 +29,25 @@ public class Dispatcher {
         put("/favicon.ico", Dispatcher::favicon);
         put("/", Dispatcher::index);
         put("/net", Dispatcher::net);
+        put("/metrics", Dispatcher::metrics);
     }};
+
+    private static void metrics(HttpRequest httpRequest, ChannelHandlerContext ctx) {
+        String html = "# HELP testA_total aa\n" +
+                "# TYPE testA_total counter\n" +
+                "testA_total{a=\"a\",b=\"b\",} 2203.0\n" +
+                "# HELP testA_created aa\n" +
+                "# TYPE testA_created gauge\n" +
+                "testA_created{a=\"a\",b=\"b\",} 1.61175989861E9";
+        ByteBuf buffer = ctx.alloc().buffer();
+        buffer.writeBytes(html.getBytes());
+        final FullHttpResponse response = new DefaultFullHttpResponse(
+                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
+        response.headers().set("Server", "nginx/1.11");
+        response.headers().set("Content-Length", html.getBytes().length);
+        response.headers().set(CONNECTION, CLOSE);
+        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+    }
 
     static {
         try (BufferedInputStream stream = new BufferedInputStream(Objects.requireNonNull(HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")))) {
