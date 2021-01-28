@@ -16,6 +16,7 @@ import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
@@ -32,6 +33,8 @@ public class Dispatcher {
         put("/metrics", Dispatcher::metrics);
     }};
 
+    private static final Map<String, Long> counters = new ConcurrentHashMap<>();
+
     private static void metrics(HttpRequest httpRequest, ChannelHandlerContext ctx) {
         String html = GlobalTrafficMonitor.metrics();
         ByteBuf buffer = ctx.alloc().buffer();
@@ -40,8 +43,20 @@ public class Dispatcher {
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
         response.headers().set("Server", "nginx/1.11");
         response.headers().set("Content-Length", html.getBytes().length);
-        response.headers().set(CONNECTION, CLOSE);
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        ctx.writeAndFlush(response);
+    }
+
+    private static boolean needClose(HttpRequest httpRequest) {
+        Long counter = counters.computeIfAbsent(httpRequest.uri(), (key) -> 0L);
+        counter++;
+        if (counter > 10) {
+            counter = 0L;
+            counters.put(httpRequest.uri(), counter);
+            return true;
+        } else {
+            counters.put(httpRequest.uri(), counter);
+            return false;
+        }
     }
 
     static {
@@ -93,8 +108,12 @@ public class Dispatcher {
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
         response.headers().set("Server", "nginx/1.11");
         response.headers().set("Content-Length", html.getBytes().length);
-        response.headers().set(CONNECTION, CLOSE);
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        if (needClose(request)) {
+            response.headers().set(CONNECTION, CLOSE);
+            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        } else {
+            ctx.writeAndFlush(response);
+        }
     }
 
 
@@ -105,8 +124,12 @@ public class Dispatcher {
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
         response.headers().set("Server", "nginx/1.11");
         response.headers().set("Content-Length", favicon.length);
-        response.headers().set(CONNECTION, CLOSE);
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        if (needClose(request)) {
+            response.headers().set(CONNECTION, CLOSE);
+            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        } else {
+            ctx.writeAndFlush(response);
+        }
     }
 
 
