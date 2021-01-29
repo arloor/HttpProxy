@@ -49,7 +49,9 @@ https.privkey.pem 是私钥
 
 ## 网速监控
 
-`http(s)://host:port/net`提供了基于echarts.js的网速监控，展示最近500秒的网速
+
+1. `http(s)://host:port/net`提供了基于echarts.js的网速监控，展示最近500秒的网速
+2. `http(s)://host:port/metrics`提供了prometheus的exporter，可以方便地接入prometheus监控
 
 
 ## 性能测试
