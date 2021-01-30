@@ -11,6 +11,9 @@ import io.netty.util.internal.PlatformDependent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -25,15 +28,6 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     private static GlobalTrafficMonitor instance = new GlobalTrafficMonitor(Executors.newScheduledThreadPool(1), 1000);
     private static String hostname;
 
-
-    static {
-        try {
-            hostname = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-    }
-
     public static GlobalTrafficMonitor getInstance() {
         return instance;
     }
@@ -42,6 +36,12 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     private static List<String> xScales = new ArrayList<>();
     private static List<Double> yScalesUp = new LinkedList<>();
     private static List<Double> yScalesDown = new LinkedList<>();
+    volatile long out = 0L;
+    volatile long in = 0L;
+    volatile long outRate = 0L;
+    volatile long inRate = 0L;
+    private static final Logger logger = LoggerFactory.getLogger(GlobalTrafficMonitor.class);
+    static MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
     private static final String format =
             "# HELP proxy_out 上行流量\n" +
                     "# TYPE proxy_out counter\n" +
@@ -57,15 +57,25 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                     "proxy_in_rate{host=\"" + hostname + "\",} %s\n" +
                     "# HELP direct_memory_total 直接内存使用量 对于jdk9+，请增加-Dio.netty.tryReflectionSetAccessible=true\n" +
                     "# TYPE direct_memory_total gauge\n" +
-                    "direct_memory_total{host=\"" + hostname + "\",} %s\n";
-
-    volatile long out = 0L;
-    volatile long in = 0L;
-    volatile long outRate = 0L;
-    volatile long inRate = 0L;
-    private static final Logger logger = LoggerFactory.getLogger(GlobalTrafficMonitor.class);
-
+                    "direct_memory_total{host=\"" + hostname + "\",} %s\n" +
+                    "# HELP heap_memory_usage 堆内存使用量\n" +
+                    "# TYPE heap_memory_usage gauge\n" +
+                    "heap_memory_usage{host=\"" + hostname + "\",} %s\n" +
+                    "# HELP heap_memory_committed 堆内存容量\n" +
+                    "# TYPE heap_memory_committed gauge\n" +
+                    "heap_memory_committed{host=\"" + hostname + "\",} %s\n" +
+                    "# HELP nonheap_memory_usage 非堆内存使用量\n" +
+                    "# TYPE nonheap_memory_usage gauge\n" +
+                    "nonheap_memory_usage{host=\"" + hostname + "\",} %s\n" +
+                    "# HELP nonheap_memory_committed 非堆内存容量\n" +
+                    "# TYPE nonheap_memory_committed gauge\n" +
+                    "nonheap_memory_committed{host=\"" + hostname + "\",} %s\n";
     static {
+        try {
+            hostname = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
         for (int i = 1; i <= seconds; i++) {
             xScales.add(String.valueOf(i));
         }
@@ -114,7 +124,9 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     }
 
     public static final String metrics() {
-        return String.format(format, instance.out, instance.in, instance.outRate, instance.inRate, getDirectMemoryCounter());
+        MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
+        MemoryUsage nonHeapMemoryUsage = memoryMXBean.getNonHeapMemoryUsage();
+        return String.format(format, instance.out, instance.in, instance.outRate, instance.inRate, getDirectMemoryCounter(), heapMemoryUsage.getUsed(), heapMemoryUsage.getCommitted(), nonHeapMemoryUsage.getUsed(), nonHeapMemoryUsage.getCommitted());
     }
 
     private static long getDirectMemoryCounter() {
