@@ -42,6 +42,18 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     volatile long inRate = 0L;
     private static final Logger logger = LoggerFactory.getLogger(GlobalTrafficMonitor.class);
     static MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+
+    static {
+        try {
+            hostname = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        for (int i = 1; i <= seconds; i++) {
+            xScales.add(String.valueOf(i));
+        }
+    }
+
     private static final String format =
             "# HELP proxy_out 上行流量\n" +
                     "# TYPE proxy_out counter\n" +
@@ -70,16 +82,6 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                     "# HELP nonheap_memory_committed 非堆内存容量\n" +
                     "# TYPE nonheap_memory_committed gauge\n" +
                     "nonheap_memory_committed{host=\"" + hostname + "\",} %s\n";
-    static {
-        try {
-            hostname = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-        for (int i = 1; i <= seconds; i++) {
-            xScales.add(String.valueOf(i));
-        }
-    }
 
 
     private GlobalTrafficMonitor(ScheduledExecutorService executor, long writeLimit, long readLimit, long checkInterval, long maxTime) {
