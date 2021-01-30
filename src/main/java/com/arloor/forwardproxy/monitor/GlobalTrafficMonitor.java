@@ -7,6 +7,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
 import io.netty.handler.traffic.TrafficCounter;
 import io.netty.util.concurrent.EventExecutor;
+import io.netty.util.internal.PlatformDependent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +24,7 @@ import java.util.concurrent.ScheduledExecutorService;
 public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     private static GlobalTrafficMonitor instance = new GlobalTrafficMonitor(Executors.newScheduledThreadPool(1), 1000);
     private static String hostname;
+
 
     static {
         try {
@@ -41,23 +43,27 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     private static List<Double> yScalesUp = new LinkedList<>();
     private static List<Double> yScalesDown = new LinkedList<>();
     private static final String format =
-            "# HELP proxy_out out\n" +
+            "# HELP proxy_out 上行流量\n" +
                     "# TYPE proxy_out counter\n" +
                     "proxy_out{host=\"" + hostname + "\",} %s\n" +
-                    "# HELP proxy_in in\n" +
+                    "# HELP proxy_in 下行流量\n" +
                     "# TYPE proxy_in counter\n" +
                     "proxy_in{host=\"" + hostname + "\",} %s\n" +
-                    "# HELP proxy_out_rate help\n" +
+                    "# HELP proxy_out_rate 上行网速\n" +
                     "# TYPE proxy_out_rate gauge\n" +
                     "proxy_out_rate{host=\"" + hostname + "\",} %s\n" +
-                    "# HELP proxy_in_rate help\n" +
+                    "# HELP proxy_in_rate 下行网速\n" +
                     "# TYPE proxy_in_rate gauge\n" +
-                    "proxy_in_rate{host=\"" + hostname + "\",} %s\n";
+                    "proxy_in_rate{host=\"" + hostname + "\",} %s\n" +
+                    "# HELP direct_memory_total 直接内存使用量 对于jdk9+，请增加-Dio.netty.tryReflectionSetAccessible=true\n" +
+                    "# TYPE direct_memory_total gauge\n" +
+                    "direct_memory_total{host=\"" + hostname + "\",} %s\n";
 
     volatile long out = 0L;
     volatile long in = 0L;
     volatile long outRate = 0L;
     volatile long inRate = 0L;
+    private static final Logger logger = LoggerFactory.getLogger(GlobalTrafficMonitor.class);
 
     static {
         for (int i = 1; i <= seconds; i++) {
@@ -65,7 +71,6 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
         }
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(GlobalTrafficMonitor.class);
 
     private GlobalTrafficMonitor(ScheduledExecutorService executor, long writeLimit, long readLimit, long checkInterval, long maxTime) {
         super(executor, writeLimit, readLimit, checkInterval, maxTime);
@@ -109,7 +114,11 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     }
 
     public static final String metrics() {
-        return String.format(format, instance.out, instance.in, instance.outRate, instance.inRate);
+        return String.format(format, instance.out, instance.in, instance.outRate, instance.inRate, getDirectMemoryCounter());
+    }
+
+    private static long getDirectMemoryCounter() {
+        return PlatformDependent.usedDirectMemory();
     }
 
     public static final String html() {

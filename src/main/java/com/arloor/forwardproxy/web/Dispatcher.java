@@ -43,6 +43,7 @@ public class Dispatcher {
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
         response.headers().set("Server", "nginx/1.11");
         response.headers().set("Content-Length", html.getBytes().length);
+        response.headers().set("Content-Type", "text/text; charset=utf-8");
         ctx.writeAndFlush(response);
     }
 
@@ -108,6 +109,7 @@ public class Dispatcher {
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
         response.headers().set("Server", "nginx/1.11");
         response.headers().set("Content-Length", html.getBytes().length);
+        response.headers().set("Content-Type", "text/html; charset=utf-8");
         if (needClose(request)) {
             response.headers().set(CONNECTION, CLOSE);
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
