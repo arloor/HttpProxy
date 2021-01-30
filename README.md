@@ -75,6 +75,18 @@ direct_memory_total{host="localhost",} 33554439
 
 “对于jdk9+，请增加-Dio.netty.tryReflectionSetAccessible=true”的补充说明见：[https://github.com/netty/netty/pull/7650](https://github.com/netty/netty/pull/7650)
 
+简单讲就是，在jdk9以上对于Bytebuffer的通过反射来创建对象会抛出warning:
+
+```shell
+WARNING: An illegal reflective access operation has occurred
+WARNING: Illegal reflective access by io.netty.util.internal.ReflectionUtil (file:/C:/Users/arloor/.m2/repository/io/netty/netty-all/4.1.53.Final/netty-all-4.1.53.Final.jar) to constructor java.nio.DirectByteBuffer(long,int)
+WARNING: Please consider reporting this to the maintainers of io.netty.util.internal.ReflectionUtil
+WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
+WARNING: All illegal access operations will be denied in a future release
+```
+
+所以，netty提供了这个选项，并且默认关闭。但是如果需要统计直接内存使用量的话，需要开启这个JVM参数
+
 ## 性能测试
 
 [性能测试](性能测试.md)
