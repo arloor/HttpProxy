@@ -38,17 +38,17 @@
             <version>29.0-jre</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>ch.qos.logback</groupId>-->
-<!--            <artifactId>logback-core</artifactId>-->
-<!--            <version>1.2.3</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>ch.qos.logback</groupId>-->
+        <!--            <artifactId>logback-core</artifactId>-->
+        <!--            <version>1.2.3</version>-->
+        <!--        </dependency>-->
 
-<!--        <dependency>-->
-<!--            <groupId>ch.qos.logback</groupId>-->
-<!--            <artifactId>logback-classic</artifactId>-->
-<!--            <version>1.2.3</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>ch.qos.logback</groupId>-->
+        <!--            <artifactId>logback-classic</artifactId>-->
+        <!--            <version>1.2.3</version>-->
+        <!--        </dependency>-->
         <!--log4j2核心包-->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -61,11 +61,11 @@
             <version>2.9.1</version>
         </dependency>
         <!-- Web项目需添加 -->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.logging.log4j</groupId>-->
-<!--            <artifactId>log4j-web</artifactId>-->
-<!--            <version>2.9.1</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.apache.logging.log4j</groupId>-->
+        <!--            <artifactId>log4j-web</artifactId>-->
+        <!--            <version>2.9.1</version>-->
+        <!--        </dependency>-->
         <!--用于与slf4j保持桥接-->
         <dependency>
             <groupId>com.lmax</groupId>
@@ -136,10 +136,14 @@
                             <mainClass>${mainClass}</mainClass>
                         </manifest>
                     </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-
+                    <!--                    <descriptorRefs>-->
+                    <!--                        <descriptorRef>jar-with-dependencies</descriptorRef>-->
+                    <!--                    </descriptorRefs>-->
+                    <descriptors>
+                        <descriptor>
+                            src/assembly/release.xml
+                        </descriptor>
+                    </descriptors>
                 </configuration>
 
                 <executions>
