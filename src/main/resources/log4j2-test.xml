@@ -17,7 +17,7 @@
         <RollingRandomAccessFile name="log" fileName="${MSG_LOG_HOME}/proxy.log" immediateFlush="false"
                           append="true" filePattern="${MSG_LOG_HOME}/proxy-%d{MM-dd-yyyy}-%i.log.gz">
             <PatternLayout>
-                <Pattern>%d %p %c{1.} [%t] %m %ex%n</Pattern>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n</Pattern>
             </PatternLayout>
             <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
             <Policies>
@@ -28,7 +28,7 @@
         <RollingRandomAccessFile name="web" fileName="${MSG_LOG_HOME}/web.log" immediateFlush="false"
                           append="true" filePattern="${MSG_LOG_HOME}/web-%d{MM-dd-yyyy}-%i.log.gz">
             <PatternLayout>
-                <Pattern>%d %p %c{1.} [%t] %m %ex%n</Pattern>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n</Pattern>
             </PatternLayout>
             <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
             <Policies>
