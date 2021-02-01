@@ -2,6 +2,7 @@ package com.arloor.forwardproxy.web;
 
 import com.arloor.forwardproxy.HttpProxyServer;
 import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
+import com.arloor.forwardproxy.monitor.MonitorService;
 import com.arloor.forwardproxy.util.SocksServerUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
@@ -36,7 +37,7 @@ public class Dispatcher {
     private static final Map<String, Long> counters = new ConcurrentHashMap<>();
 
     private static void metrics(HttpRequest httpRequest, ChannelHandlerContext ctx) {
-        String html = GlobalTrafficMonitor.metrics();
+        String html = MonitorService.getInstance().metrics();
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(html.getBytes());
         final FullHttpResponse response = new DefaultFullHttpResponse(

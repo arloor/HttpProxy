@@ -1,6 +1,5 @@
 package com.arloor.forwardproxy;
 
-import com.arloor.forwardproxy.monitor.MonitorService;
 import com.arloor.forwardproxy.util.OsHelper;
 import com.arloor.forwardproxy.vo.Config;
 import io.netty.bootstrap.ServerBootstrap;
@@ -24,8 +23,6 @@ public final class HttpProxyServer {
     private static final Logger log = LoggerFactory.getLogger(HttpProxyServer.class);
 
     public static void main(String[] args) throws Exception {
-        MonitorService instance = MonitorService.getInstance();
-        instance.hello();
 //        NetStats.start();
         // get name representing the running Java virtual machine.
         String propertiesPath = null;
