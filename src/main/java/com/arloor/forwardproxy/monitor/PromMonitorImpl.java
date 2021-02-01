@@ -1,8 +1,6 @@
 package com.arloor.forwardproxy.monitor;
 
 import io.netty.util.internal.PlatformDependent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.management.BufferPoolMXBean;
 import java.lang.management.ManagementFactory;
@@ -16,11 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * prometheus exporter实现类
+ */
 public class PromMonitorImpl implements MonitorService {
     private static String hostname;
     static MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
     List<BufferPoolMXBean> bufferPoolMXBeans = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
-    private static final Logger logger = LoggerFactory.getLogger(PromMonitorImpl.class);
 
     static {
         try {
@@ -86,12 +86,9 @@ public class PromMonitorImpl implements MonitorService {
 
     @Override
     public String metrics() {
-        for (BufferPoolMXBean bufferPoolMXBean : bufferPoolMXBeans) {
-            logger.info("buffer pool: {} {} {}", bufferPoolMXBean.getName(), bufferPoolMXBean.getMemoryUsed(), bufferPoolMXBean.getTotalCapacity());
-        }
         MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
         MemoryUsage nonHeapMemoryUsage = memoryMXBean.getNonHeapMemoryUsage();
-        List<Metric> metrics = new ArrayList<>();
+        List<Metric<Long>> metrics = new ArrayList<>();
         metrics.add(new Metric<>(MetricType.counter, "上行流量", "proxy_out", GlobalTrafficMonitor.getInstance().outTotal).tag("host", hostname));
         metrics.add(new Metric<>(MetricType.counter, "下行流量", "proxy_in", GlobalTrafficMonitor.getInstance().inTotal).tag("host", hostname));
         metrics.add(new Metric<>(MetricType.gauge, "上行网速", "proxy_out_rate", GlobalTrafficMonitor.getInstance().outRate).tag("host", hostname));
@@ -102,15 +99,14 @@ public class PromMonitorImpl implements MonitorService {
         metrics.add(new Metric<>(MetricType.gauge, "非堆内存使用量", "nonheap_memory_usage", nonHeapMemoryUsage.getUsed()).tag("host", hostname));
         metrics.add(new Metric<>(MetricType.gauge, "非堆内存容量", "nonheap_memory_committed", nonHeapMemoryUsage.getCommitted()).tag("host", hostname));
         for (BufferPoolMXBean bufferPool : bufferPoolMXBeans) {
-            logger.info("buffer pool: {} {} {}", bufferPool.getName(), bufferPool.getMemoryUsed(), bufferPool.getTotalCapacity());
-            metrics.add(new Metric(MetricType.gauge, "bufferPool使用量" + bufferPool.getName(), "bufferpool_used_" + fixName(bufferPool.getName()), bufferPool.getMemoryUsed()).tag("host", hostname));
-            metrics.add(new Metric(MetricType.gauge, "bufferPool容量" + bufferPool.getName(), "bufferpool_capacity_" + fixName(bufferPool.getName()), bufferPool.getTotalCapacity()).tag("host", hostname));
+            metrics.add(new Metric<Long>(MetricType.gauge, "bufferPool使用量" + bufferPool.getName(), "bufferpool_used_" + fixName(bufferPool.getName()), bufferPool.getMemoryUsed()).tag("host", hostname));
+            metrics.add(new Metric<Long>(MetricType.gauge, "bufferPool容量" + bufferPool.getName(), "bufferpool_capacity_" + fixName(bufferPool.getName()), bufferPool.getTotalCapacity()).tag("host", hostname));
         }
         return metrics.stream().map(Metric::toString).collect(Collectors.joining());
     }
 
-    private String fixName(String name){
-        String s = name.replaceAll(" ", "_").replaceAll("'", "").replaceAll("-","_");
+    private String fixName(String name) {
+        String s = name.replaceAll(" ", "_").replaceAll("'", "").replaceAll("-", "_");
         return s;
     }
 

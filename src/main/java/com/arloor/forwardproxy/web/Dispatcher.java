@@ -27,6 +27,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 public class Dispatcher {
     private static final Logger log = LoggerFactory.getLogger("web");
     private static byte[] favicon = new byte[0];
+    private static final MonitorService MONITOR_SERVICE = MonitorService.getInstance();
     private static Map<String, BiConsumer<HttpRequest, ChannelHandlerContext>> handler = new HashMap<String, BiConsumer<HttpRequest, ChannelHandlerContext>>() {{
         put("/favicon.ico", Dispatcher::favicon);
         put("/", Dispatcher::index);
@@ -37,7 +38,7 @@ public class Dispatcher {
     private static final Map<String, Long> counters = new ConcurrentHashMap<>();
 
     private static void metrics(HttpRequest httpRequest, ChannelHandlerContext ctx) {
-        String html = MonitorService.getInstance().metrics();
+        String html = MONITOR_SERVICE.metrics();
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(html.getBytes());
         final FullHttpResponse response = new DefaultFullHttpResponse(
