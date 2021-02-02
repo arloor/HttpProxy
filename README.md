@@ -29,8 +29,8 @@ http代理部分的配置，没啥好说的
 https.enable=true
 https.port=443
 https.auth=arloor:httpforarloor
-https.fullchain.pem=1_xxx.com_bundle.crt
-https.privkey.pem=2_xxx.com.key
+https.fullchain.pem=fullchain.pem
+https.privkey.pem=privkey.pem
 ```
 
 https代理部分的配置，主要就是证书相关的几个配置需要说明
