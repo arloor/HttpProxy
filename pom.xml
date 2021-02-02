@@ -214,7 +214,7 @@
             </activation>
             <distributionManagement>
                 <snapshotRepository>
-                    <id>oss</id>
+                    <id>oss-snapshot</id>
                     <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
                 </snapshotRepository>
                 <repository>
