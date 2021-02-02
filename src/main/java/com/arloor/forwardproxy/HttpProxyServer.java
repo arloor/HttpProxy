@@ -22,19 +22,12 @@ public final class HttpProxyServer {
 
     private static final Logger log = LoggerFactory.getLogger(HttpProxyServer.class);
 
-    public static void main(String[] args) throws Exception {
-//        NetStats.start();
-        // get name representing the running Java virtual machine.
+    public static void main(String[] args) {
         String propertiesPath = null;
         if (args.length == 2 && args[0].equals("-c")) {
             propertiesPath = args[1];
         }
-        Properties properties = new Properties();
-        if (propertiesPath != null) {
-            properties.load(new FileReader(new File(propertiesPath)));
-        } else {
-            properties.load(HttpProxyServer.class.getClassLoader().getResourceAsStream("proxy.properties"));
-        }
+        Properties properties = parseProperties(propertiesPath);
 
         Config config = Config.parse(properties);
         log.info("主动要求验证：" + Config.ask4Authcate);
@@ -66,10 +59,26 @@ public final class HttpProxyServer {
                     sslChannel.closeFuture().sync();
                 }
             }
+        } catch (InterruptedException e) {
+            log.error("interrupt!", e);
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
+    }
+
+    private static Properties parseProperties(String propertiesPath) {
+        Properties properties = new Properties();
+        try {
+            if (propertiesPath != null) {
+                properties.load(new FileReader(new File(propertiesPath)));
+            } else {
+                properties.load(HttpProxyServer.class.getClassLoader().getResourceAsStream("proxy.properties"));
+            }
+        } catch (Exception e) {
+            log.error("loadProperties Error!", e);
+        }
+        return properties;
     }
 
 
