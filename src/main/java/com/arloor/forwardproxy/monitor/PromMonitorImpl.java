@@ -1,23 +1,27 @@
 package com.arloor.forwardproxy.monitor;
 
+import com.google.common.collect.Lists;
 import io.netty.util.internal.PlatformDependent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.lang.management.BufferPoolMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * prometheus exporter实现类
  */
 public class PromMonitorImpl implements MonitorService {
+    private static final Logger logger = LoggerFactory.getLogger(PromMonitorImpl.class);
     private static String hostname;
     static MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
     List<BufferPoolMXBean> bufferPoolMXBeans = ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
@@ -102,6 +106,7 @@ public class PromMonitorImpl implements MonitorService {
             metrics.add(new Metric<Long>(MetricType.gauge, "bufferPool使用量" + bufferPool.getName(), "bufferpool_used_" + fixName(bufferPool.getName()), bufferPool.getMemoryUsed()).tag("host", hostname));
             metrics.add(new Metric<Long>(MetricType.gauge, "bufferPool容量" + bufferPool.getName(), "bufferpool_capacity_" + fixName(bufferPool.getName()), bufferPool.getTotalCapacity()).tag("host", hostname));
         }
+        metrics.addAll(procNetDevMetric());
         return metrics.stream().map(Metric::toString).collect(Collectors.joining());
     }
 
@@ -114,4 +119,32 @@ public class PromMonitorImpl implements MonitorService {
         return PlatformDependent.usedDirectMemory();
     }
 
+    private static List<Metric<Long>> procNetDevMetric() {
+        String filename = "/proc/net/dev";
+        File file = new File(filename);
+        if (file.exists()) {
+            try {
+                List<String> lines = Files.readAllLines(Paths.get(file.toURI()));
+                List<Metric<Long>> metrics = lines.stream()
+                        .skip(2)
+                        .map(line -> line.trim().replaceAll("(\\s)+", " ").split(" "))
+                        .flatMap(splits -> {
+                            if (splits.length == 17) {
+                                String interfaceName = splits[0].substring(0, splits[0].length() - 1);
+                                return Lists.newArrayList(
+                                        new Metric<Long>(MetricType.counter, "网卡流量", interfaceName + "_in_total", Long.parseLong(splits[1])).tag("host", hostname),
+                                        new Metric<Long>(MetricType.counter, "网卡流量", interfaceName + "_out_total", Long.parseLong(splits[9])).tag("host", hostname)
+                                ).stream();
+                            }
+                            return null;
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+                return metrics;
+            } catch (Exception e) {
+                logger.error("", e);
+            }
+        }
+        return new ArrayList<>();
+    }
 }
