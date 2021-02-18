@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -106,11 +107,11 @@ public class Dispatcher {
     private static void net(HttpRequest request, ChannelHandlerContext ctx) {
         String html = GlobalTrafficMonitor.html();
         ByteBuf buffer = ctx.alloc().buffer();
-        buffer.writeBytes(html.getBytes());
+        buffer.writeBytes(html.getBytes(StandardCharsets.UTF_8));
         final FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
         response.headers().set("Server", "nginx/1.11");
-        response.headers().set("Content-Length", html.getBytes().length);
+        response.headers().set("Content-Length", html.getBytes(StandardCharsets.UTF_8).length);
         response.headers().set("Content-Type", "text/html; charset=utf-8");
         if (needClose(request)) {
             response.headers().set(CONNECTION, CLOSE);
