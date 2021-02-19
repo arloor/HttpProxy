@@ -26,6 +26,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.PROXY_AUTHENTICATIO
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
     private static final Logger log = LoggerFactory.getLogger(HttpProxyConnectHandler.class);
     private final Map<String, String> auths;
+
     public HttpProxyConnectHandler(Map<String, String> auths) {
         this.auths = auths;
     }
@@ -200,8 +201,20 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
         return userName;
     }
 
+    /**
+     * 从httprequest中寻找host和port
+     * 由于不同的httpclient实现不一样，可能会有不兼容
+     * 已知不兼容：
+     * idea2019.3设置的http proxy，传的Host请求头没有带上端口，因此需要以request.uri()为准
+     * ubuntu的apt设置的代理，request.uri()为代理的地址，因此需要以Host请求头为准
+     * 很坑。。
+     * @param ctx
+     */
     private void setHostPort(ChannelHandlerContext ctx) {
         String hostAndPortStr = request.headers().get("Host");
+        if (HttpMethod.CONNECT.equals(request.method())) {
+            hostAndPortStr = request.uri();
+        }
         if (hostAndPortStr == null) {
             SocksServerUtils.closeOnFlush(ctx.channel());
         }
