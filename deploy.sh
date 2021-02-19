@@ -6,5 +6,6 @@ for host in $hosts; do
   ssh root@${host} '
   service proxy stop
   service proxy start
+  service proxy status --no-page
   '
 done
