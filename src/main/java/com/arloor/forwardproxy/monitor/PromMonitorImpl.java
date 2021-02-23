@@ -130,7 +130,7 @@ public class PromMonitorImpl implements MonitorService {
                         .map(line -> line.trim().replaceAll("(\\s)+", " ").split(" "))
                         .flatMap(splits -> {
                             if (splits.length == 17) {
-                                String interfaceName = splits[0].substring(0, splits[0].length() - 1);
+                                String interfaceName = splits[0].substring(0, splits[0].length() - 1).replaceAll("-", "_");
                                 return Lists.newArrayList(
                                         new Metric<Long>(MetricType.counter, "网卡流量", interfaceName + "_in_total", Long.parseLong(splits[1])).tag("host", hostname),
                                         new Metric<Long>(MetricType.counter, "网卡流量", interfaceName + "_out_total", Long.parseLong(splits[9])).tag("host", hostname)
