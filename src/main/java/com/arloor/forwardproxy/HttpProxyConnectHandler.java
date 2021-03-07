@@ -212,12 +212,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
      * @param ctx
      */
     private void setHostPort(ChannelHandlerContext ctx) {
-        String hostAndPortStr = request.headers().get("Host");
+        String hostAndPortStr = HttpMethod.CONNECT.equals(request.method()) ? request.uri() : request.headers().get("Host");
         String[] hostPortArray = hostAndPortStr.split(":");
-        if (hostPortArray.length != 2 && HttpMethod.CONNECT.equals(request.method())) {
-            hostAndPortStr = request.uri();
-            hostPortArray = hostAndPortStr.split(":");
-        }
         host = hostPortArray[0];
         String portStr = hostPortArray.length == 2 ? hostPortArray[1] : !HttpMethod.CONNECT.equals(request.method()) ? "80" : "443";
         port = Integer.parseInt(portStr);
