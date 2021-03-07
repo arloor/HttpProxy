@@ -44,8 +44,7 @@ https.privkey.pem 是私钥
 ## 客户端说明
 
 1. 可以使用支持https的软件，例如：surge、shadowrocket、clash
-2.
-chrome浏览器可以通过[SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件使用本代理（不推荐，会存在被嗅探的风险）
+2. chrome浏览器可以通过[SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件使用本代理（不推荐，会存在被嗅探的风险）  
 3. Java开发人员可以使用[connect](https://github.com/arloor/connect)项目
 
 ## 网速监控
