@@ -89,7 +89,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                 }
 
                 //3. 这里进入代理请求处理，分为两种：CONNECT方法和其他HTTP方法
-                log.info("{}@{} {} {} {}", userName, clientHostname, request.method(), request.uri(), request.headers().get("Host"));
+                log.info("{}@{} ==> {} {} {}", userName, clientHostname, request.method(), request.uri(), !request.uri().equals(request.headers().get("Host")) ? request.headers().get("Host") : "");
                 Promise<Channel> promise = ctx.executor().newPromise();
                 if (request.method().equals(HttpMethod.CONNECT)) {
                     promise.addListener(
