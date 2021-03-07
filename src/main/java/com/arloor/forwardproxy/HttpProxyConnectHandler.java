@@ -89,7 +89,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                 }
 
                 //3. 这里进入代理请求处理，分为两种：CONNECT方法和其他HTTP方法
-                log.info("{}@{} {} {} {}", userName, clientHostname, request.method(), request.uri(), HttpMethod.CONNECT.equals(request.method()) ? "" : String.format("{%s:%s}", host, port));
+                log.info("{}@{} {} {} {}", userName, clientHostname, request.method(), request.uri(), request.headers().get("Host"));
                 Promise<Channel> promise = ctx.executor().newPromise();
                 if (request.method().equals(HttpMethod.CONNECT)) {
                     promise.addListener(
@@ -208,19 +208,18 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
      * idea2019.3设置的http proxy，传的Host请求头没有带上端口，因此需要以request.uri()为准
      * ubuntu的apt设置的代理，request.uri()为代理的地址，因此需要以Host请求头为准
      * 很坑。。
+     *
      * @param ctx
      */
     private void setHostPort(ChannelHandlerContext ctx) {
         String hostAndPortStr = request.headers().get("Host");
-        if (HttpMethod.CONNECT.equals(request.method())) {
-            hostAndPortStr = request.uri();
-        }
-        if (hostAndPortStr == null) {
-            SocksServerUtils.closeOnFlush(ctx.channel());
-        }
         String[] hostPortArray = hostAndPortStr.split(":");
+        if (hostPortArray.length != 2 && HttpMethod.CONNECT.equals(request.method())) {
+            hostAndPortStr = request.uri();
+            hostPortArray = hostAndPortStr.split(":");
+        }
         host = hostPortArray[0];
-        String portStr = hostPortArray.length == 2 ? hostPortArray[1] : "80";
+        String portStr = hostPortArray.length == 2 ? hostPortArray[1] : !HttpMethod.CONNECT.equals(request.method()) ? "80" : "443";
         port = Integer.parseInt(portStr);
     }
 
