@@ -205,8 +205,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
      * 从httprequest中寻找host和port
      * 由于不同的httpclient实现不一样，可能会有不兼容
      * 已知不兼容：
-     * idea2019.3设置的http proxy，传的Host请求头没有带上端口，因此需要以request.uri()为准
-     * ubuntu的apt设置的代理，request.uri()为代理的地址，因此需要以Host请求头为准
+     * idea2019.3设置的http proxy: 传的Host请求头没有带上端口，因此需要以request.uri()为准 CONNECT www.google.com:443 Host=www.google.com
+     * ubuntu的apt设置的代理，request.uri()为代理的地址，因此需要以Host请求头为准 CONNECT mirrors.tuna.tsinghua.edu.cn:443 Host=localhost:3128
      * 很坑。。
      *
      * @param ctx
