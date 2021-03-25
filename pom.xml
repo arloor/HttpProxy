@@ -32,6 +32,7 @@
     <properties>
         <netty.version>4.1.53.Final</netty.version>
         <mainClass>com.arloor.forwardproxy.HttpProxyServer</mainClass>
+        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
     </properties>
 
 
@@ -174,6 +175,7 @@
                 <configuration>
                     <source>8</source>
                     <target>8</target>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
 
