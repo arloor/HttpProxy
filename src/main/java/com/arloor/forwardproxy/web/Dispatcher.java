@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,8 +77,15 @@ public class Dispatcher {
     }
 
     public static void handle(HttpRequest request, ChannelHandlerContext ctx) {
-        log(request, ctx);
-        refuse(request, ctx);
+        SocketAddress socketAddress = ctx.channel().remoteAddress();
+        boolean fromLocalAddress = ((InetSocketAddress) socketAddress).getAddress().isSiteLocalAddress();
+        boolean fromLocalHost = ((InetSocketAddress) socketAddress).getAddress().isLoopbackAddress();
+        if (fromLocalAddress || fromLocalHost) {
+            log(request, ctx);
+            handler.getOrDefault(request.uri(), Dispatcher::other).accept(request, ctx);
+        } else {
+            refuse(request, ctx);
+        }
     }
 
     private static void other(HttpRequest request, ChannelHandlerContext ctx) {
