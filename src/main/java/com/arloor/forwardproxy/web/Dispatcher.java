@@ -4,6 +4,7 @@ import com.arloor.forwardproxy.HttpProxyServer;
 import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
 import com.arloor.forwardproxy.monitor.MonitorService;
 import com.arloor.forwardproxy.util.SocksServerUtils;
+import com.arloor.forwardproxy.vo.Config;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -80,7 +81,7 @@ public class Dispatcher {
         SocketAddress socketAddress = ctx.channel().remoteAddress();
         boolean fromLocalAddress = ((InetSocketAddress) socketAddress).getAddress().isSiteLocalAddress();
         boolean fromLocalHost = ((InetSocketAddress) socketAddress).getAddress().isLoopbackAddress();
-        if (fromLocalAddress || fromLocalHost) {
+        if (fromLocalAddress || fromLocalHost || !Config.ask4Authcate) { //来自局域网或本机，或者无被探测到风险
             log(request, ctx);
             handler.getOrDefault(request.uri(), Dispatcher::other).accept(request, ctx);
         } else {

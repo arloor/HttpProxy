@@ -18,9 +18,11 @@ import java.util.concurrent.ScheduledExecutorService;
  */
 public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     private static GlobalTrafficMonitor instance = new GlobalTrafficMonitor(MonitorService.EXECUTOR_SERVICE, 1000);
+
     public static GlobalTrafficMonitor getInstance() {
         return instance;
     }
+
     private static final int seconds = 500;
     private static List<String> xScales = new ArrayList<>();
     private static List<Double> yScalesUp = new LinkedList<>();
@@ -29,6 +31,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     volatile long inTotal = 0L;
     volatile long outRate = 0L;
     volatile long inRate = 0L;
+
     static {
         for (int i = 1; i <= seconds; i++) {
             xScales.add(String.valueOf(i));
@@ -87,11 +90,20 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
         String seriesUp = JSONObject.toJSONString(yScalesUp);
         String seriesDown = JSONObject.toJSONString(yScalesDown);
 
+        long interval = 1024 * 1024;
+        Double upMax = yScalesUp.stream().max(Double::compareTo).orElse(0D);
+        Double downMax = yScalesDown.stream().max(Double::compareTo).orElse(0D);
+        Double max = Math.max(upMax, downMax);
+        if (max / (interval) > 50) {
+            interval = (long) Math.ceil(max / interval / 10) * interval;
+        }
+
         Map<String, Object> params = new HashMap<>();
         params.put("legends", legends);
         params.put("scales", scales);
         params.put("seriesUp", seriesUp);
         params.put("seriesDown", seriesDown);
+        params.put("interval", interval);
 
         return RenderUtil.text(template, params);
     }
@@ -178,7 +190,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             "            interval = Math.pow(k, c);\n" +
             "            return Math.ceil(value.max / interval) * interval;\n" +
             "        },\n" +
-            "        interval: 1024 * 1024,\n" + // 1MB
+            "        interval: [(${interval})],\n" + // 1MB
             "        axisLabel: {\n" +
             "            formatter: function(value, index) {\n" +
             "                if (value <= 0) {\n" +
