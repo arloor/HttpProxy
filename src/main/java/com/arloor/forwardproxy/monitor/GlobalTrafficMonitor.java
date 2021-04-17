@@ -94,7 +94,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
         Double upMax = yScalesUp.stream().max(Double::compareTo).orElse(0D);
         Double downMax = yScalesDown.stream().max(Double::compareTo).orElse(0D);
         Double max = Math.max(upMax, downMax);
-        if (max / (interval) > 50) {
+        if (max / (interval) > 10) {
             interval = (long) Math.ceil(max / interval / 10) * interval;
         }
 
