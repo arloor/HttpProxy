@@ -28,7 +28,7 @@
 
     <groupId>com.arloor</groupId>
     <artifactId>httpproxy</artifactId>
-    <version>1.0-lan-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
     <properties>
         <netty.version>4.1.53.Final</netty.version>
         <mainClass>com.arloor.forwardproxy.HttpProxyServer</mainClass>
