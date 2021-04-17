@@ -100,7 +100,7 @@ public final class HttpProxyServer {
         return null;
     }
 
-    private static Channel startSSl(EventLoopGroup bossGroup, EventLoopGroup workerGroup, Config.Ssl ssl) {
+    public static Channel startSSl(EventLoopGroup bossGroup, EventLoopGroup workerGroup, Config.Ssl ssl) {
         try {
             // Configure the server.
             ServerBootstrap b = new ServerBootstrap();

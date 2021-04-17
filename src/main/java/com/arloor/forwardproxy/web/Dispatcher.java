@@ -4,6 +4,7 @@ import com.arloor.forwardproxy.HttpProxyServer;
 import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
 import com.arloor.forwardproxy.monitor.MonitorService;
 import com.arloor.forwardproxy.util.SocksServerUtils;
+import com.arloor.forwardproxy.vo.Config;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,8 +78,15 @@ public class Dispatcher {
     }
 
     public static void handle(HttpRequest request, ChannelHandlerContext ctx) {
-        log(request, ctx);
-        handler.getOrDefault(request.uri(), Dispatcher::other).accept(request, ctx);
+        SocketAddress socketAddress = ctx.channel().remoteAddress();
+        boolean fromLocalAddress = ((InetSocketAddress) socketAddress).getAddress().isSiteLocalAddress();
+        boolean fromLocalHost = ((InetSocketAddress) socketAddress).getAddress().isLoopbackAddress();
+        if (fromLocalAddress || fromLocalHost || !Config.ask4Authcate) { //来自局域网或本机，或者无被探测到风险
+            log(request, ctx);
+            handler.getOrDefault(request.uri(), Dispatcher::other).accept(request, ctx);
+        } else {
+            refuse(request, ctx);
+        }
     }
 
     private static void other(HttpRequest request, ChannelHandlerContext ctx) {
@@ -90,6 +99,20 @@ public class Dispatcher {
         response.headers().set("Content-Length", notFound.getBytes().length);
         response.headers().set(CONNECTION, CLOSE);
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    private static void refuse(HttpRequest request, ChannelHandlerContext ctx) {
+        String hostAndPortStr = request.headers().get("Host");
+        if (hostAndPortStr == null) {
+            SocksServerUtils.closeOnFlush(ctx.channel());
+        }
+        String[] hostPortArray = hostAndPortStr.split(":");
+        String host = hostPortArray[0];
+        String portStr = hostPortArray.length == 2 ? hostPortArray[1] : "80";
+        int port = Integer.parseInt(portStr);
+        String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress();
+        log.info("refuse!! {} {} {} {}", clientHostname, request.method(), request.uri(), String.format("{%s:%s}", host, port));
+        ctx.close();
     }
 
     private static void index(HttpRequest request, ChannelHandlerContext ctx) {

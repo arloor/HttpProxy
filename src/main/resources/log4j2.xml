@@ -39,7 +39,7 @@
     </Appenders>
     <Loggers>
         <logger name="web" level="info"
-                additivity="false">
+                additivity="true">
             <appender-ref ref="web"/>
         </logger>
         <Root level="info" includeLocation="false">
