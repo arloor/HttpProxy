@@ -1,5 +1,6 @@
 package com.arloor.forwardproxy;
 
+import com.arloor.forwardproxy.dnspod.DnspodHelper;
 import com.arloor.forwardproxy.util.OsHelper;
 import com.arloor.forwardproxy.vo.Config;
 import io.netty.bootstrap.ServerBootstrap;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.Properties;
 
 
@@ -28,6 +30,18 @@ public final class HttpProxyServer {
             propertiesPath = args[1];
         }
         Properties properties = parseProperties(propertiesPath);
+        if (DnspodHelper.isEnable()) {
+            new Thread(() -> {
+                while (true) {
+                    try {
+                        DnspodHelper.ddns();
+                        Thread.sleep(60000);
+                    } catch (IOException | InterruptedException e) {
+                        log.error("ddns错误！ ", e);
+                    }
+                }
+            }, "ddns").start();
+        }
 
         Config config = Config.parse(properties);
         log.info("主动要求验证：" + Config.ask4Authcate);
@@ -36,8 +50,6 @@ public final class HttpProxyServer {
 
         EventLoopGroup bossGroup = OsHelper.buildEventLoopGroup(1);
         EventLoopGroup workerGroup = OsHelper.buildEventLoopGroup(0);
-
-
         try {
             if (ssl != null && http != null) {
                 Channel sslChannel = startSSl(bossGroup, workerGroup, ssl);
