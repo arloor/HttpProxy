@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.Properties;
 
 
@@ -30,18 +29,7 @@ public final class HttpProxyServer {
             propertiesPath = args[1];
         }
         Properties properties = parseProperties(propertiesPath);
-        if (DnspodHelper.isEnable()) {
-            new Thread(() -> {
-                while (true) {
-                    try {
-                        DnspodHelper.ddns();
-                        Thread.sleep(60000);
-                    } catch (IOException | InterruptedException e) {
-                        log.error("ddns错误！ ", e);
-                    }
-                }
-            }, "ddns").start();
-        }
+        ddnsStart();
 
         Config config = Config.parse(properties);
         log.info("主动要求验证：" + Config.ask4Authcate);
@@ -76,6 +64,21 @@ public final class HttpProxyServer {
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
+        }
+    }
+
+    private static void ddnsStart() {
+        if (DnspodHelper.isEnable()) {
+            new Thread(() -> {
+                while (true) {
+                    try {
+                        DnspodHelper.ddns();
+                        Thread.sleep(60000);
+                    } catch (Throwable e) {
+                        log.error("ddns错误！ ", e);
+                    }
+                }
+            }, "dnspod").start();
         }
     }
 
