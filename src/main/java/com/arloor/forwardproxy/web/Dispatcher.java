@@ -48,6 +48,7 @@ public class Dispatcher {
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
         response.headers().set("Server", "nginx/1.11");
         response.headers().set("Content-Length", echarts_min_js.length);
+        response.headers().set("Cache-Control", "max-age=86400");
         if (needClose(request)) {
             response.headers().set(CONNECTION, CLOSE);
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
@@ -151,7 +152,7 @@ public class Dispatcher {
     }
 
     private static void net(HttpRequest request, ChannelHandlerContext ctx) {
-        String html = GlobalTrafficMonitor.html();
+        String html = GlobalTrafficMonitor.html(true);
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(html.getBytes(StandardCharsets.UTF_8));
         final FullHttpResponse response = new DefaultFullHttpResponse(
@@ -175,6 +176,7 @@ public class Dispatcher {
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
         response.headers().set("Server", "nginx/1.11");
         response.headers().set("Content-Length", favicon.length);
+        response.headers().set("Cache-Control", "max-age=86400");
         if (needClose(request)) {
             response.headers().set(CONNECTION, CLOSE);
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);

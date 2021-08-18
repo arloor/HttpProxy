@@ -84,7 +84,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
         return PlatformDependent.usedDirectMemory();
     }
 
-    public static final String html() {
+    public static final String html(boolean localEcharts) {
         String legends = JSONObject.toJSONString(Lists.newArrayList("上行网速", "下行网速"));
         String scales = JSONObject.toJSONString(xScales);
         String seriesUp = JSONObject.toJSONString(yScalesUp);
@@ -104,10 +104,10 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
         params.put("seriesUp", seriesUp);
         params.put("seriesDown", seriesDown);
         params.put("interval", interval);
-        if (false) {
-            params.put("echarts_url", "https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js");
-        } else {
+        if (localEcharts) {
             params.put("echarts_url", "/echarts.min.js");
+        } else {
+            params.put("echarts_url", "https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js");
         }
         return RenderUtil.text(template, params);
     }
