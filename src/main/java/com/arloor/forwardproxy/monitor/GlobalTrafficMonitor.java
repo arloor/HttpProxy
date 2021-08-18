@@ -104,7 +104,11 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
         params.put("seriesUp", seriesUp);
         params.put("seriesDown", seriesDown);
         params.put("interval", interval);
-
+        if (false) {
+            params.put("echarts_url", "https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js");
+        } else {
+            params.put("echarts_url", "/echarts.min.js");
+        }
         return RenderUtil.text(template, params);
     }
 
@@ -114,7 +118,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             "<meta charset=\"UTF-8\">\n" +
             "<title>实时网速</title>\n" +
             "<meta http-equiv=\"refresh\" content=\"3\">" +
-            "<script src=\"https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js\"></script>\n" +
+            "<script src=\"[(${echarts_url})]\"></script>\n" +
             "</head>\n" +
             "<body style=\"margin: 0;height:100%;\">\n" +
             "<div id=\"main\" style=\"width: 100%;height: 100vh;\"></div>\n" +

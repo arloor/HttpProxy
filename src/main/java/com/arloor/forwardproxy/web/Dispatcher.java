@@ -9,17 +9,18 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
+import org.apache.logging.log4j.core.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
@@ -30,13 +31,31 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 public class Dispatcher {
     private static final Logger log = LoggerFactory.getLogger("web");
     private static byte[] favicon = new byte[0];
+    private static byte[] echarts_min_js = new byte[0];
     private static final MonitorService MONITOR_SERVICE = MonitorService.getInstance();
     private static Map<String, BiConsumer<HttpRequest, ChannelHandlerContext>> handler = new HashMap<String, BiConsumer<HttpRequest, ChannelHandlerContext>>() {{
         put("/favicon.ico", Dispatcher::favicon);
         put("/", Dispatcher::index);
         put("/net", Dispatcher::net);
         put("/metrics", Dispatcher::metrics);
+        put("/echarts.min.js", Dispatcher::echarts);
     }};
+
+    private static void echarts(HttpRequest request, ChannelHandlerContext ctx) {
+        ByteBuf buffer = ctx.alloc().buffer();
+        buffer.writeBytes(echarts_min_js);
+        final FullHttpResponse response = new DefaultFullHttpResponse(
+                HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
+        response.headers().set("Server", "nginx/1.11");
+        response.headers().set("Content-Length", echarts_min_js.length);
+        if (needClose(request)) {
+            response.headers().set(CONNECTION, CLOSE);
+            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        } else {
+            ctx.writeAndFlush(response);
+        }
+
+    }
 
     private static final Map<String, Long> counters = new ConcurrentHashMap<>();
 
@@ -66,14 +85,18 @@ public class Dispatcher {
     }
 
     static {
-        try (BufferedInputStream stream = new BufferedInputStream(Objects.requireNonNull(HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")))) {
-            byte[] bytes = new byte[stream.available()];
-            int read = stream.read(bytes);
-            favicon = bytes;
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (NullPointerException e) {
-            log.error("缺少favicon.ico");
+        try (InputStream stream = HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")) {
+            String str = IOUtils.toString(new BufferedReader(new InputStreamReader(stream)));
+            favicon = str.getBytes(StandardCharsets.UTF_8);
+        } catch (Throwable e) {
+            log.error("加载favicon失败");
+        }
+
+        try (InputStream stream = HttpProxyServer.class.getClassLoader().getResourceAsStream("echarts.min.js")) {
+            String str = IOUtils.toString(new BufferedReader(new InputStreamReader(stream)));
+            echarts_min_js = str.getBytes(StandardCharsets.UTF_8);
+        } catch (Throwable e) {
+            log.error("加载echart.min.js失败");
         }
     }
 
