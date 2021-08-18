@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.Properties;
 
 
@@ -74,8 +75,12 @@ public final class HttpProxyServer {
                     try {
                         DnspodHelper.ddns();
                         Thread.sleep(60000);
+                    } catch (IOException e) {
+                        log.error("http请求出错！", e);
+                    } catch (InterruptedException e) {
+                        log.error("interrupt！ ", e);
                     } catch (Throwable e) {
-                        log.error("ddns错误！ ", e);
+                        log.error("dns更新发生未知错误 ", e);
                     }
                 }
             }, "dnspod").start();
