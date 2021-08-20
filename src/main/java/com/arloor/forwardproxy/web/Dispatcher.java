@@ -9,18 +9,19 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
-import org.apache.logging.log4j.core.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
@@ -86,19 +87,29 @@ public class Dispatcher {
     }
 
     static {
-        try (InputStream stream = HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")) {
-            String str = IOUtils.toString(new BufferedReader(new InputStreamReader(stream)));
-            favicon = str.getBytes(StandardCharsets.UTF_8);
-        } catch (Throwable e) {
-            log.error("加载favicon失败");
+        try (BufferedInputStream stream = new BufferedInputStream(Objects.requireNonNull(HttpProxyServer.class.getClassLoader().getResourceAsStream("favicon.ico")))) {
+            favicon = readAll(stream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NullPointerException e) {
+            log.error("缺少favicon.ico");
         }
 
-        try (InputStream stream = HttpProxyServer.class.getClassLoader().getResourceAsStream("echarts.min.js")) {
-            String str = IOUtils.toString(new BufferedReader(new InputStreamReader(stream)));
-            echarts_min_js = str.getBytes(StandardCharsets.UTF_8);
+        try (BufferedInputStream stream = new BufferedInputStream(Objects.requireNonNull(HttpProxyServer.class.getClassLoader().getResourceAsStream("echarts.min.js")))) {
+            echarts_min_js = readAll(stream);
         } catch (Throwable e) {
             log.error("加载echart.min.js失败");
         }
+    }
+
+    public static byte[] readAll(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int n = 0;
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+        }
+        return output.toByteArray();
     }
 
     public static void handle(HttpRequest request, ChannelHandlerContext ctx) {
