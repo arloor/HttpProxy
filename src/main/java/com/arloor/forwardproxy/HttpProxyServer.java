@@ -39,7 +39,8 @@ public final class HttpProxyServer {
         EventLoopGroup bossGroup = OsHelper.buildEventLoopGroup(1);
         EventLoopGroup workerGroup = OsHelper.buildEventLoopGroup(0);
         if (DnspodHelper.isEnable()) {
-            bossGroup.scheduleAtFixedRate(DnspodHelper::ddns, 0, 1, TimeUnit.MINUTES);
+            EventLoopGroup dnsEventLoop = OsHelper.buildEventLoopGroup(1);
+            dnsEventLoop.scheduleAtFixedRate(DnspodHelper::ddns, 0, 1, TimeUnit.MINUTES);
         }
         try {
             if (ssl != null && http != null) {
