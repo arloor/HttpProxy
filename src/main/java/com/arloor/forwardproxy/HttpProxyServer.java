@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -30,7 +30,6 @@ public final class HttpProxyServer {
             propertiesPath = args[1];
         }
         Properties properties = parseProperties(propertiesPath);
-        ddnsStart();
 
         Config config = Config.parse(properties);
         log.info("主动要求验证：" + Config.ask4Authcate);
@@ -39,6 +38,9 @@ public final class HttpProxyServer {
 
         EventLoopGroup bossGroup = OsHelper.buildEventLoopGroup(1);
         EventLoopGroup workerGroup = OsHelper.buildEventLoopGroup(0);
+        if (DnspodHelper.isEnable()) {
+            bossGroup.scheduleAtFixedRate(DnspodHelper::ddns, 0, 1, TimeUnit.MINUTES);
+        }
         try {
             if (ssl != null && http != null) {
                 Channel sslChannel = startSSl(bossGroup, workerGroup, ssl);
@@ -65,25 +67,6 @@ public final class HttpProxyServer {
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
-        }
-    }
-
-    private static void ddnsStart() {
-        if (DnspodHelper.isEnable()) {
-            new Thread(() -> {
-                while (true) {
-                    try {
-                        DnspodHelper.ddns();
-                        Thread.sleep(60000);
-                    } catch (IOException e) {
-                        log.error("http请求出错！", e);
-                    } catch (InterruptedException e) {
-                        log.error("interrupt！ ", e);
-                    } catch (Throwable e) {
-                        log.error("dns更新发生未知错误 ", e);
-                    }
-                }
-            }, "dnspod").start();
         }
     }
 
@@ -125,11 +108,17 @@ public final class HttpProxyServer {
             // Configure the server.
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 10240);
+            HttpsProxyServerInitializer initializer = new HttpsProxyServerInitializer(ssl);
             b.group(bossGroup, workerGroup)
                     .channel(OsHelper.serverSocketChannelClazz())
-                    .childHandler(new HttpsProxyServerInitializer(ssl));
+                    .childHandler(initializer);
 
             Channel sslChannel = b.bind(ssl.getPort()).sync().channel();
+            // 每天更新一次ssl证书
+            sslChannel.eventLoop().scheduleAtFixedRate(() -> {
+                log.info("定时重加载ssl证书！");
+                initializer.loadSslContext();
+            }, 1, 1, TimeUnit.DAYS);
             log.info("https proxy@ port=" + ssl.getPort() + " auth=" + ssl.needAuth());
             return sslChannel;
         } catch (Exception e) {

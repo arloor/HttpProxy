@@ -10,19 +10,19 @@ import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerExpectContinueHandler;
 import io.netty.handler.ssl.SslContext;
-
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChannel> {
+    private static final Logger log = LoggerFactory.getLogger(HttpsProxyServerInitializer.class);
 
     private final Config.Ssl ssl;
 
-    private final SslContext sslCtx;
+    private SslContext sslCtx;
 
-    public HttpsProxyServerInitializer(Config.Ssl ssl) throws IOException, GeneralSecurityException {
+    public HttpsProxyServerInitializer(Config.Ssl ssl) {
         this.ssl = ssl;
-        this.sslCtx = SslContextFactory.getSSLContext(ssl.getFullchain(), ssl.getPrivkey());
+        loadSslContext();
     }
 
     @Override
@@ -38,5 +38,13 @@ public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChanne
 //        p.addLast(new LoggingHandler(LogLevel.INFO));
         p.addLast(new HttpProxyConnectHandler(ssl.getAuthMap()));
 
+    }
+
+    public void loadSslContext() {
+        try {
+            this.sslCtx = SslContextFactory.getSSLContext(ssl.getFullchain(), ssl.getPrivkey());
+        } catch (Throwable e) {
+            log.error("init ssl context error!", e);
+        }
     }
 }

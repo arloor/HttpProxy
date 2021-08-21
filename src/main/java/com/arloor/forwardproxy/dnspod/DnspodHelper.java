@@ -27,18 +27,22 @@ public class DnspodHelper {
         return content;
     }
 
-    public static void ddns() throws IOException {
-        RecordList recordList = fetchRecordList();
-        for (RecordList.Record record : recordList.getRecords()) {
-            if (record.getName().equals(getSubdomain())) {
-                String lastIp = record.getValue();
-                String currentIp = fetchCurrentIp();
-                if (!Objects.equals(currentIp, lastIp)) {
-                    modifyRecord(record, currentIp);
-                } else {
-                    log.info("ip未变化：{} @{}", lastIp, new Date());
+    public static void ddns() {
+        try {
+            RecordList recordList = fetchRecordList();
+            for (RecordList.Record record : recordList.getRecords()) {
+                if (record.getName().equals(getSubdomain())) {
+                    String lastIp = record.getValue();
+                    String currentIp = fetchCurrentIp();
+                    if (!Objects.equals(currentIp, lastIp)) {
+                        modifyRecord(record, currentIp);
+                    } else {
+                        log.info("ip未变化：{} @{}", lastIp, new Date());
+                    }
                 }
             }
+        } catch (Throwable e) {
+            log.error("update dns error!", e);
         }
     }
 
