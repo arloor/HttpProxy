@@ -155,8 +155,8 @@ public class HttpUtil {
         CloseableHttpResponse response = null;
         //设置超时时间
         RequestConfig config = RequestConfig.custom()
-                .setConnectionRequestTimeout(100)
-                .setConnectTimeout(100)
+                .setConnectionRequestTimeout(1000)
+                .setConnectTimeout(1000)
                 .setSocketTimeout(readTimeout)
                 .build();
         httpPost.setConfig(config);
@@ -194,8 +194,8 @@ public class HttpUtil {
         CloseableHttpResponse response = null;
         //设置超时时间
         RequestConfig config = RequestConfig.custom()
-                .setConnectionRequestTimeout(100)
-                .setConnectTimeout(100)
+                .setConnectionRequestTimeout(1000)
+                .setConnectTimeout(1000)
                 .setSocketTimeout(readTimeout)
                 .build();
         httpPost.setConfig(config);
@@ -237,8 +237,8 @@ public class HttpUtil {
         CloseableHttpResponse response = null;
         //设置超时时间
         RequestConfig config = RequestConfig.custom()
-                .setConnectionRequestTimeout(100)
-                .setConnectTimeout(100)
+                .setConnectionRequestTimeout(1000)
+                .setConnectTimeout(1000)
                 .setSocketTimeout(readTimeout)
                 .build();
         get.setConfig(config);
@@ -273,8 +273,8 @@ public class HttpUtil {
         CloseableHttpResponse response = null;
         //设置超时时间
         RequestConfig config = RequestConfig.custom()
-                .setConnectionRequestTimeout(100)
-                .setConnectTimeout(100)
+                .setConnectionRequestTimeout(1000)
+                .setConnectTimeout(1000)
                 .setSocketTimeout(readTimeout)
                 .build();
         get.setConfig(config);

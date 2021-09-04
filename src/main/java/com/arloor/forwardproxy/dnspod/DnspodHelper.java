@@ -18,12 +18,12 @@ public class DnspodHelper {
 
 
     public static RecordList fetchRecordList() throws IOException {
-        String content = HttpUtil.doPostForm(API_URL + "Record.List", JsonUtil.fromJson(JsonUtil.toJson(new RecordListParam()), HashMap.class), 100);
+        String content = HttpUtil.doPostForm(API_URL + "Record.List", JsonUtil.fromJson(JsonUtil.toJson(new RecordListParam()), HashMap.class), 5000);
         return JsonUtil.fromJson(content, RecordList.class);
     }
 
     public static String fetchCurrentIp() throws IOException {
-        String content = HttpUtil.get("https://sg.gcall.me", 100);
+        String content = HttpUtil.get("https://sg.gcall.me", 5000);
         return content;
     }
 
@@ -56,7 +56,7 @@ public class DnspodHelper {
         ddnsParam.put("sub_domain", getSubdomain());
         ddnsParam.put("record_line_id", record.getLine_id());
         ddnsParam.put("value", currentIp);
-        String s = HttpUtil.doPostForm(API_URL + "Record.Ddns", ddnsParam, 200);
+        String s = HttpUtil.doPostForm(API_URL + "Record.Ddns", ddnsParam, 5000);
         log.info(s);
     }
 
