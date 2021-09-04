@@ -10,7 +10,7 @@ public class Config {
     private static final String TRUE = "true";
 
     public static boolean ask4Authcate = false;
-    private static final String POUND_SIGN = "\u00A3";
+    private static final String POUND_SIGN = "\u00A3";  // £
 
     private Ssl ssl;
     private Http http;
@@ -37,6 +37,7 @@ public class Config {
             if (auth != null && auth.length() != 0) {
                 for (String user : auth.split(",")) {
                     users.computeIfAbsent(genBasicAuth(user), (cell) -> user);
+                    users.computeIfAbsent(genBasicAuthWithOut£(user), (cell) -> user);
                 }
             }
             String fullchain = properties.getProperty("https.fullchain.pem");
@@ -54,6 +55,7 @@ public class Config {
             if (auth != null && auth.length() != 0) {
                 for (String user : auth.split(",")) {
                     users.computeIfAbsent(genBasicAuth(user), (cell) -> user);
+                    users.computeIfAbsent(genBasicAuthWithOut£(user), (cell) -> user);
                 }
             }
             Http http = new Http(port, users);
@@ -81,6 +83,11 @@ public class Config {
      */
     private static String genBasicAuth(String user) {
         user += POUND_SIGN;
+        return "Basic " + Base64.getEncoder().encodeToString(user.getBytes(StandardCharsets.UTF_8));
+    }
+
+
+    private static String genBasicAuthWithOut£(String user) {
         return "Basic " + Base64.getEncoder().encodeToString(user.getBytes(StandardCharsets.UTF_8));
     }
 
