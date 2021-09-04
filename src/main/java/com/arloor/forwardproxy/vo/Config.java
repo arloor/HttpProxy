@@ -1,18 +1,6 @@
 package com.arloor.forwardproxy.vo;
 
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.epoll.EpollEventLoopGroup;
-import io.netty.channel.epoll.EpollServerSocketChannel;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.kqueue.KQueueEventLoopGroup;
-import io.netty.channel.kqueue.KQueueServerSocketChannel;
-import io.netty.channel.kqueue.KQueueSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +10,7 @@ public class Config {
     private static final String TRUE = "true";
 
     public static boolean ask4Authcate = false;
+    private static final String POUND_SIGN = "\u00A3";
 
     private Ssl ssl;
     private Http http;
@@ -47,7 +36,7 @@ public class Config {
             Map<String, String> users = new HashMap<>();
             if (auth != null && auth.length() != 0) {
                 for (String user : auth.split(",")) {
-                    users.computeIfAbsent("Basic " + Base64.getEncoder().encodeToString(user.getBytes()), (cell) -> user);
+                    users.computeIfAbsent(genBasicAuth(user), (cell) -> user);
                 }
             }
             String fullchain = properties.getProperty("https.fullchain.pem");
@@ -64,7 +53,7 @@ public class Config {
             Map<String, String> users = new HashMap<>();
             if (auth != null && auth.length() != 0) {
                 for (String user : auth.split(",")) {
-                    users.computeIfAbsent("Basic " + Base64.getEncoder().encodeToString(user.getBytes()), (cell) -> user);
+                    users.computeIfAbsent(genBasicAuth(user), (cell) -> user);
                 }
             }
             Http http = new Http(port, users);
@@ -72,6 +61,27 @@ public class Config {
         }
 
         return config;
+    }
+
+    /**
+     * https://datatracker.ietf.org/doc/html/rfc7617
+     * The user's name is "test", and the password is the string "123"
+     * followed by the Unicode character U+00A3 (POUND SIGN).  Using the
+     * character encoding scheme UTF-8, the user-pass becomes:
+     * <p>
+     * 't' 'e' 's' 't' ':' '1' '2' '3' pound
+     * 74  65  73  74  3A  31  32  33  C2  A3
+     * <p>
+     * Encoding this octet sequence in Base64 ([RFC4648], Section 4) yields:
+     * <p>
+     * dGVzdDoxMjPCow==
+     *
+     * @param user
+     * @return
+     */
+    private static String genBasicAuth(String user) {
+        user += POUND_SIGN;
+        return "Basic " + Base64.getEncoder().encodeToString(user.getBytes(StandardCharsets.UTF_8));
     }
 
 

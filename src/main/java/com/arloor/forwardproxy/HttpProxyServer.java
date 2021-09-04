@@ -86,7 +86,7 @@ public final class HttpProxyServer {
     }
 
 
-    private static Channel startHttp(EventLoopGroup bossGroup, EventLoopGroup workerGroup, Config.Http http) {
+    public static Channel startHttp(EventLoopGroup bossGroup, EventLoopGroup workerGroup, Config.Http http) {
         try {
             // Configure the server.
             ServerBootstrap b = new ServerBootstrap();
