@@ -39,12 +39,22 @@ https.fullchain.pem 是域名证书+根证书的简单拼接（fullchain是指�
 
 https.privkey.pem 是私钥
 
-以腾讯云上的免费ssl证书为例，nginx文件夹中的`1_xxx.com_bundle.crt`是fullchain，`2_xxx.com.key`是privkey，相信代码从业者能够从这里举一反三，从而知道从其他途径签发的证书应该如何配置。
+以腾讯云的免费ssl证书为例，nginx文件夹中的`1_xxx.com_bundle.crt`是fullchain，`2_xxx.com.key`是privkey，相信代码从业者能够从这里举一反三，从而知道从其他途径签发的证书应该如何配置。
+
+测试时，可以使用openssl生成证书和密钥,同时设置chrome不验证本地证书
+
+```shell
+openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout privkey.pem -out cert.pem -days 3650
+
+## chrome不验证本地证书
+chrome://flags/#allow-insecure-localhost
+```
 
 ## 客户端说明
 
 1. 可以使用支持https的软件，例如：surge、shadowrocket、clash
-2. chrome浏览器可以通过[SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件使用本代理（不推荐，会存在被嗅探的风险）  
+2.
+chrome浏览器可以通过[SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件使用本代理（不推荐，会存在被嗅探的风险）
 3. Java开发人员可以使用[connect](https://github.com/arloor/connect)项目
 
 ## 网速监控
