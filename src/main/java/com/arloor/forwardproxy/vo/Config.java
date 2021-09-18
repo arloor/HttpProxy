@@ -12,15 +12,15 @@ public class Config {
     public static boolean ask4Authcate = false;
     private static final String POUND_SIGN = "\u00A3";  // £
 
-    private Ssl ssl;
-    private Http http;
+    private SslConfig sslConfig;
+    private HttpConfig httpConfig;
 
-    public Ssl ssl() {
-        return ssl;
+    public SslConfig ssl() {
+        return sslConfig;
     }
 
-    public Http http() {
-        return http;
+    public HttpConfig http() {
+        return httpConfig;
     }
 
     public static Config parse(Properties properties) {
@@ -42,8 +42,8 @@ public class Config {
             }
             String fullchain = properties.getProperty("https.fullchain.pem");
             String privkey = properties.getProperty("https.privkey.pem");
-            Ssl ssl = new Ssl(port, users, fullchain, privkey);
-            config.ssl = ssl;
+            SslConfig sslConfig = new SslConfig(port, users, fullchain, privkey);
+            config.sslConfig = sslConfig;
         }
 
         String httpEnable = properties.getProperty("http.enable");
@@ -58,8 +58,8 @@ public class Config {
                     users.computeIfAbsent(genBasicAuthWithOut£(user), (cell) -> user);
                 }
             }
-            Http http = new Http(port, users);
-            config.http = http;
+            HttpConfig httpConfig = new HttpConfig(port, users);
+            config.httpConfig = httpConfig;
         }
 
         return config;
@@ -92,68 +92,4 @@ public class Config {
     }
 
 
-    public static class Http {
-        private Integer port;
-        private Map<String, String> auth; // base64 - raw
-
-        public Http(Integer port, Map<String, String> auth) {
-            this.port = port;
-            this.auth = auth;
-        }
-
-        public Integer getPort() {
-            return port;
-        }
-
-        public String getAuth(String base64Auth) {
-            return auth.get(base64Auth);
-        }
-
-        public Map<String, String> getAuthMap() {
-            return auth;
-        }
-
-        public boolean needAuth() {
-            return auth != null && auth.size() != 0;
-        }
-
-    }
-
-    public static class Ssl {
-        private Integer port;
-        private Map<String, String> auth; // base64 - raw
-        private String fullchain;
-        private String privkey;
-
-        public Ssl(Integer port, Map<String, String> auth, String fullchain, String privkey) {
-            this.port = port;
-            this.auth = auth;
-            this.fullchain = fullchain;
-            this.privkey = privkey;
-        }
-
-        public Integer getPort() {
-            return port;
-        }
-
-        public String getAuth(String base64Auth) {
-            return auth.get(base64Auth);
-        }
-
-        public Map<String, String> getAuthMap() {
-            return auth;
-        }
-
-        public String getFullchain() {
-            return fullchain;
-        }
-
-        public String getPrivkey() {
-            return privkey;
-        }
-
-        public boolean needAuth() {
-            return auth != null && auth.size() != 0;
-        }
-    }
 }

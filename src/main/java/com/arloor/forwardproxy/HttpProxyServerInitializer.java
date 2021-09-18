@@ -1,7 +1,7 @@
 package com.arloor.forwardproxy;
 
 import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
-import com.arloor.forwardproxy.vo.Config;
+import com.arloor.forwardproxy.vo.HttpConfig;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -14,10 +14,10 @@ import java.security.GeneralSecurityException;
 
 public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel> {
 
-    private final Config.Http http;
+    private final HttpConfig httpConfig;
 
-    public HttpProxyServerInitializer(Config.Http http) throws IOException, GeneralSecurityException {
-        this.http = http;
+    public HttpProxyServerInitializer(HttpConfig httpConfig) throws IOException, GeneralSecurityException {
+        this.httpConfig = httpConfig;
     }
 
     @Override
@@ -27,6 +27,6 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
         p.addLast(new HttpRequestDecoder());
         p.addLast(new HttpResponseEncoder());
         p.addLast(new HttpServerExpectContinueHandler());
-        p.addLast(new HttpProxyConnectHandler(http.getAuthMap()));
+        p.addLast(new HttpProxyConnectHandler(httpConfig.getAuthMap()));
     }
 }
