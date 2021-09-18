@@ -114,7 +114,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
         param.add("seriesUp", seriesUp);
         param.add("seriesDown", seriesDown);
         param.add("interval", interval);
-        param.add("hostname", hostname);
+        param.add("title", hostname.length() > 10 ? hostname : hostname + " 实时网速");
         if (localEcharts) {
             param.add("echarts_url", "/echarts.min.js");
         } else {
@@ -129,7 +129,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
-                <title>[(${hostname})]</title>
+                <title>[(${title})]</title>
                 <meta http-equiv="refresh" content="3">
                 <script src="[(${echarts_url})]"></script>
             </head>
@@ -141,7 +141,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                 // 指定图表的配置项和数据
                 var option = {
                     title: {
-                        text: '[(${hostname})]'
+                        text: '[(${title})]'
                     },
                     tooltip: {
                         trigger: 'axis',
