@@ -77,7 +77,7 @@ public class Dispatcher {
     private static boolean needClose(HttpRequest httpRequest) {
         Long counter = counters.computeIfAbsent(httpRequest.uri(), (key) -> 0L);
         counter++;
-        if (counter > 10) {
+        if (counter > 100) {
             counter = 0L;
             counters.put(httpRequest.uri(), counter);
             return true;
@@ -136,7 +136,12 @@ public class Dispatcher {
             response.headers().set("Content-Length", bytes.length);
             response.headers().set("Cache-Control", "max-age=1800");
             response.headers().set("Content-Type", contentType + "; charset=utf-8");
-            ctx.writeAndFlush(response);
+            if (needClose(request)) {
+                response.headers().set(CONNECTION, CLOSE);
+                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+            } else {
+                ctx.writeAndFlush(response);
+            }
         }
     }
 
