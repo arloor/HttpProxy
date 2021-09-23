@@ -134,6 +134,7 @@ public class Dispatcher {
                     HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
             response.headers().set("Server", "nginx/1.11");
             response.headers().set("Content-Length", bytes.length);
+            response.headers().set("Cache-Control", "max-age=1800");
             response.headers().set("Content-Type", contentType + "; charset=utf-8");
             ctx.writeAndFlush(response);
         }
