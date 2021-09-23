@@ -37,7 +37,7 @@ public class Dispatcher {
     private static final MonitorService MONITOR_SERVICE = MonitorService.getInstance();
     private static Map<String, BiConsumer<HttpRequest, ChannelHandlerContext>> handler = new HashMap<String, BiConsumer<HttpRequest, ChannelHandlerContext>>() {{
         put("/favicon.ico", Dispatcher::favicon);
-        put("/", Dispatcher::index);
+        put("/ip", Dispatcher::ip);
         put("/net", Dispatcher::net);
         put("/metrics", Dispatcher::metrics);
         put("/echarts.min.js", Dispatcher::echarts);
@@ -223,6 +223,9 @@ public class Dispatcher {
     private static String getPath(HttpRequest request) {
         String uri = request.uri();
         uri = URLDecoder.decode(uri, StandardCharsets.UTF_8);
+        if (uri.endsWith("/")) {
+            uri += "index.html";
+        }
         if (uri.startsWith("/")) {
             uri = uri.substring(1);
         }
@@ -255,7 +258,7 @@ public class Dispatcher {
         ctx.close();
     }
 
-    private static void index(HttpRequest request, ChannelHandlerContext ctx) {
+    private static void ip(HttpRequest request, ChannelHandlerContext ctx) {
         String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress();
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(clientHostname.getBytes());

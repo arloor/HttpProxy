@@ -23,7 +23,7 @@ public class DnspodHelper {
     }
 
     public static String fetchCurrentIp() throws IOException {
-        String content = HttpUtil.get("https://sg.gcall.me", 5000);
+        String content = HttpUtil.get("https://sg.gcall.me/ip", 5000);
         return content;
     }
 
