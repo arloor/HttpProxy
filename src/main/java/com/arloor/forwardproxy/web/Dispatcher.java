@@ -272,8 +272,13 @@ public class Dispatcher {
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
         response.headers().set("Server", "nginx/1.11");
         response.headers().set("Content-Length", clientHostname.getBytes().length);
-        response.headers().set(CONNECTION, CLOSE);
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        response.headers().set("Content-Type", "text/html; charset=utf-8");
+        if (needClose(request)) {
+            response.headers().set(CONNECTION, CLOSE);
+            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        } else {
+            ctx.writeAndFlush(response);
+        }
     }
 
     private static void net(HttpRequest request, ChannelHandlerContext ctx) {
