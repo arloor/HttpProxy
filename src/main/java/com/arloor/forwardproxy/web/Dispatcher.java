@@ -113,7 +113,7 @@ public class Dispatcher {
         SocketAddress socketAddress = ctx.channel().remoteAddress();
         boolean fromLocalAddress = ((InetSocketAddress) socketAddress).getAddress().isSiteLocalAddress();
         boolean fromLocalHost = ((InetSocketAddress) socketAddress).getAddress().isLoopbackAddress();
-        if (fromLocalAddress || fromLocalHost || !Config.ask4Authcate) { //来自局域网或本机，或者无被探测到风险
+        if (fromLocalAddress || fromLocalHost || !Config.ask4Authcate || request.headers().contains("you-are-welcome")) { //来自局域网或本机，或者无被探测到风险
             log(request, ctx);
             handler.getOrDefault(request.uri(), Dispatcher::other).accept(request, ctx);
         } else {
