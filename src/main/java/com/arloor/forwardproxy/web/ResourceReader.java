@@ -14,7 +14,7 @@ public class ResourceReader {
         try {
             return Files.readAllBytes(Path.of(path));
         } catch (IOException e) {
-            logger.error("error read file", e);
+            logger.error("error read file {}", path);
         }
         return null;
     }
