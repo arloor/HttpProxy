@@ -15,24 +15,24 @@
         </Console>
         <!-- Async Loggers will auto-flush in batches, so switch off immediateFlush. -->
         <RollingRandomAccessFile name="log" fileName="${MSG_LOG_HOME}/proxy.log" immediateFlush="false"
-                          append="true" filePattern="${MSG_LOG_HOME}/proxy-%d{MM-dd-yyyy}-%i.log">
+                                 append="true" filePattern="${MSG_LOG_HOME}/proxy.log-%d{MM-dd-yyyy}-%i">
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n</Pattern>
             </PatternLayout>
             <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
             <Policies>
-                <TimeBasedTriggeringPolicy />
+                <TimeBasedTriggeringPolicy/>
                 <SizeBasedTriggeringPolicy size="250 MB"/>
             </Policies>
         </RollingRandomAccessFile>
         <RollingRandomAccessFile name="web" fileName="${MSG_LOG_HOME}/web.log" immediateFlush="false"
-                          append="true" filePattern="${MSG_LOG_HOME}/web-%d{MM-dd-yyyy}-%i.log">
+                                 append="true" filePattern="${MSG_LOG_HOME}/web.log-%d{MM-dd-yyyy}-%i">
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n</Pattern>
             </PatternLayout>
             <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
             <Policies>
-                <TimeBasedTriggeringPolicy />
+                <TimeBasedTriggeringPolicy/>
                 <SizeBasedTriggeringPolicy size="250 MB"/>
             </Policies>
         </RollingRandomAccessFile>
