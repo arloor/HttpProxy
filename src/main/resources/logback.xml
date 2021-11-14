@@ -64,12 +64,12 @@
 
     <logger name="web" additivity="false" level="INFO">
         <appender-ref ref="ASYNC-WEB"/>
-        <!--        <appender-ref ref="STDOUT"/>-->
+                <appender-ref ref="STDOUT"/>
     </logger>
 
     <!-- 日志输出级别 -->
     <root level="INFO">
         <appender-ref ref="ASYNC-FILE"/>
-<!--        <appender-ref ref="STDOUT"/>-->
+        <appender-ref ref="STDOUT"/>
     </root>
 </configuration>
