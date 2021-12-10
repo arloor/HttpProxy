@@ -77,7 +77,7 @@ public class Dispatcher {
     private static boolean needClose(HttpRequest httpRequest) {
         Long counter = counters.computeIfAbsent(httpRequest.uri(), (key) -> 0L);
         counter++;
-        if (counter > 1) {
+        if (counter > 100) {
             counter = 0L;
             counters.put(httpRequest.uri(), counter);
             return true;
