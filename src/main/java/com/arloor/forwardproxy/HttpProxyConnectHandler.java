@@ -204,6 +204,8 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         if (future.isSuccess()) {
+                            String targetAddr = ((InetSocketAddress) future.channel().remoteAddress()).getAddress().getHostAddress();
+                            streamSpan.setAttribute(TraceConstant.target.name(), targetAddr);
                             // Connection established use handler provided results
                         } else {
                             // Close the connection if the connection attempt has failed.

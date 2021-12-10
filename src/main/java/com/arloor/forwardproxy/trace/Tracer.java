@@ -8,6 +8,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
+import io.opentelemetry.sdk.trace.samplers.Sampler;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -27,6 +28,7 @@ public enum Tracer {
             hostName = "unknown";
         }
         SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder()
+                .setSampler(Sampler.alwaysOn())
                 .setResource(Resource.getDefault().toBuilder().put("service.name", hostName).build())
                 .addSpanProcessor(BatchSpanProcessor.builder(new LogSpanExporter()).build())
 //                .addSpanProcessor(BatchSpanProcessor.builder(JaegerGrpcSpanExporter.builder().setEndpoint("http://hk.gcall.me:14250").build()).build())
