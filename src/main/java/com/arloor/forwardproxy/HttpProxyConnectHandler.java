@@ -69,6 +69,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 //                }
                 // 1. 如果url以 / 开头，则认为是直接请求，而不是代理请求
                 if (request.uri().startsWith("/")) {
+                    streamSpan.setAttribute(TraceConstant.host.name(), "this.hostname");
                     Span dispatch = Tracer.spanBuilder(TraceConstant.web.name())
                             .setAttribute(TraceConstant.url.name(), String.valueOf(request.uri()))
                             .setParent(Context.current().with(this.streamSpan))
