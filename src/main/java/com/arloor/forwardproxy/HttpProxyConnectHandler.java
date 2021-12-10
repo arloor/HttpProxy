@@ -1,5 +1,7 @@
 package com.arloor.forwardproxy;
 
+import com.arloor.forwardproxy.trace.TraceConstant;
+import com.arloor.forwardproxy.trace.Tracer;
 import com.arloor.forwardproxy.util.OsHelper;
 import com.arloor.forwardproxy.util.SocksServerUtils;
 import com.arloor.forwardproxy.vo.Config;
@@ -13,6 +15,9 @@ import io.netty.util.ReferenceCountUtil;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.FutureListener;
 import io.netty.util.concurrent.Promise;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +31,11 @@ import static io.netty.handler.codec.http.HttpResponseStatus.PROXY_AUTHENTICATIO
 public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObject> {
     private static final Logger log = LoggerFactory.getLogger(HttpProxyConnectHandler.class);
     private final Map<String, String> auths;
+    private Span streamSpan;
 
-    public HttpProxyConnectHandler(Map<String, String> auths) {
+    public HttpProxyConnectHandler(Map<String, String> auths, Span streamSpan) {
         this.auths = auths;
+        this.streamSpan = streamSpan;
     }
 
     private final Bootstrap b = new Bootstrap();
@@ -61,10 +68,19 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
 //                }
                 // 1. 如果url以 / 开头，则认为是直接请求，而不是代理请求
                 if (request.uri().startsWith("/")) {
-                    Dispatcher.handle(request, ctx);
-                    // 这里需要将content全部release
-                    contents.forEach(ReferenceCountUtil::release);
-                    return;
+                    Span dispatch = Tracer.spanBuilder(TraceConstant.web.name())
+                            .setAttribute(TraceConstant.url.name(), String.valueOf(request.uri()))
+                            .setParent(Context.current().with(this.streamSpan))
+                            .startSpan();
+                    try (Scope scope = dispatch.makeCurrent()) {
+                        Dispatcher.handle(request, ctx);
+                        // 这里需要将content全部release
+                        contents.forEach(ReferenceCountUtil::release);
+                        return;
+                    } finally {
+                        dispatch.end();
+                    }
+
                 }
 
                 //2. 检验auth
@@ -84,10 +100,21 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         }
                         ctx.channel().writeAndFlush(responseAuthRequired);
                         SocksServerUtils.closeOnFlush(ctx.channel());
+                        Tracer.spanBuilder(TraceConstant.wrong_auth.name())
+                                .setAttribute(TraceConstant.auth.name(), String.valueOf(basicAuth))
+                                .setParent(Context.current().with(this.streamSpan))
+                                .startSpan()
+                                .end();
                         return;
                     }
                 }
 
+                Span relaySpan = Tracer.spanBuilder(TraceConstant.proxy.name())
+                        .setAttribute(TraceConstant.method.name(), String.valueOf(request.method()))
+                        .setAttribute(TraceConstant.host.name(), host)
+                        .setAttribute(TraceConstant.port.name(), port)
+                        .setAttribute(TraceConstant.url.name(), request.uri())
+                        .setParent(Context.current().with(this.streamSpan)).startSpan();
                 //3. 这里进入代理请求处理，分为两种：CONNECT方法和其他HTTP方法
                 log.info("{}@{} ==> {} {} {}", userName, clientHostname, request.method(), request.uri(), !request.uri().equals(request.headers().get("Host")) ? "Host=" + request.headers().get("Host") : "");
                 Promise<Channel> promise = ctx.executor().newPromise();
@@ -109,7 +136,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                                     ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
                                                     ctx.pipeline().remove(HttpProxyConnectHandler.class);
                                                     outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
-                                                    ctx.pipeline().addLast(new RelayHandler(outboundChannel));
+                                                    ctx.pipeline().addLast(new RelayHandler(outboundChannel, relaySpan));
 //                                                    ctx.channel().config().setAutoRead(true);
                                                 } else {
                                                     log.info("reply tunnel established Failed: " + ctx.channel().remoteAddress() + " " + request.method() + " " + request.uri());
@@ -139,7 +166,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                         ctx.pipeline().remove(HttpResponseEncoder.class);
                                         outboundChannel.pipeline().addLast(new HttpRequestEncoder());
                                         outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
-                                        RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel);
+                                        RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel, relaySpan);
                                         ctx.pipeline().addLast(clientEndtoRemoteHandler);
 //                                        ctx.channel().config().setAutoRead(true);
 
