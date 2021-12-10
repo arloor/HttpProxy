@@ -21,7 +21,7 @@ public class LogSpanExporter implements SpanExporter {
             String name = spanData.getName();
             if (TraceConstant.stream.name().equals(name)) {
                 String host = spanData.getAttributes().get(AttributeKey.stringKey(TraceConstant.host.name()));
-                logger.info("{} lifetime is {}", host, time);
+                logger.info("{} at {}", String.format("%8s", time), host);
             }
         }
         return CompletableResultCode.ofSuccess();
