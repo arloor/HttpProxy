@@ -55,6 +55,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
         if (msg instanceof HttpRequest) {
             request = (HttpRequest) msg;
             setHostPort(ctx);
+            streamSpan.setAttribute(TraceConstant.host.name(), host);
         } else {
             //SimpleChannelInboundHandler会将HttpContent中的bytebuf Release，但是这个还会转给relayHandler，所以需要在这里预先retain
             ((HttpContent) msg).content().retain();

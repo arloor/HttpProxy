@@ -4,8 +4,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
-import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
-import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
@@ -30,8 +28,8 @@ public enum Tracer {
         }
         SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder()
                 .setResource(Resource.getDefault().toBuilder().put("service.name", hostName).build())
-                .addSpanProcessor(BatchSpanProcessor.builder(new LoggingSpanExporter()).build())
-                .addSpanProcessor(BatchSpanProcessor.builder(JaegerGrpcSpanExporter.builder().setEndpoint("http://hk.gcall.me:14250").build()).build())
+                .addSpanProcessor(BatchSpanProcessor.builder(new LogSpanExporter()).build())
+//                .addSpanProcessor(BatchSpanProcessor.builder(JaegerGrpcSpanExporter.builder().setEndpoint("http://hk.gcall.me:14250").build()).build())
                 .build();
 
         OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
