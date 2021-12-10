@@ -22,7 +22,7 @@ public class LogSpanExporter implements SpanExporter {
             if (TraceConstant.stream.name().equals(name)) {
                 String host = spanData.getAttributes().get(AttributeKey.stringKey(TraceConstant.host.name()));
                 String client = spanData.getAttributes().get(AttributeKey.stringKey(TraceConstant.client.name()));
-                logger.info("{} last for {} from {}", String.format("%8s", time), host, client);
+                logger.info("{} ==> {} from {}", String.format("%8s", time), String.format("%-50s", host), client);
             }
         }
         return CompletableResultCode.ofSuccess();
