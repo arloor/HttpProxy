@@ -25,6 +25,17 @@
                 <SizeBasedTriggeringPolicy size="250 MB"/>
             </Policies>
         </RollingRandomAccessFile>
+        <RollingRandomAccessFile name="span" fileName="${MSG_LOG_HOME}/span.log" immediateFlush="false"
+                                 append="true" filePattern="${MSG_LOG_HOME}/span.log-%d{MM-dd-yyyy}-%i">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n</Pattern>
+            </PatternLayout>
+            <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="250 MB"/>
+            </Policies>
+        </RollingRandomAccessFile>
         <RollingRandomAccessFile name="web" fileName="${MSG_LOG_HOME}/web.log" immediateFlush="false"
                                  append="true" filePattern="${MSG_LOG_HOME}/web.log-%d{MM-dd-yyyy}-%i">
             <PatternLayout>
@@ -41,6 +52,10 @@
         <logger name="web" level="info"
                 additivity="false">
             <appender-ref ref="web"/>
+        </logger>
+        <logger name="com.arloor.forwardproxy.trace.LogSpanExporter" level="info"
+                additivity="false">
+            <appender-ref ref="span"/>
         </logger>
         <Root level="info" includeLocation="false">
             <AppenderRef ref="log"/>

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 
 public class LogSpanExporter implements SpanExporter {
-    private static final Logger logger = LoggerFactory.getLogger(Tracer.class);
+    private static final Logger logger = LoggerFactory.getLogger(LogSpanExporter.class);
 
     @Override
     public CompletableResultCode export(Collection<SpanData> collection) {
