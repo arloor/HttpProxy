@@ -13,6 +13,7 @@ import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerExpectContinueHandler;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -33,6 +34,7 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
         p.addLast(new HttpResponseEncoder());
         p.addLast(new HttpServerExpectContinueHandler());
         Span streamSpan = Tracer.spanBuilder(TraceConstant.stream.name())
+                .setSpanKind(SpanKind.SERVER)
                 .setAttribute(TraceConstant.client.name(), ch.remoteAddress().getHostName())
                 .startSpan();
         p.addLast(new HttpProxyConnectHandler(httpConfig.getAuthMap(), streamSpan));

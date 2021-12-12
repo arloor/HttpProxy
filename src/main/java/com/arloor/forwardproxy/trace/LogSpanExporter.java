@@ -1,6 +1,6 @@
 package com.arloor.forwardproxy.trace;
 
-import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class LogSpanExporter implements SpanExporter {
     private static final Logger logger = LoggerFactory.getLogger(LogSpanExporter.class);
@@ -18,12 +19,11 @@ public class LogSpanExporter implements SpanExporter {
             long durationInSeconds = (spanData.getEndEpochNanos() - spanData.getStartEpochNanos()) / 1000000000;
             long durationInMills = (spanData.getEndEpochNanos() - spanData.getStartEpochNanos()) / 1000000;
             String time = (durationInSeconds <= 0) ? durationInMills + "ms" : durationInSeconds + "s";
-            String name = spanData.getName();
-            if (TraceConstant.stream.name().equals(name)) {
-                String host = spanData.getAttributes().get(AttributeKey.stringKey(TraceConstant.host.name()));
-                String client = spanData.getAttributes().get(AttributeKey.stringKey(TraceConstant.client.name()));
-                String target = spanData.getAttributes().get(AttributeKey.stringKey(TraceConstant.target.name()));
-                logger.info("{} for {} || {} ==> {}", String.format("%8s", time), String.format("%-50s", host), client, target);
+            if (SpanKind.SERVER.equals(spanData.getKind())) {
+                String attrs = spanData.getAttributes().asMap().entrySet().stream()
+                        .map(entry -> String.format("%s=%s", entry.getKey().getKey(), entry.getValue()))
+                        .collect(Collectors.joining(", "));
+                logger.info("{} for {}", String.format("%8s", time), attrs);
             }
         }
         return CompletableResultCode.ofSuccess();
