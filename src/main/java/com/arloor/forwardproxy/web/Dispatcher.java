@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +37,7 @@ public class Dispatcher {
     private static final MonitorService MONITOR_SERVICE = MonitorService.getInstance();
     private static Map<String, BiConsumer<HttpRequest, ChannelHandlerContext>> handler = new HashMap<String, BiConsumer<HttpRequest, ChannelHandlerContext>>() {{
         put("/favicon.ico", Dispatcher::favicon);
-        put("/", Dispatcher::index);
+        put("/ip", Dispatcher::ip);
         put("/net", Dispatcher::net);
         put("/metrics", Dispatcher::metrics);
         put("/echarts.min.js", Dispatcher::echarts);
@@ -76,7 +77,7 @@ public class Dispatcher {
     private static boolean needClose(HttpRequest httpRequest) {
         Long counter = counters.computeIfAbsent(httpRequest.uri(), (key) -> 0L);
         counter++;
-        if (counter > 10) {
+        if (counter > 100) {
             counter = 0L;
             counters.put(httpRequest.uri(), counter);
             return true;
@@ -104,11 +105,7 @@ public class Dispatcher {
 
     public static byte[] readAll(InputStream input) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        byte[] buffer = new byte[4096];
-        int n = 0;
-        while (-1 != (n = input.read(buffer))) {
-            output.write(buffer, 0, n);
-        }
+        input.transferTo(output);
         return output.toByteArray();
     }
 
@@ -116,7 +113,9 @@ public class Dispatcher {
         SocketAddress socketAddress = ctx.channel().remoteAddress();
         boolean fromLocalAddress = ((InetSocketAddress) socketAddress).getAddress().isSiteLocalAddress();
         boolean fromLocalHost = ((InetSocketAddress) socketAddress).getAddress().isLoopbackAddress();
-        if (fromLocalAddress || fromLocalHost || !Config.ask4Authcate) { //来自局域网或本机，或者无被探测到风险
+        // 以下允许处理：
+        // 1. 来自局域网 2.无被探测风险 3. 请求头包含特定字符串
+        if (fromLocalAddress || fromLocalHost || !Config.ask4Authcate || request.headers().contains("you-are-welcome")) {
             log(request, ctx);
             handler.getOrDefault(request.uri(), Dispatcher::other).accept(request, ctx);
         } else {
@@ -125,6 +124,123 @@ public class Dispatcher {
     }
 
     private static void other(HttpRequest request, ChannelHandlerContext ctx) {
+        String path = getPath(request);
+        final byte[] bytes = ResourceReader.readFile(path);
+        if (bytes == null) {
+            r404(ctx);
+        } else {
+            String contentType = getContentType(path);
+            ByteBuf buffer = ctx.alloc().buffer();
+            buffer.writeBytes(bytes);
+            final FullHttpResponse response = new DefaultFullHttpResponse(
+                    HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
+            response.headers().set("Server", "nginx/1.11");
+            response.headers().set("Content-Length", bytes.length);
+            response.headers().set("Cache-Control", "max-age=1800");
+            response.headers().set("Content-Type", contentType + "; charset=utf-8");
+            if (needClose(request)) {
+                response.headers().set(CONNECTION, CLOSE);
+                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+            } else {
+                ctx.writeAndFlush(response);
+            }
+        }
+    }
+
+    // 文件后缀与contentType映射见 https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+    private static String getContentType(String path) {
+        final int i = path.lastIndexOf(".");
+        if (i == -1) return "text/text";
+        String end = path.substring(i);
+        return switch (end) {
+            case ".aac" -> "audio/aac";
+            case ".abw" -> "application/x-abiword";
+            case ".arc" -> "application/x-freearc";
+            case ".avi" -> "video/x-msvideo";
+            case ".azw" -> "application/vnd.amazon.ebook";
+            case ".bin" -> "application/octet-stream";
+            case ".bmp" -> "image/bmp";
+            case ".bz" -> "application/x-bzip";
+            case ".bz2" -> "application/x-bzip2";
+            case ".csh" -> "application/x-csh";
+            case ".css" -> "text/css";
+            case ".csv" -> "text/csv";
+            case ".doc" -> "application/msword";
+            case ".docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            case ".eot" -> "application/vnd.ms-fontobject";
+            case ".epub" -> "application/epub+zip";
+            case ".gif" -> "image/gif";
+            case ".htm" -> "text/html";
+            case ".html" -> "text/html";
+            case ".ico" -> "image/vnd.microsoft.icon";
+            case ".ics" -> "text/calendar";
+            case ".jar" -> "application/java-archive";
+            case ".jpeg" -> "image/jpeg";
+            case ".jpg" -> "image/jpeg";
+            case ".js" -> "text/javascript";
+            case ".json" -> "application/json";
+            case ".jsonld" -> "application/ld+json";
+            case ".mid" -> "audio/midi";
+            case ".midi" -> "audio/midi";
+            case ".mjs" -> "text/javascript";
+            case ".mp3" -> "audio/mpeg";
+            case ".mpeg" -> "video/mpeg";
+            case ".mpkg" -> "application/vnd.apple.installer+xml";
+            case ".odp" -> "application/vnd.oasis.opendocument.presentation";
+            case ".ods" -> "application/vnd.oasis.opendocument.spreadsheet";
+            case ".odt" -> "application/vnd.oasis.opendocument.text";
+            case ".oga" -> "audio/ogg";
+            case ".ogv" -> "video/ogg";
+            case ".ogx" -> "application/ogg";
+            case ".otf" -> "font/otf";
+            case ".png" -> "image/png";
+            case ".pdf" -> "application/pdf";
+            case ".ppt" -> "application/vnd.ms-powerpoint";
+            case ".pptx" -> "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+            case ".rar" -> "application/x-rar-compressed";
+            case ".rtf" -> "application/rtf";
+            case ".sh" -> "application/x-sh";
+            case ".svg" -> "image/svg+xml";
+            case ".swf" -> "application/x-shockwave-flash";
+            case ".tar" -> "application/x-tar";
+            case ".tif" -> "image/tiff";
+            case ".tiff" -> "image/tiff";
+            case ".ttf" -> "font/ttf";
+            case ".txt" -> "text/plain";
+            case ".vsd" -> "application/vnd.visio";
+            case ".wav" -> "audio/wav";
+            case ".weba" -> "audio/webm";
+            case ".webm" -> "video/webm";
+            case ".webp" -> "image/webp";
+            case ".woff" -> "font/woff";
+            case ".woff2" -> "font/woff2";
+            case ".xhtml" -> "application/xhtml+xml";
+            case ".xls" -> "application/vnd.ms-excel";
+            case ".xlsx" -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+            case ".xml" -> "application/xml";
+            case ".xul" -> "application/vnd.mozilla.xul+xml";
+            case ".zip" -> "application/zip";
+            case ".3gp" -> "video/3gpp";
+            case ".3g2" -> "video/3gpp2";
+            case ".7z" -> "application/x-7z-compressed";
+            default -> "text/text";
+        };
+
+    }
+
+    private static String getPath(HttpRequest request) {
+        String uri = request.uri();
+        uri = URLDecoder.decode(uri, StandardCharsets.UTF_8);
+        if (uri.endsWith("/")) {
+            uri += "index.html";
+        }
+        if (uri.startsWith("/")) {
+            uri = uri.substring(1);
+        }
+        return uri;
+    }
+
+    private static void r404(ChannelHandlerContext ctx) {
         String notFound = "404 not found";
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(notFound.getBytes());
@@ -150,7 +266,7 @@ public class Dispatcher {
         ctx.close();
     }
 
-    private static void index(HttpRequest request, ChannelHandlerContext ctx) {
+    private static void ip(HttpRequest request, ChannelHandlerContext ctx) {
         String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress();
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(clientHostname.getBytes());
@@ -158,8 +274,13 @@ public class Dispatcher {
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
         response.headers().set("Server", "nginx/1.11");
         response.headers().set("Content-Length", clientHostname.getBytes().length);
-        response.headers().set(CONNECTION, CLOSE);
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        response.headers().set("Content-Type", "text/html; charset=utf-8");
+        if (needClose(request)) {
+            response.headers().set(CONNECTION, CLOSE);
+            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        } else {
+            ctx.writeAndFlush(response);
+        }
     }
 
     private static void net(HttpRequest request, ChannelHandlerContext ctx) {

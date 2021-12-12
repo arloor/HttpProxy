@@ -7,6 +7,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.util.ReferenceCountUtil;
+import io.opentelemetry.api.trace.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +18,15 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
     private static final Logger log = LoggerFactory.getLogger(RelayHandler.class);
 
     private final Channel relayChannel;
+    private Span span;
 
     public RelayHandler(Channel relayChannel) {
         this.relayChannel = relayChannel;
+    }
+
+    public RelayHandler(Channel relayChannel, Span connectSpan) {
+        this(relayChannel);
+        this.span = connectSpan;
     }
 
     @Override
@@ -85,12 +92,15 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
         if (relayChannel.isActive()) {
             SocksServerUtils.closeOnFlush(relayChannel);
         }
+        if (span != null) {
+            span.end();
+        }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostString();
-        log.info("[EXCEPTION]["+clientHostname+"] "+ cause.getMessage());
+        log.info("[EXCEPTION][" + clientHostname + "] " + cause.getMessage());
         ctx.close();
     }
 }

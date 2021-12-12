@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -23,7 +22,7 @@ public class DnspodHelper {
     }
 
     public static String fetchCurrentIp() throws IOException {
-        String content = HttpUtil.get("https://sg.gcall.me", 5000);
+        String content = HttpUtil.get("https://sg.gcall.me/ip", 5000);
         return content;
     }
 
@@ -37,7 +36,7 @@ public class DnspodHelper {
                     if (!Objects.equals(currentIp, lastIp)) {
                         modifyRecord(record, currentIp);
                     } else {
-                        log.info("ip未变化：{} @{}", lastIp, new Date());
+                        log.info("ip未变化：{}", lastIp);
                     }
                 }
             }

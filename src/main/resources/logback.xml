@@ -15,7 +15,7 @@
         <file>${LOG_HOME}/proxy/proxy.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- rollover daily -->
-            <fileNamePattern>${LOG_HOME}/proxy/proxy-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/proxy/proxy.log-%d{yyyy-MM-dd}.%i</fileNamePattern>
             <!-- each file should be at most 100MB, keep 60 days worth of history, but at most 20GB -->
             <maxFileSize>200MB</maxFileSize>
             <maxHistory>60</maxHistory>
@@ -31,7 +31,7 @@
         <file>${LOG_HOME}/proxy/web.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- rollover daily -->
-            <fileNamePattern>${LOG_HOME}/proxy/web-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/proxy/web.log-%d{yyyy-MM-dd}.%i</fileNamePattern>
             <!-- each file should be at most 100MB, keep 60 days worth of history, but at most 20GB -->
             <maxFileSize>200MB</maxFileSize>
             <maxHistory>60</maxHistory>
@@ -64,12 +64,12 @@
 
     <logger name="web" additivity="false" level="INFO">
         <appender-ref ref="ASYNC-WEB"/>
-        <!--        <appender-ref ref="STDOUT"/>-->
+                <appender-ref ref="STDOUT"/>
     </logger>
 
     <!-- 日志输出级别 -->
     <root level="INFO">
         <appender-ref ref="ASYNC-FILE"/>
-<!--        <appender-ref ref="STDOUT"/>-->
+        <appender-ref ref="STDOUT"/>
     </root>
 </configuration>

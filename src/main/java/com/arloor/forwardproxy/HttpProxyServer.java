@@ -3,6 +3,8 @@ package com.arloor.forwardproxy;
 import com.arloor.forwardproxy.dnspod.DnspodHelper;
 import com.arloor.forwardproxy.util.OsHelper;
 import com.arloor.forwardproxy.vo.Config;
+import com.arloor.forwardproxy.vo.HttpConfig;
+import com.arloor.forwardproxy.vo.SslConfig;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
@@ -33,8 +35,8 @@ public final class HttpProxyServer {
 
         Config config = Config.parse(properties);
         log.info("主动要求验证：" + Config.ask4Authcate);
-        Config.Ssl ssl = config.ssl();
-        Config.Http http = config.http();
+        SslConfig sslConfig = config.ssl();
+        HttpConfig httpConfig = config.http();
 
         EventLoopGroup bossGroup = OsHelper.buildEventLoopGroup(1);
         EventLoopGroup workerGroup = OsHelper.buildEventLoopGroup(0);
@@ -43,22 +45,22 @@ public final class HttpProxyServer {
             dnsEventLoop.scheduleAtFixedRate(DnspodHelper::ddns, 0, 1, TimeUnit.MINUTES);
         }
         try {
-            if (ssl != null && http != null) {
-                Channel sslChannel = startSSl(bossGroup, workerGroup, ssl);
-                Channel httpChannel = startHttp(bossGroup, workerGroup, http);
+            if (sslConfig != null && httpConfig != null) {
+                Channel sslChannel = startSSl(bossGroup, workerGroup, sslConfig);
+                Channel httpChannel = startHttp(bossGroup, workerGroup, httpConfig);
                 if (httpChannel != null) {
                     httpChannel.closeFuture().sync();
                 }
                 if (sslChannel != null) {
                     sslChannel.closeFuture().sync();
                 }
-            } else if (ssl != null) {
-                Channel httpChannel = startSSl(bossGroup, workerGroup, ssl);
+            } else if (sslConfig != null) {
+                Channel httpChannel = startSSl(bossGroup, workerGroup, sslConfig);
                 if (httpChannel != null) {
                     httpChannel.closeFuture().sync();
                 }
-            } else if (http != null) {
-                Channel sslChannel = startHttp(bossGroup, workerGroup, http);
+            } else if (httpConfig != null) {
+                Channel sslChannel = startHttp(bossGroup, workerGroup, httpConfig);
                 if (sslChannel != null) {
                     sslChannel.closeFuture().sync();
                 }
@@ -86,17 +88,17 @@ public final class HttpProxyServer {
     }
 
 
-    public static Channel startHttp(EventLoopGroup bossGroup, EventLoopGroup workerGroup, Config.Http http) {
+    public static Channel startHttp(EventLoopGroup bossGroup, EventLoopGroup workerGroup, HttpConfig httpConfig) {
         try {
             // Configure the server.
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 10240);
             b.group(bossGroup, workerGroup)
                     .channel(OsHelper.serverSocketChannelClazz())
-                    .childHandler(new HttpProxyServerInitializer(http));
+                    .childHandler(new HttpProxyServerInitializer(httpConfig));
 
-            Channel httpChannel = b.bind(http.getPort()).sync().channel();
-            log.info("http proxy@ port=" + http.getPort() + " auth=" + http.needAuth());
+            Channel httpChannel = b.bind(httpConfig.getPort()).sync().channel();
+            log.info("http proxy@ port=" + httpConfig.getPort() + " auth=" + httpConfig.needAuth());
             return httpChannel;
         } catch (Exception e) {
             log.error("无法启动Http Proxy", e);
@@ -104,23 +106,23 @@ public final class HttpProxyServer {
         return null;
     }
 
-    public static Channel startSSl(EventLoopGroup bossGroup, EventLoopGroup workerGroup, Config.Ssl ssl) {
+    public static Channel startSSl(EventLoopGroup bossGroup, EventLoopGroup workerGroup, SslConfig sslConfig) {
         try {
             // Configure the server.
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 10240);
-            HttpsProxyServerInitializer initializer = new HttpsProxyServerInitializer(ssl);
+            HttpsProxyServerInitializer initializer = new HttpsProxyServerInitializer(sslConfig);
             b.group(bossGroup, workerGroup)
                     .channel(OsHelper.serverSocketChannelClazz())
                     .childHandler(initializer);
 
-            Channel sslChannel = b.bind(ssl.getPort()).sync().channel();
+            Channel sslChannel = b.bind(sslConfig.getPort()).sync().channel();
             // 每天更新一次ssl证书
             sslChannel.eventLoop().scheduleAtFixedRate(() -> {
                 log.info("定时重加载ssl证书！");
                 initializer.loadSslContext();
             }, 1, 1, TimeUnit.DAYS);
-            log.info("https proxy@ port=" + ssl.getPort() + " auth=" + ssl.needAuth());
+            log.info("https proxy@ port=" + sslConfig.getPort() + " auth=" + sslConfig.needAuth());
             return sslChannel;
         } catch (Exception e) {
             log.error("无法启动Https Proxy", e);
