@@ -39,7 +39,11 @@ public class ChannelTrafficMonitor extends ChannelTrafficShapingHandler {
         for (double i = value; i >= 1024 && index < array.length - 1; i /= 1024, index++, value = i) {
         }
         BigDecimal bigDecimal = new BigDecimal(value);
-        bigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_UP);
+        if (index == array.length - 1) {
+            bigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_UP);
+        }else {
+            bigDecimal=bigDecimal.setScale(0,RoundingMode.HALF_UP);
+        }
         String string = bigDecimal.toString();
         if (string.endsWith(".00")) {
             string = string.substring(0, string.length() - 3);
@@ -50,7 +54,7 @@ public class ChannelTrafficMonitor extends ChannelTrafficShapingHandler {
     public static void main(String[] args) {
         System.out.println(format(1023));
         System.out.println(format(1024));
-        System.out.println(format(1024*1024));
+        System.out.println(format(1024 * 1024));
         System.out.println(format(1064 * 1024));
         System.out.println(format(1064 * 1024 * 1024));
         System.out.println(format(1064L * 1024 * 1024 * 1024));
