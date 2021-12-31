@@ -7,9 +7,11 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.exporter.jaeger.JaegerGrpcSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 
@@ -28,7 +30,7 @@ public enum Tracer {
                 .setSampler(Sampler.alwaysOn())
                 .setResource(Resource.getDefault().toBuilder().put("service.name", serviceName()).build())
                 .addSpanProcessor(SimpleSpanProcessor.create(new LogSpanExporter()))
-//                .addSpanProcessor(BatchSpanProcessor.builder(JaegerGrpcSpanExporter.builder().setEndpoint("http://hk.gcall.me:14250").build()).build())
+                .addSpanProcessor(BatchSpanProcessor.builder(JaegerGrpcSpanExporter.builder().setEndpoint("http://hk.gcall.me:14250").build()).build())
                 .build();
 
         OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
