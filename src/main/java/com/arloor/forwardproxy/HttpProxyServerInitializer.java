@@ -1,5 +1,6 @@
 package com.arloor.forwardproxy;
 
+import com.arloor.forwardproxy.monitor.ChannelTrafficMonitor;
 import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
 import com.arloor.forwardproxy.trace.TraceConstant;
 import com.arloor.forwardproxy.trace.Tracer;
@@ -30,14 +31,10 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
     public void initChannel(SocketChannel ch) {
         ChannelPipeline p = ch.pipeline();
         p.addLast(GlobalTrafficMonitor.getInstance());
-        p.addLast(new HttpRequestDecoder());
-        p.addLast(new HttpResponseEncoder());
-        p.addLast(new HttpServerExpectContinueHandler());
         Span streamSpan = Tracer.spanBuilder(TraceConstant.stream.name())
                 .setSpanKind(SpanKind.SERVER)
                 .setAttribute(TraceConstant.client.name(), ch.remoteAddress().getHostName())
                 .startSpan();
-        p.addLast(new HttpProxyConnectHandler(httpConfig.getAuthMap(), streamSpan));
         p.addLast(new ChannelInboundHandlerAdapter() {
             @Override
             public void channelInactive(ChannelHandlerContext ctx) throws Exception {
@@ -45,5 +42,11 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
                 streamSpan.end();
             }
         });
+        p.addLast(new ChannelTrafficMonitor(1000, streamSpan));
+        p.addLast(new HttpRequestDecoder());
+        p.addLast(new HttpResponseEncoder());
+        p.addLast(new HttpServerExpectContinueHandler());
+        p.addLast(new HttpProxyConnectHandler(httpConfig.getAuthMap(), streamSpan));
+
     }
 }
