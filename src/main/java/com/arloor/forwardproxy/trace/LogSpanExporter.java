@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 public class LogSpanExporter implements SpanExporter {
@@ -21,6 +22,7 @@ public class LogSpanExporter implements SpanExporter {
             String time = (durationInSeconds <= 0) ? durationInMills + "ms" : durationInSeconds + "s";
             if (SpanKind.SERVER.equals(spanData.getKind())) {
                 String attrs = spanData.getAttributes().asMap().entrySet().stream()
+                        .sorted(Comparator.comparing(o -> o.getKey().getKey()))
                         .map(entry -> String.format("%s=%s", entry.getKey().getKey(), entry.getValue()))
                         .collect(Collectors.joining(", "));
                 logger.info("{} for {}", String.format("%8s", time), attrs);
