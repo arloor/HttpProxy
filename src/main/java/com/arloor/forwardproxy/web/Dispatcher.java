@@ -34,6 +34,7 @@ public class Dispatcher {
     private static final Logger log = LoggerFactory.getLogger("web");
     private static byte[] favicon = new byte[0];
     private static byte[] echarts_min_js = new byte[0];
+    private static final String MAGIC_HEADER = "i-am-arloor";
     private static final MonitorService MONITOR_SERVICE = MonitorService.getInstance();
     private static Map<String, BiConsumer<HttpRequest, ChannelHandlerContext>> handler = new HashMap<String, BiConsumer<HttpRequest, ChannelHandlerContext>>() {{
         put("/favicon.ico", Dispatcher::favicon);
@@ -115,7 +116,7 @@ public class Dispatcher {
         boolean fromLocalHost = ((InetSocketAddress) socketAddress).getAddress().isLoopbackAddress();
         // 以下允许处理：
         // 1. 来自局域网 2.无被探测风险 3. 请求头包含特定字符串
-        if (fromLocalAddress || fromLocalHost || !Config.ask4Authcate || request.headers().contains("you-are-welcome")) {
+        if (fromLocalAddress || fromLocalHost || !Config.ask4Authcate || request.headers().contains(MAGIC_HEADER)) {
             log(request, ctx);
             handler.getOrDefault(request.uri(), Dispatcher::other).accept(request, ctx);
         } else {
