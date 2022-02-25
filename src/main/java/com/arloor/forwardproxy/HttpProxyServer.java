@@ -1,6 +1,5 @@
 package com.arloor.forwardproxy;
 
-import com.arloor.forwardproxy.dnspod.DnspodHelper;
 import com.arloor.forwardproxy.util.OsHelper;
 import com.arloor.forwardproxy.vo.Config;
 import com.arloor.forwardproxy.vo.HttpConfig;
@@ -40,10 +39,6 @@ public final class HttpProxyServer {
 
         EventLoopGroup bossGroup = OsHelper.buildEventLoopGroup(1);
         EventLoopGroup workerGroup = OsHelper.buildEventLoopGroup(0);
-        if (DnspodHelper.isEnable()) {
-            EventLoopGroup dnsEventLoop = OsHelper.buildEventLoopGroup(1);
-            dnsEventLoop.scheduleAtFixedRate(DnspodHelper::ddns, 0, 1, TimeUnit.MINUTES);
-        }
         try {
             if (sslConfig != null && httpConfig != null) {
                 Channel sslChannel = startSSl(bossGroup, workerGroup, sslConfig);
