@@ -34,7 +34,7 @@ public class Dispatcher {
     private static final Logger log = LoggerFactory.getLogger("web");
     private static byte[] favicon = new byte[0];
     private static byte[] echarts_min_js = new byte[0];
-    private static final String MAGIC_HEADER = "i-am-arloor";
+    private static final String MAGIC_HEADER = "arloor";
     private static final MonitorService MONITOR_SERVICE = MonitorService.getInstance();
     private static Map<String, BiConsumer<HttpRequest, ChannelHandlerContext>> handler = new HashMap<String, BiConsumer<HttpRequest, ChannelHandlerContext>>() {{
         put("/favicon.ico", Dispatcher::favicon);
