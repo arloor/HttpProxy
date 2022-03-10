@@ -236,7 +236,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                             "label": {
                                 formatter: function(value) {
                                     if (value.value <= 0) {
-                                        value.value = '0B';
+                                        value = '0B';
                                     } else {
                                         var k = 1024;
                                         var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
@@ -259,7 +259,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                             "label": {
                                 formatter: function(value) {
                                     if (value.value <= 0) {
-                                        value.value = '0B';
+                                        value = '0B';
                                     } else {
                                         var k = 1024;
                                         var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
@@ -289,7 +289,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                             "label": {
                                 formatter: function(value) {
                                     if (value.value <= 0) {
-                                        value.value = '0B';
+                                        value = '0B';
                                     } else {
                                         var k = 1024;
                                         var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
@@ -312,7 +312,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                              "label": {
                                  formatter: function(value) {
                                      if (value.value <= 0) {
-                                         value.value = '0B';
+                                         value = '0B';
                                      } else {
                                          var k = 1024;
                                          var sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
