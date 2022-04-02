@@ -1,12 +1,11 @@
 package com.arloor.forwardproxy;
 
+import com.arloor.forwardproxy.idle.HeartbeatIdleStateHandler;
 import com.arloor.forwardproxy.monitor.ChannelTrafficMonitor;
 import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
 import com.arloor.forwardproxy.trace.TraceConstant;
 import com.arloor.forwardproxy.trace.Tracer;
 import com.arloor.forwardproxy.vo.HttpConfig;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -18,6 +17,7 @@ import io.opentelemetry.api.trace.SpanKind;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.concurrent.TimeUnit;
 
 public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel> {
 
@@ -35,13 +35,7 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
                 .setSpanKind(SpanKind.SERVER)
                 .setAttribute(TraceConstant.client.name(), ch.remoteAddress().getHostName())
                 .startSpan();
-        p.addLast(new ChannelInboundHandlerAdapter() {
-            @Override
-            public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-                super.channelInactive(ctx);
-                streamSpan.end();
-            }
-        });
+        p.addLast(new HeartbeatIdleStateHandler(5, 0, 0, TimeUnit.MINUTES));
         p.addLast(new ChannelTrafficMonitor(1000, streamSpan));
         p.addLast(new HttpRequestDecoder());
         p.addLast(new HttpResponseEncoder());

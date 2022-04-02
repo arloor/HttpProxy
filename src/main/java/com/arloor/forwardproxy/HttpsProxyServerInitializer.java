@@ -1,13 +1,12 @@
 package com.arloor.forwardproxy;
 
+import com.arloor.forwardproxy.idle.HeartbeatIdleStateHandler;
 import com.arloor.forwardproxy.monitor.ChannelTrafficMonitor;
 import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
 import com.arloor.forwardproxy.ssl.SslContextFactory;
 import com.arloor.forwardproxy.trace.TraceConstant;
 import com.arloor.forwardproxy.trace.Tracer;
 import com.arloor.forwardproxy.vo.SslConfig;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -19,6 +18,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChannel> {
     private static final Logger log = LoggerFactory.getLogger(HttpsProxyServerInitializer.class);
@@ -36,17 +37,11 @@ public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChanne
     public void initChannel(SocketChannel ch) {
         ChannelPipeline p = ch.pipeline();
         p.addLast(GlobalTrafficMonitor.getInstance());
+        p.addLast(new HeartbeatIdleStateHandler(5, 0, 0, TimeUnit.MINUTES));
         Span streamSpan = Tracer.spanBuilder(TraceConstant.stream.name())
                 .setSpanKind(SpanKind.SERVER)
                 .setAttribute(TraceConstant.client.name(), ch.remoteAddress().getHostName())
                 .startSpan();
-        p.addLast(new ChannelInboundHandlerAdapter() {
-            @Override
-            public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-                super.channelInactive(ctx);
-                streamSpan.end();
-            }
-        });
         p.addLast(new ChannelTrafficMonitor(1000, streamSpan));
         if (sslCtx != null) {
             p.addLast(sslCtx.newHandler(ch.alloc()));
@@ -54,7 +49,6 @@ public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChanne
         p.addLast(new HttpRequestDecoder());
         p.addLast(new HttpResponseEncoder());
         p.addLast(new HttpServerExpectContinueHandler());
-
         p.addLast(new HttpProxyConnectHandler(sslConfig.getAuthMap(), streamSpan));
 
     }

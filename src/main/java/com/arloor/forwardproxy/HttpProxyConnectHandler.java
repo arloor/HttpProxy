@@ -1,5 +1,6 @@
 package com.arloor.forwardproxy;
 
+import com.arloor.forwardproxy.idle.HeartbeatIdleStateHandler;
 import com.arloor.forwardproxy.trace.TraceConstant;
 import com.arloor.forwardproxy.trace.Tracer;
 import com.arloor.forwardproxy.util.OsHelper;
@@ -24,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED;
@@ -137,6 +139,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                                     ctx.pipeline().remove(HttpResponseEncoder.class);
                                                     ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
                                                     ctx.pipeline().remove(HttpProxyConnectHandler.class);
+                                                    outboundChannel.pipeline().addLast(new HeartbeatIdleStateHandler(5, 0, 0, TimeUnit.MINUTES));
                                                     outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
                                                     ctx.pipeline().addLast(new RelayHandler(outboundChannel, relaySpan));
 //                                                    ctx.channel().config().setAutoRead(true);
@@ -166,6 +169,7 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                                         // 考虑到是比较小的几率，不catch。注：该异常没有啥影响。
                                         ctx.pipeline().remove(HttpProxyConnectHandler.this);
                                         ctx.pipeline().remove(HttpResponseEncoder.class);
+                                        outboundChannel.pipeline().addLast(new HeartbeatIdleStateHandler(5, 0, 0, TimeUnit.MINUTES));
                                         outboundChannel.pipeline().addLast(new HttpRequestEncoder());
                                         outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
                                         RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel, relaySpan);
