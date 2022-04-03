@@ -10,12 +10,7 @@ import com.arloor.forwardproxy.web.Dispatcher;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.ReferenceCountUtil;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.FutureListener;
-import io.netty.util.concurrent.Promise;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -121,79 +116,6 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         .setParent(Context.current().with(this.streamSpan)).startSpan();
                 //3. 这里进入代理请求处理，分为两种：CONNECT方法和其他HTTP方法
                 log.info("{}@{} ==> {} {} {}", userName, clientHostname, request.method(), request.uri(), !request.uri().equals(request.headers().get("Host")) ? "Host=" + request.headers().get("Host") : "");
-                Promise<Channel> promise = ctx.executor().newPromise();
-                if (request.method().equals(HttpMethod.CONNECT)) {
-                    promise.addListener(
-                            new FutureListener<Channel>() {
-                                @Override
-                                public void operationComplete(final Future<Channel> future) throws Exception {
-                                    final Channel outboundChannel = future.getNow();
-                                    if (future.isSuccess()) {
-                                        ChannelFuture responseFuture = ctx.channel().writeAndFlush(
-                                                new DefaultHttpResponse(request.protocolVersion(), new HttpResponseStatus(200, "Connection Established")));
-                                        responseFuture.addListener(new ChannelFutureListener() {
-                                            @Override
-                                            public void operationComplete(ChannelFuture channelFuture) {
-                                                if (channelFuture.isSuccess()) {
-                                                    ctx.pipeline().remove(HttpRequestDecoder.class);
-                                                    ctx.pipeline().remove(HttpResponseEncoder.class);
-                                                    ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
-                                                    ctx.pipeline().remove(HttpProxyConnectHandler.class);
-                                                    outboundChannel.pipeline().addLast(new HeartbeatIdleStateHandler(5, 0, 0, TimeUnit.MINUTES));
-                                                    outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
-                                                    ctx.pipeline().addLast(new RelayHandler(outboundChannel, relaySpan));
-//                                                    ctx.channel().config().setAutoRead(true);
-                                                } else {
-                                                    log.info("reply tunnel established Failed: " + ctx.channel().remoteAddress() + " " + request.method() + " " + request.uri());
-                                                    SocksServerUtils.closeOnFlush(ctx.channel());
-                                                    SocksServerUtils.closeOnFlush(outboundChannel);
-                                                }
-                                            }
-                                        });
-                                    } else {
-                                        ctx.channel().writeAndFlush(
-                                                new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR)
-                                        );
-                                        SocksServerUtils.closeOnFlush(ctx.channel());
-                                    }
-                                }
-                            });
-                } else {
-                    promise.addListener(
-                            new FutureListener<Channel>() {
-                                @Override
-                                public void operationComplete(final Future<Channel> future) throws Exception {
-                                    final Channel outboundChannel = future.getNow();
-                                    if (future.isSuccess()) {
-                                        // 这里有几率抛出NoSuchElementException，原因是连接target host完成时，客户端已经关闭连接。
-                                        // 考虑到是比较小的几率，不catch。注：该异常没有啥影响。
-                                        ctx.pipeline().remove(HttpProxyConnectHandler.this);
-                                        ctx.pipeline().remove(HttpResponseEncoder.class);
-                                        outboundChannel.pipeline().addLast(new HeartbeatIdleStateHandler(5, 0, 0, TimeUnit.MINUTES));
-                                        outboundChannel.pipeline().addLast(new HttpRequestEncoder());
-                                        outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
-                                        RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel, relaySpan);
-                                        ctx.pipeline().addLast(clientEndtoRemoteHandler);
-//                                        ctx.channel().config().setAutoRead(true);
-
-                                        //出于未知的原因，不知道为什么fireChannelread不行
-                                        clientEndtoRemoteHandler.channelRead(ctx, request);
-                                        contents.forEach(content -> {
-                                            try {
-                                                clientEndtoRemoteHandler.channelRead(ctx, content);
-                                            } catch (Exception e) {
-                                                log.error("处理非CONNECT方法的代理请求失败！", e);
-                                            }
-                                        });
-                                    } else {
-                                        ctx.channel().writeAndFlush(
-                                                new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR)
-                                        );
-                                        SocksServerUtils.closeOnFlush(ctx.channel());
-                                    }
-                                }
-                            });
-                }
 
 
                 // 4.连接目标网站
@@ -202,16 +124,59 @@ public class HttpProxyConnectHandler extends SimpleChannelInboundHandler<HttpObj
                         .channel(OsHelper.socketChannelClazz())
                         .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                         .option(ChannelOption.SO_KEEPALIVE, true)
-                        .handler(new LoggingHandler(LogLevel.INFO))
-                        .handler(new DirectClientHandler(promise));
+                        .handler(new HeartbeatIdleStateHandler(5, 0, 0, TimeUnit.MINUTES));
 
                 b.connect(host, port).addListener(new ChannelFutureListener() {
                     @Override
                     public void operationComplete(ChannelFuture future) throws Exception {
                         if (future.isSuccess()) {
-                            String targetAddr = ((InetSocketAddress) future.channel().remoteAddress()).getAddress().getHostAddress();
+                            final Channel outboundChannel = future.channel();
+                            String targetAddr = ((InetSocketAddress) outboundChannel.remoteAddress()).getAddress().getHostAddress();
                             streamSpan.setAttribute(TraceConstant.target.name(), targetAddr);
                             // Connection established use handler provided results
+                            if (request.method().equals(HttpMethod.CONNECT)) {
+
+                                ChannelFuture responseFuture = ctx.channel().writeAndFlush(
+                                        new DefaultHttpResponse(request.protocolVersion(), new HttpResponseStatus(200, "Connection Established")));
+                                responseFuture.addListener(new ChannelFutureListener() {
+                                    @Override
+                                    public void operationComplete(ChannelFuture channelFuture) {
+                                        if (channelFuture.isSuccess()) {
+                                            ctx.pipeline().remove(HttpRequestDecoder.class);
+                                            ctx.pipeline().remove(HttpResponseEncoder.class);
+                                            ctx.pipeline().remove(HttpServerExpectContinueHandler.class);
+                                            ctx.pipeline().remove(HttpProxyConnectHandler.class);
+                                            outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
+                                            ctx.pipeline().addLast(new RelayHandler(outboundChannel, relaySpan));
+//                                                    ctx.channel().config().setAutoRead(true);
+                                        } else {
+                                            log.info("reply tunnel established Failed: " + ctx.channel().remoteAddress() + " " + request.method() + " " + request.uri());
+                                            SocksServerUtils.closeOnFlush(ctx.channel());
+                                            SocksServerUtils.closeOnFlush(outboundChannel);
+                                        }
+                                    }
+                                });
+                            } else {
+                                // 这里有几率抛出NoSuchElementException，原因是连接target host完成时，客户端已经关闭连接。
+                                // 考虑到是比较小的几率，不catch。注：该异常没有啥影响。
+                                ctx.pipeline().remove(HttpProxyConnectHandler.this);
+                                ctx.pipeline().remove(HttpResponseEncoder.class);
+                                outboundChannel.pipeline().addLast(new HttpRequestEncoder());
+                                outboundChannel.pipeline().addLast(new RelayHandler(ctx.channel()));
+                                RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel, relaySpan);
+                                ctx.pipeline().addLast(clientEndtoRemoteHandler);
+//                                        ctx.channel().config().setAutoRead(true);
+
+                                //出于未知的原因，不知道为什么fireChannelread不行
+                                clientEndtoRemoteHandler.channelRead(ctx, request);
+                                contents.forEach(content -> {
+                                    try {
+                                        clientEndtoRemoteHandler.channelRead(ctx, content);
+                                    } catch (Exception e) {
+                                        log.error("处理非CONNECT方法的代理请求失败！", e);
+                                    }
+                                });
+                            }
                         } else {
                             // Close the connection if the connection attempt has failed.
                             ctx.channel().writeAndFlush(
