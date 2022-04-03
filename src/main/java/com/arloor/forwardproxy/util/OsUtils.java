@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory;
 import java.lang.management.ManagementFactory;
 import java.util.Optional;
 
-public class OsHelper {
-    private static final Logger logger = LoggerFactory.getLogger(OsHelper.class);
+public class OsUtils {
+    private static final Logger logger = LoggerFactory.getLogger(OsUtils.class);
     private static final OS os = parseOS();
 
 
@@ -87,7 +87,7 @@ public class OsHelper {
         }
     }
 
-    private static OsHelper.OS parseOS() {
+    private static OsUtils.OS parseOS() {
         String osName = System.getProperty("os.name");
         logger.info("当前系统为： " + osName);
         String name = ManagementFactory.getRuntimeMXBean().getName();

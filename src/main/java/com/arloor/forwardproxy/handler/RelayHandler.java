@@ -1,4 +1,4 @@
-package com.arloor.forwardproxy;
+package com.arloor.forwardproxy.handler;
 
 import com.arloor.forwardproxy.util.SocksServerUtils;
 import io.netty.buffer.Unpooled;

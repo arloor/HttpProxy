@@ -1,4 +1,4 @@
-package com.arloor.forwardproxy.idle;
+package com.arloor.forwardproxy.handler;
 
 import com.arloor.forwardproxy.util.SocksServerUtils;
 import io.netty.channel.ChannelHandlerContext;

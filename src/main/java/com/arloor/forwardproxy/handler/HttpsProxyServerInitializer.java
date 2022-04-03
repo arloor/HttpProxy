@@ -1,6 +1,5 @@
-package com.arloor.forwardproxy;
+package com.arloor.forwardproxy.handler;
 
-import com.arloor.forwardproxy.idle.HeartbeatIdleStateHandler;
 import com.arloor.forwardproxy.monitor.ChannelTrafficMonitor;
 import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
 import com.arloor.forwardproxy.ssl.SslContextFactory;
@@ -49,7 +48,7 @@ public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChanne
         p.addLast(new HttpRequestDecoder());
         p.addLast(new HttpResponseEncoder());
         p.addLast(new HttpServerExpectContinueHandler());
-        p.addLast(new HttpProxyConnectHandler(sslConfig.getAuthMap(), streamSpan));
+        p.addLast(new SessionHandShakeHandler(sslConfig.getAuthMap(), streamSpan));
 
     }
 

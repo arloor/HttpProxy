@@ -1,6 +1,8 @@
 package com.arloor.forwardproxy;
 
-import com.arloor.forwardproxy.util.OsHelper;
+import com.arloor.forwardproxy.handler.HttpProxyServerInitializer;
+import com.arloor.forwardproxy.handler.HttpsProxyServerInitializer;
+import com.arloor.forwardproxy.util.OsUtils;
 import com.arloor.forwardproxy.vo.Config;
 import com.arloor.forwardproxy.vo.HttpConfig;
 import com.arloor.forwardproxy.vo.SslConfig;
@@ -16,11 +18,6 @@ import java.io.FileReader;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-
-/**
- * An HTTP server that sends back the content of the received HTTP request
- * in a pretty plaintext form.
- */
 public final class HttpProxyServer {
 
     private static final Logger log = LoggerFactory.getLogger(HttpProxyServer.class);
@@ -37,8 +34,8 @@ public final class HttpProxyServer {
         SslConfig sslConfig = config.ssl();
         HttpConfig httpConfig = config.http();
 
-        EventLoopGroup bossGroup = OsHelper.buildEventLoopGroup(1);
-        EventLoopGroup workerGroup = OsHelper.buildEventLoopGroup(0);
+        EventLoopGroup bossGroup = OsUtils.buildEventLoopGroup(1);
+        EventLoopGroup workerGroup = OsUtils.buildEventLoopGroup(0);
         try {
             if (sslConfig != null && httpConfig != null) {
                 Channel sslChannel = startSSl(bossGroup, workerGroup, sslConfig);
@@ -89,7 +86,7 @@ public final class HttpProxyServer {
             ServerBootstrap b = new ServerBootstrap();
             b.option(ChannelOption.SO_BACKLOG, 10240);
             b.group(bossGroup, workerGroup)
-                    .channel(OsHelper.serverSocketChannelClazz())
+                    .channel(OsUtils.serverSocketChannelClazz())
                     .childHandler(new HttpProxyServerInitializer(httpConfig));
 
             Channel httpChannel = b.bind(httpConfig.getPort()).sync().channel();
@@ -108,7 +105,7 @@ public final class HttpProxyServer {
             b.option(ChannelOption.SO_BACKLOG, 10240);
             HttpsProxyServerInitializer initializer = new HttpsProxyServerInitializer(sslConfig);
             b.group(bossGroup, workerGroup)
-                    .channel(OsHelper.serverSocketChannelClazz())
+                    .channel(OsUtils.serverSocketChannelClazz())
                     .childHandler(initializer);
 
             Channel sslChannel = b.bind(sslConfig.getPort()).sync().channel();
