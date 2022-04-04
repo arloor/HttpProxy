@@ -1,6 +1,6 @@
 package com.arloor.forwardproxy.monitor;
 
-import com.alibaba.fastjson.JSONObject;
+import com.arloor.forwardproxy.util.JsonUtil;
 import com.arloor.forwardproxy.util.RenderUtil;
 import com.arloor.forwardproxy.vo.RenderParam;
 import com.google.common.collect.Lists;
@@ -9,6 +9,8 @@ import io.netty.handler.traffic.GlobalTrafficShapingHandler;
 import io.netty.handler.traffic.TrafficCounter;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.internal.PlatformDependent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -22,6 +24,7 @@ import java.util.concurrent.ScheduledExecutorService;
  * 该应用的网速监控
  */
 public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalTrafficMonitor.class);
     private static GlobalTrafficMonitor instance = new GlobalTrafficMonitor(MonitorService.EXECUTOR_SERVICE, 1000);
 
     public static GlobalTrafficMonitor getInstance() {
@@ -37,6 +40,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     volatile long inTotal = 0L;
     volatile long outRate = 0L;
     volatile long inRate = 0L;
+
     static {
         try {
             hostname = InetAddress.getLocalHost().getHostName();
@@ -95,32 +99,37 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
     }
 
     public static final String html(boolean localEcharts) {
-        String legends = JSONObject.toJSONString(Lists.newArrayList("上行网速", "下行网速"));
-        String scales = JSONObject.toJSONString(xScales);
-        String seriesUp = JSONObject.toJSONString(yScalesUp);
-        String seriesDown = JSONObject.toJSONString(yScalesDown);
+        try {
+            String legends = JsonUtil.toJson(Lists.newArrayList("上行网速", "下行网速"));
+            String scales = JsonUtil.toJson(xScales);
+            String seriesUp = JsonUtil.toJson(yScalesUp);
+            String seriesDown = JsonUtil.toJson(yScalesDown);
 
-        long interval = 1024 * 1024;
-        Double upMax = yScalesUp.stream().max(Double::compareTo).orElse(0D);
-        Double downMax = yScalesDown.stream().max(Double::compareTo).orElse(0D);
-        Double max = Math.max(upMax, downMax);
-        if (max / (interval) > 10) {
-            interval = (long) Math.ceil(max / interval / 10) * interval;
-        }
+            long interval = 1024 * 1024;
+            Double upMax = yScalesUp.stream().max(Double::compareTo).orElse(0D);
+            Double downMax = yScalesDown.stream().max(Double::compareTo).orElse(0D);
+            Double max = Math.max(upMax, downMax);
+            if (max / (interval) > 10) {
+                interval = (long) Math.ceil(max / interval / 10) * interval;
+            }
 
-        RenderParam param = new RenderParam();
-        param.add("legends", legends);
-        param.add("scales", scales);
-        param.add("seriesUp", seriesUp);
-        param.add("seriesDown", seriesDown);
-        param.add("interval", interval);
-        param.add("title", hostname.length() > 10 ? hostname : hostname + " 实时网速");
-        if (localEcharts) {
-            param.add("echarts_url", "/echarts.min.js");
-        } else {
-            param.add("echarts_url", "https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js");
+            RenderParam param = new RenderParam();
+            param.add("legends", legends);
+            param.add("scales", scales);
+            param.add("seriesUp", seriesUp);
+            param.add("seriesDown", seriesDown);
+            param.add("interval", interval);
+            param.add("title", hostname.length() > 10 ? hostname : hostname + " 实时网速");
+            if (localEcharts) {
+                param.add("echarts_url", "/echarts.min.js");
+            } else {
+                param.add("echarts_url", "https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js");
+            }
+            return RenderUtil.text(TEMPLATE, param);
+        } catch (Throwable e) {
+            log.error("", e);
         }
-        return RenderUtil.text(TEMPLATE, param);
+        return "";
     }
 
 

@@ -1,8 +1,10 @@
 package com.arloor.forwardproxy.monitor;
 
-import com.alibaba.fastjson.JSONObject;
+import com.arloor.forwardproxy.util.JsonUtil;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
  * 网卡网速监控
  */
 public class NetStats {
+    private static final Logger log = LoggerFactory.getLogger(NetStats.class);
     private static final String filename = "/proc/net/dev";
     private static List<String> interfaces = new ArrayList<>();
     private static List<String> xScales = new ArrayList<>();
@@ -153,58 +156,63 @@ public class NetStats {
     }
 
     public static final String html() {
-        List<YValue> yValues = buildYvalues();
-        String legends = JSONObject.toJSONString(interfaces);
-        String scales = JSONObject.toJSONString(xScales);
-        String series = JSONObject.toJSONString(yValues);
+        try {
+            List<YValue> yValues = buildYvalues();
+            String legends = JsonUtil.toJson(interfaces);
+            String scales = JsonUtil.toJson(xScales);
+            String series = JsonUtil.toJson(yValues);
 
-        String template = "<!DOCTYPE html>\n" +
-                "<html lang=\"en\">\n" +
-                "<head>\n" +
-                "    <meta charset=\"UTF-8\">\n" +
-                "    <title>谁在跑流量</title>\n" +
-                "    <script src=\"https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js\"></script>\n" +
-                "</head>\n" +
-                "<body>\n" +
-                "<div id=\"main\" style=\"width: 100%;height: 800px;\"></div>\n" +
-                "<script type=\"text/javascript\">\n" +
-                "    // 基于准备好的dom，初始化echarts实例\n" +
-                "    var myChart = echarts.init(document.getElementById('main'));\n" +
-                "    // 指定图表的配置项和数据\n" +
-                "    var option = {\n" +
-                "        title: {\n" +
-                "            text: '网卡网速|KB/s'\n" +
-                "        },\n" +
-                "        tooltip: {\n" +
-                "            trigger: 'axis'\n" +
-                "        },\n" +
-                "        legend: {\n" +
-                "            data: " + legends + "\n" +
-                "        },\n" +
-                "        toolbox: {\n" +
-                "            feature: {\n" +
-                "                mark : {show: true},\n" +
-                "                dataView : {show: true, readOnly: false},\n" +
-                "                magicType : {show: true, type: ['line', 'bar']},\n" +
-                "                restore : {show: true},\n" +
-                "                saveAsImage : {show: true}" +
-                "            }\n" +
-                "        },\n" +
-                "        xAxis: {\n" +
-                "            type: 'category',\n" +
-                "            boundaryGap: false,\n" +
-                "            data: " + scales + "\n" +
-                "        },\n" +
-                "        yAxis: {\n" +
-                "            type: \"value\"\n" +
-                "        },\n" +
-                "        series: " + series + "\n" +
-                "    };\n" +
-                "    // 使用刚指定的配置项和数据显示图表。\n" +
-                "    myChart.setOption(option);\n" +
-                "</script>\n" +
-                "</body>\n" +
-                "</html>";
-        return template;
+            String template = "<!DOCTYPE html>\n" +
+                    "<html lang=\"en\">\n" +
+                    "<head>\n" +
+                    "    <meta charset=\"UTF-8\">\n" +
+                    "    <title>谁在跑流量</title>\n" +
+                    "    <script src=\"https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js\"></script>\n" +
+                    "</head>\n" +
+                    "<body>\n" +
+                    "<div id=\"main\" style=\"width: 100%;height: 800px;\"></div>\n" +
+                    "<script type=\"text/javascript\">\n" +
+                    "    // 基于准备好的dom，初始化echarts实例\n" +
+                    "    var myChart = echarts.init(document.getElementById('main'));\n" +
+                    "    // 指定图表的配置项和数据\n" +
+                    "    var option = {\n" +
+                    "        title: {\n" +
+                    "            text: '网卡网速|KB/s'\n" +
+                    "        },\n" +
+                    "        tooltip: {\n" +
+                    "            trigger: 'axis'\n" +
+                    "        },\n" +
+                    "        legend: {\n" +
+                    "            data: " + legends + "\n" +
+                    "        },\n" +
+                    "        toolbox: {\n" +
+                    "            feature: {\n" +
+                    "                mark : {show: true},\n" +
+                    "                dataView : {show: true, readOnly: false},\n" +
+                    "                magicType : {show: true, type: ['line', 'bar']},\n" +
+                    "                restore : {show: true},\n" +
+                    "                saveAsImage : {show: true}" +
+                    "            }\n" +
+                    "        },\n" +
+                    "        xAxis: {\n" +
+                    "            type: 'category',\n" +
+                    "            boundaryGap: false,\n" +
+                    "            data: " + scales + "\n" +
+                    "        },\n" +
+                    "        yAxis: {\n" +
+                    "            type: \"value\"\n" +
+                    "        },\n" +
+                    "        series: " + series + "\n" +
+                    "    };\n" +
+                    "    // 使用刚指定的配置项和数据显示图表。\n" +
+                    "    myChart.setOption(option);\n" +
+                    "</script>\n" +
+                    "</body>\n" +
+                    "</html>";
+            return template;
+        } catch (Throwable e) {
+            log.error("", e);
+        }
+        return "";
     }
 }

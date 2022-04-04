@@ -10,7 +10,7 @@
         <!--这个输出控制台的配置-->
         <console name="CONSOLE" target="SYSTEM_OUT">
             <!--输出日志的格式-->
-            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p [%l] - %m%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p [%C{1}.%M(%F:%L)] - %m%n"/>
         </console>
 
         <!-- 每次大小超过size，则这size大小的日志会自动存入按yyyy-MM-dd建立.log，作为存档-->
@@ -20,7 +20,7 @@
                      filePattern="${MSG_LOG_HOME}/proxy-%d{MM-dd-yyyy}-%i.log" createOnDemand="true">
             <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
             <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
-            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p [%l] - %m%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p [%C{1}.%M(%F:%L)] - %m%n"/>
             <!-- Policies指定滚动日志的策略，就是什么时候进行新建日志文件输出日志 -->
             <Policies>
                 <!-- 基于时间的滚动策略,设置每天打包一次 -->
@@ -38,7 +38,7 @@
         </RollingFile>
         <RollingFile name="span" fileName="${MSG_LOG_HOME}/span.log"
                      filePattern="${MSG_LOG_HOME}/span.log-%d{MM-dd-yyyy}-%i" createOnDemand="true">
-            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p [%l] - %m%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p - %m%n"/>
             <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
@@ -47,7 +47,7 @@
         </RollingFile>
         <RollingFile name="web" fileName="${MSG_LOG_HOME}/web.log"
                      append="true" filePattern="${MSG_LOG_HOME}/web.log-%d{MM-dd-yyyy}-%i" createOnDemand="true">
-            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p [%l] - %m%n"/>
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p [%C{1}.%M(%F:%L)] - %m%n"/>
             <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>

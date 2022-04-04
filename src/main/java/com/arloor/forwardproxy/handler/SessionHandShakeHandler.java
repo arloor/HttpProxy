@@ -32,7 +32,6 @@ public class SessionHandShakeHandler extends SimpleChannelInboundHandler<HttpObj
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
         String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostString();
         log.info("[EXCEPTION][" + clientHostname + "] " + cause.getMessage());
         ctx.close();
