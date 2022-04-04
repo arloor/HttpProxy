@@ -13,6 +13,7 @@ import java.util.Map;
 
 
 public class SessionHandShakeHandler extends SimpleChannelInboundHandler<HttpObject> {
+    public static final String NAME = "session";
     private static final Logger log = LoggerFactory.getLogger(SessionHandShakeHandler.class);
     private final Session session;
 
@@ -20,10 +21,10 @@ public class SessionHandShakeHandler extends SimpleChannelInboundHandler<HttpObj
         this.session = new Session(auths, streamSpan);
     }
 
-    @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) {
-        ctx.flush();
-    }
+//    @Override
+//    public void channelReadComplete(ChannelHandlerContext ctx) {
+//        ctx.flush();
+//    }
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, HttpObject msg) {

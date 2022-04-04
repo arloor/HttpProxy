@@ -61,7 +61,7 @@ public enum Status {
     }, WEB {
         @Override
         public void handle(Session session, ChannelHandlerContext channelContext, HttpObject msg) {
-
+            session.ensureChunkedWriter(channelContext);
             session.setAttribute(TraceConstant.host.name(), "localhost");
             Span dispatch = Tracer.spanBuilder(TraceConstant.web.name())
                     .setAttribute(TraceConstant.url.name(), String.valueOf(session.getRequest().uri()))

@@ -39,7 +39,7 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
         p.addLast(new HttpRequestDecoder());
         p.addLast(new HttpResponseEncoder());
         p.addLast(new HttpServerExpectContinueHandler());
-        p.addLast(new SessionHandShakeHandler(httpConfig.getAuthMap(), streamSpan));
+        p.addLast(SessionHandShakeHandler.NAME, new SessionHandShakeHandler(httpConfig.getAuthMap(), streamSpan));
 
     }
 }

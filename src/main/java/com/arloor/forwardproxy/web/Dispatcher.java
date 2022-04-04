@@ -6,16 +6,14 @@ import com.arloor.forwardproxy.monitor.MonitorService;
 import com.arloor.forwardproxy.util.SocksServerUtils;
 import com.arloor.forwardproxy.vo.Config;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.stream.ChunkedFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URLDecoder;
@@ -28,6 +26,7 @@ import java.util.function.BiConsumer;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
+import static io.netty.handler.codec.http.HttpHeaderValues.KEEP_ALIVE;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 
 public class Dispatcher {
@@ -126,26 +125,58 @@ public class Dispatcher {
 
     private static void other(HttpRequest request, ChannelHandlerContext ctx) {
         String path = getPath(request);
-        final byte[] bytes = ResourceReader.readFile(path);
-        if (bytes == null) {
-            r404(ctx);
-        } else {
-            String contentType = getContentType(path);
-            ByteBuf buffer = ctx.alloc().buffer();
-            buffer.writeBytes(bytes);
-            final FullHttpResponse response = new DefaultFullHttpResponse(
-                    HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
+        String contentType = getContentType(path);
+        try {
+            RandomAccessFile randomAccessFile = new RandomAccessFile(path, "r");
+            long fileLength = randomAccessFile.length();
+            ChunkedFile chunkedFile = new ChunkedFile(randomAccessFile, 0, fileLength, 8192);
+            HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
             response.headers().set("Server", "nginx/1.11");
-            response.headers().set("Content-Length", bytes.length);
+            response.headers().set("Content-Length", fileLength);
             response.headers().set("Cache-Control", "max-age=1800");
             response.headers().set("Content-Type", contentType + "; charset=utf-8");
-            if (needClose(request)) {
-                response.headers().set(CONNECTION, CLOSE);
-                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
-            } else {
-                ctx.writeAndFlush(response);
+            boolean needClose = needClose(request);
+            response.headers().set(CONNECTION, needClose ? CLOSE : KEEP_ALIVE);
+
+
+            ctx.write(response);
+            ChannelFuture sendFileFuture = null;
+            sendFileFuture = ctx.write(chunkedFile, ctx.newProgressivePromise());
+            sendFileFuture.addListener(new ChannelProgressiveFutureListener() {
+                @Override
+                public void operationComplete(ChannelProgressiveFuture future)
+                        throws Exception {
+                    log.debug("Transfer complete.");
+                }
+
+                @Override
+                public void operationProgressed(ChannelProgressiveFuture future,
+                                                long progress, long total) throws Exception {
+                    if (total < 0)
+                        log.debug("Transfer progress: " + progress);
+                    else
+                        log.debug("Transfer progress: " + progress + "/" + total);
+                }
+            });
+
+            ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
+            if (needClose) {
+                lastContentFuture.addListener(ChannelFutureListener.CLOSE);
             }
+        } catch (FileNotFoundException fnfd) {
+            r404(ctx);
+        } catch (IOException e) {
+            log.error("", e);
+            sendError(ctx, HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
+
+    }
+
+    private static void sendError(ChannelHandlerContext ctx, HttpResponseStatus status) {
+        FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status,
+                Unpooled.copiedBuffer("Failure: " + status.toString() + "\r\n", StandardCharsets.UTF_8));
+        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html;charset=UTF-8");
+        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 
     // 文件后缀与contentType映射见 https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
