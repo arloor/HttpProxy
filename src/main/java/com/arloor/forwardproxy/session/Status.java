@@ -29,8 +29,7 @@ public enum Status {
     HTTP_REQUEST {
         @Override
         public void handle(Session session, ChannelHandlerContext channelContext, HttpObject msg) {
-            if (msg instanceof HttpRequest) {
-                HttpRequest request = (HttpRequest) msg;
+            if (msg instanceof HttpRequest request) {
                 session.setRequest(request);
                 String hostAndPortStr = HttpMethod.CONNECT.equals(request.method()) ? request.uri() : request.headers().get("Host");
                 String[] hostPortArray = hostAndPortStr.split(":");
