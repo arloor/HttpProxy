@@ -30,6 +30,7 @@
     <artifactId>httpproxy</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
+        <java.version>17</java.version>
         <netty.version>4.1.70.Final</netty.version>
         <mainClass>com.arloor.forwardproxy.HttpProxyServer</mainClass>
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
