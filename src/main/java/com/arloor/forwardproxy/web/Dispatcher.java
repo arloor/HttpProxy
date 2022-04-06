@@ -1,6 +1,7 @@
 package com.arloor.forwardproxy.web;
 
 import com.arloor.forwardproxy.HttpProxyServer;
+import com.arloor.forwardproxy.handler.SessionHandShakeHandler;
 import com.arloor.forwardproxy.monitor.GlobalTrafficMonitor;
 import com.arloor.forwardproxy.monitor.MonitorService;
 import com.arloor.forwardproxy.util.SocksServerUtils;
@@ -10,6 +11,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.stream.ChunkedFile;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,6 +132,10 @@ public class Dispatcher {
             RandomAccessFile randomAccessFile = new RandomAccessFile(path, "r");
             long fileLength = randomAccessFile.length();
             ChunkedFile chunkedFile = new ChunkedFile(randomAccessFile, 0, fileLength, 8192);
+            // 针对其他需要读取文件的请求，增加ChunkedWriteHandler，防止OOM
+            if (ctx.pipeline().get("chunked") == null) {
+                ctx.pipeline().addBefore(SessionHandShakeHandler.NAME, "chunked", new ChunkedWriteHandler());
+            }
             HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
             response.headers().set("Server", "nginx/1.11");
             response.headers().set("Content-Length", fileLength);

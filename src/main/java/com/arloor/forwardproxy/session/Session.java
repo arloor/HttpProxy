@@ -6,7 +6,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpContent;
 import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.stream.ChunkedWriteHandler;
 import io.opentelemetry.api.trace.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,24 +25,10 @@ public class Session {
     private int port;
     private HttpRequest request;
     private ArrayList<HttpContent> contents = new ArrayList<>();
-    private volatile boolean hasChunkedWriter = false;
-
 
     public Session(Map<String, String> auths, Span streamSpan) {
         this.auths = auths;
         this.streamSpan = streamSpan;
-    }
-
-    public void ensureChunkedWriter(ChannelHandlerContext channelHandlerContext) {
-        if (!hasChunkedWriter) {
-            synchronized (this) {
-                if (!hasChunkedWriter) {
-                    channelHandlerContext.pipeline().addBefore(SessionHandShakeHandler.NAME, "chunked", new ChunkedWriteHandler());
-                    hasChunkedWriter = true;
-                }
-            }
-        }
-
     }
 
     public void handle(ChannelHandlerContext channelHandlerContext, HttpObject msg) {
