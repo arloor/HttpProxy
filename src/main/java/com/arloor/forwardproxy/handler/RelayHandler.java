@@ -69,7 +69,7 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
                 }
                 request.setUri(url);
             } catch (Exception e) {
-                System.err.println("无法获取url：" + request.uri() + " " + host);
+                log.error("无法获取url：{} {} ", request.uri(), host);
             }
         }
 
