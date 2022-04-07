@@ -224,7 +224,8 @@ public enum Status {
             });
             session.setStatus(WAIT_ESTABLISH);
         }
-    }, WAIT_ESTABLISH {
+    }, WAIT_ESTABLISH { // 等待到target的连接建立前不应该有新请求进入
+
         @Override
         public void handle(Session session, ChannelHandlerContext channelContext, HttpObject msg) {
             log.error("receive new message before tunnel is established, msg: {}", msg);
