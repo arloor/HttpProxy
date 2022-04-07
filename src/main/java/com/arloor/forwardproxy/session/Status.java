@@ -171,7 +171,7 @@ public enum Status {
                     }
                 }
             });
-            session.setStatus(END);
+            session.setStatus(WAIT_ESTABLISH);
         }
     }, GETPOST {
         @Override
@@ -222,9 +222,9 @@ public enum Status {
                     }
                 }
             });
-            session.setStatus(END);
+            session.setStatus(WAIT_ESTABLISH);
         }
-    }, END {
+    }, WAIT_ESTABLISH {
         @Override
         public void handle(Session session, ChannelHandlerContext channelContext, HttpObject msg) {
             log.error("receive new message before tunnel is established, msg: {}", msg);
