@@ -43,8 +43,7 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
-        if (msg instanceof HttpRequest) {//删除代理特有的请求头
-            HttpRequest request = (HttpRequest) msg;
+        if (msg instanceof HttpRequest request) {//删除代理特有的请求头
             request.headers().remove("Proxy-Authorization");
             String proxyConnection = request.headers().get("Proxy-Connection");
             if (Objects.nonNull(proxyConnection)) {
@@ -61,7 +60,6 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
 
             try {
                 String url = request.uri();
-//                log.info("relay request " + url);
                 int index = url.indexOf(host) + host.length();
                 url = url.substring(index);
                 if (url.startsWith(":")) {
@@ -76,10 +74,7 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
         if (relayChannel.isActive()) {
             relayChannel.writeAndFlush(msg).addListener(future -> {
                 if (!future.isSuccess()) {
-//                    System.out.println("FAILED "+ctx.channel().remoteAddress()+"  >>>>>  "+relayChannel.remoteAddress()+" "+msg.getClass().getSimpleName());
                     log.error("relay error!", future.cause());
-                } else {
-//                    System.out.println("SUCCESS "+ctx.channel().remoteAddress()+"  >>>>>>>  "+relayChannel.remoteAddress()+" "+msg.getClass().getSimpleName());
                 }
             });
         } else {
