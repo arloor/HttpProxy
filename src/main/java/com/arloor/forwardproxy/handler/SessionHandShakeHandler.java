@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.Set;
 
 
 public class SessionHandShakeHandler extends SimpleChannelInboundHandler<HttpObject> {
@@ -17,8 +18,8 @@ public class SessionHandShakeHandler extends SimpleChannelInboundHandler<HttpObj
     private static final Logger log = LoggerFactory.getLogger(SessionHandShakeHandler.class);
     private final Session session;
 
-    public SessionHandShakeHandler(Map<String, String> auths, Span streamSpan) {
-        this.session = new Session(auths, streamSpan);
+    public SessionHandShakeHandler(Map<String, String> auths, Span streamSpan, Set<String> whiteDomains) {
+        this.session = new Session(auths, streamSpan, whiteDomains);
     }
 
 //    @Override

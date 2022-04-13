@@ -12,12 +12,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 
 public class Session {
 
     private static final Logger log = LoggerFactory.getLogger(SessionHandShakeHandler.class);
     private final Map<String, String> auths;
     private Span streamSpan;
+    private Set<String> whiteDomains;
     private Status status = Status.HTTP_REQUEST;
     private final Bootstrap bootstrap = new Bootstrap();
 
@@ -26,9 +28,10 @@ public class Session {
     private HttpRequest request;
     private ArrayList<HttpContent> contents = new ArrayList<>();
 
-    public Session(Map<String, String> auths, Span streamSpan) {
+    public Session(Map<String, String> auths, Span streamSpan, Set<String> whiteDomains) {
         this.auths = auths;
         this.streamSpan = streamSpan;
+        this.whiteDomains = whiteDomains;
     }
 
     public void handle(ChannelHandlerContext channelHandlerContext, HttpObject msg) {
@@ -89,5 +92,9 @@ public class Session {
 
     public void setRequest(HttpRequest request) {
         this.request = request;
+    }
+
+    public boolean isWhiteDomain(String host) {
+        return whiteDomains.contains(host);
     }
 }

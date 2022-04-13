@@ -18,6 +18,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
 public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChannel> {
@@ -48,7 +49,7 @@ public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChanne
         p.addLast(new HttpRequestDecoder());
         p.addLast(new HttpResponseEncoder());
         p.addLast(new HttpServerExpectContinueHandler());
-        p.addLast(SessionHandShakeHandler.NAME, new SessionHandShakeHandler(sslConfig.getAuthMap(), streamSpan));
+        p.addLast(SessionHandShakeHandler.NAME, new SessionHandShakeHandler(sslConfig.getAuthMap(), streamSpan, new HashSet<>()));
 
     }
 

@@ -1,14 +1,20 @@
 package com.arloor.forwardproxy.vo;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class HttpConfig {
     private Integer port;
     private Map<String, String> auth; // base64 - raw
+    private Set<String> domainWhiteList = new HashSet<>();
 
-    public HttpConfig(Integer port, Map<String, String> auth) {
+    public HttpConfig(Integer port, Map<String, String> auth, Set<String> domainWhiteList) {
         this.port = port;
         this.auth = auth;
+        if (domainWhiteList != null) {
+            this.domainWhiteList = domainWhiteList;
+        }
     }
 
     public Integer getPort() {
@@ -27,4 +33,7 @@ public class HttpConfig {
         return auth != null && auth.size() != 0;
     }
 
+    public Set<String> getDomainWhiteList() {
+        return domainWhiteList;
+    }
 }

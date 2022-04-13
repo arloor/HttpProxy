@@ -90,7 +90,8 @@ public enum Status {
                     userName = raw.split(":")[0];
                 }
             }
-            if (auths != null && auths.size() != 0) {
+            boolean isWhiteDomain = session.isWhiteDomain(session.getHost());
+            if (!isWhiteDomain && auths != null && auths.size() != 0) {
                 if (basicAuth == null || !auths.containsKey(basicAuth)) {
                     log.warn(clientHostname + " " + request.method() + " " + request.uri() + "  {" + session.getHost() + "} wrong_auth:{" + basicAuth + "}");
                     // 这里需要将content全部release
@@ -115,7 +116,7 @@ public enum Status {
             }
 
             //3. 这里进入代理请求处理，分为两种：CONNECT方法和其他HTTP方法
-            log.info("{}@{} ==> {} {} {}", userName, clientHostname, request.method(), request.uri(), !request.uri().equals(request.headers().get("Host")) ? "Host=" + request.headers().get("Host") : "");
+            log.info("{}@{} ==> {} {} {}", isWhiteDomain ? "白名单域名" : userName, clientHostname, request.method(), request.uri(), !request.uri().equals(request.headers().get("Host")) ? "Host=" + request.headers().get("Host") : "");
             if (request.method().equals(HttpMethod.CONNECT)) {
                 session.setStatus(TUNNEL);
             } else {

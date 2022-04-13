@@ -1,10 +1,8 @@
 package com.arloor.forwardproxy.vo;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Config {
     private static final String TRUE = "true";
@@ -58,8 +56,9 @@ public class Config {
                     users.computeIfAbsent(genBasicAuthWithOut£(user), (cell) -> user);
                 }
             }
-            HttpConfig httpConfig = new HttpConfig(port, users);
-            config.httpConfig = httpConfig;
+            String whiteDomains = properties.getProperty("http.proxy.white.domain", "");
+            config.httpConfig = new HttpConfig(port, users, Arrays.stream(whiteDomains.split(",")).filter(s -> s != null && s.length() != 0).collect(Collectors.toSet()));
+            ;
         }
 
         return config;
