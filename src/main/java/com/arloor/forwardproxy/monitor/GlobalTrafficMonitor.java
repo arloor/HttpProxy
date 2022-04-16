@@ -139,7 +139,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                     <head>
                         <meta charset="UTF-8">
                         <title>[(${title})]</title>
-            <!--    <meta http-equiv="refresh" content="3">-->
+                        <meta http-equiv="refresh" content="5">
                         <script src="[(${echarts_url})]"></script>
                     </head>
                     <body style="margin: 0;height:100%;">
