@@ -134,22 +134,22 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
 
 
     private static final String TEMPLATE = """
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <title>[(${title})]</title>
-                <meta http-equiv="refresh" content="3">
-                <script src="[(${echarts_url})]"></script>
-            </head>
-            <body style="margin: 0;height:100%;">
-            <div id="main" style="width: 100%;height: 100vh;"></div>
-            <script type="text/javascript">
-                // 基于准备好的dom，初始化echarts实例
-                var myChart = echarts.init(document.getElementById('main'));
-                // 指定图表的配置项和数据
-                var option = {
-                    title: {
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>[(${title})]</title>
+            <!--    <meta http-equiv="refresh" content="3">-->
+                        <script src="[(${echarts_url})]"></script>
+                    </head>
+                    <body style="margin: 0;height:100%;">
+                    <div id="main" style="width: 100%;height: 100vh;"></div>
+                    <script type="text/javascript">
+                        // 基于准备好的dom，初始化echarts实例
+                        var myChart = echarts.init(document.getElementById('main'));
+                        // 指定图表的配置项和数据
+                        var option = {
+                            title: {
                         text: '[(${title})]'
                     },
                     tooltip: {
