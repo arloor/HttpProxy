@@ -94,7 +94,28 @@ public class Session {
         this.request = request;
     }
 
-    public boolean isWhiteDomain(String host) {
-        return whiteDomains.contains(host);
+    public boolean checkAuth(String basicAuth) {
+        if (isCheckAuthByWhiteDomain()) {
+            if (host != null) {
+                for (String whiteDomain : whiteDomains) {
+                    if (host.endsWith(whiteDomain)) {
+                        return true;
+                    }
+                }
+            }
+        } else {
+            if (auths != null && auths.size() != 0) {
+                if (basicAuth != null && auths.containsKey(basicAuth)) {
+                    return true;
+                }
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isCheckAuthByWhiteDomain() {
+        return !whiteDomains.isEmpty();
     }
 }

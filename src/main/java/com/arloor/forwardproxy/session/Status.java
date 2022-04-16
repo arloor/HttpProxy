@@ -90,33 +90,31 @@ public enum Status {
                     userName = raw.split(":")[0];
                 }
             }
-            boolean isWhiteDomain = session.isWhiteDomain(session.getHost());
-            if (!isWhiteDomain && auths != null && auths.size() != 0) {
-                if (basicAuth == null || !auths.containsKey(basicAuth)) {
-                    log.warn(clientHostname + " " + request.method() + " " + request.uri() + "  {" + session.getHost() + "} wrong_auth:{" + basicAuth + "}");
-                    // 这里需要将content全部release
-                    session.getContents().forEach(ReferenceCountUtil::release);
-                    DefaultHttpResponse responseAuthRequired;
-                    if (Config.ask4Authcate && !request.method().equals(HttpMethod.OPTIONS) && !request.method().equals(HttpMethod.HEAD)) {
-                        responseAuthRequired = new DefaultHttpResponse(request.protocolVersion(), PROXY_AUTHENTICATION_REQUIRED);
-                        responseAuthRequired.headers().add("Proxy-Authenticate", "Basic realm=\"netty forwardproxy\"");
-                    } else {
-                        responseAuthRequired = new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR);
-                    }
-                    channelContext.channel().writeAndFlush(responseAuthRequired);
-                    SocksServerUtils.closeOnFlush(channelContext.channel());
-                    Tracer.spanBuilder(TraceConstant.wrong_auth.name())
-                            .setAttribute(TraceConstant.auth.name(), String.valueOf(basicAuth))
-                            .setParent(io.opentelemetry.context.Context.current().with(session.getStreamSpan()))
-                            .startSpan()
-                            .end();
-                    session.setStatus(HTTP_REQUEST);
-                    return;
+
+            if (!session.checkAuth(basicAuth)) {
+                log.warn(clientHostname + " " + request.method() + " " + request.uri() + "  {" + session.getHost() + "} wrong_auth:{" + basicAuth + "}");
+                // 这里需要将content全部release
+                session.getContents().forEach(ReferenceCountUtil::release);
+                DefaultHttpResponse responseAuthRequired;
+                if (Config.ask4Authcate && !session.isCheckAuthByWhiteDomain() && !request.method().equals(HttpMethod.OPTIONS) && !request.method().equals(HttpMethod.HEAD)) {
+                    responseAuthRequired = new DefaultHttpResponse(request.protocolVersion(), PROXY_AUTHENTICATION_REQUIRED);
+                    responseAuthRequired.headers().add("Proxy-Authenticate", "Basic realm=\"netty forwardproxy\"");
+                } else {
+                    responseAuthRequired = new DefaultHttpResponse(request.protocolVersion(), INTERNAL_SERVER_ERROR);
                 }
+                channelContext.channel().writeAndFlush(responseAuthRequired);
+                SocksServerUtils.closeOnFlush(channelContext.channel());
+                Tracer.spanBuilder(TraceConstant.wrong_auth.name())
+                        .setAttribute(TraceConstant.auth.name(), String.valueOf(basicAuth))
+                        .setParent(io.opentelemetry.context.Context.current().with(session.getStreamSpan()))
+                        .startSpan()
+                        .end();
+                session.setStatus(HTTP_REQUEST);
+                return;
             }
 
             //3. 这里进入代理请求处理，分为两种：CONNECT方法和其他HTTP方法
-            log.info("{}@{} ==> {} {} {}", isWhiteDomain ? "白名单域名" : userName, clientHostname, request.method(), request.uri(), !request.uri().equals(request.headers().get("Host")) ? "Host=" + request.headers().get("Host") : "");
+            log.info("{}@{} ==> {} {} {}", userName, clientHostname, request.method(), request.uri(), !request.uri().equals(request.headers().get("Host")) ? "Host=" + request.headers().get("Host") : "");
             if (request.method().equals(HttpMethod.CONNECT)) {
                 session.setStatus(TUNNEL);
             } else {
