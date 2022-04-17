@@ -119,7 +119,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             param.add("seriesUp", seriesUp);
             param.add("seriesDown", seriesDown);
             param.add("interval", interval);
-            param.add("title", hostname.length() > 10 ? hostname : hostname + " 实时网速");
+            param.add("title", hostname + "实时网速");
             if (localEcharts) {
                 param.add("echarts_url", "/echarts.min.js");
             } else {

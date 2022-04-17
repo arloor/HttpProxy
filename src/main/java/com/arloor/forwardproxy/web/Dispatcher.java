@@ -35,6 +35,7 @@ public class Dispatcher {
     private static final Logger log = LoggerFactory.getLogger("web");
     private static byte[] favicon = new byte[0];
     private static byte[] echarts_min_js = new byte[0];
+    private static final String SERVER_NAME = "github.com/arloor/HttpProxy";
     private static final String MAGIC_HEADER = "arloor";
     private static final MonitorService MONITOR_SERVICE = MonitorService.getInstance();
     private static Map<String, BiConsumer<HttpRequest, ChannelHandlerContext>> handler = new HashMap<String, BiConsumer<HttpRequest, ChannelHandlerContext>>() {{
@@ -50,7 +51,7 @@ public class Dispatcher {
         buffer.writeBytes(echarts_min_js);
         final FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
-        response.headers().set("Server", "nginx/1.11");
+        response.headers().set("Server", SERVER_NAME);
         response.headers().set("Content-Length", echarts_min_js.length);
         response.headers().set("Cache-Control", "max-age=86400");
         if (needClose(request)) {
@@ -70,7 +71,7 @@ public class Dispatcher {
         buffer.writeBytes(html.getBytes());
         final FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
-        response.headers().set("Server", "nginx/1.11");
+        response.headers().set("Server", SERVER_NAME);
         response.headers().set("Content-Length", html.getBytes().length);
         response.headers().set("Content-Type", "text/text; charset=utf-8");
         ctx.writeAndFlush(response);
@@ -137,7 +138,7 @@ public class Dispatcher {
                 ctx.pipeline().addBefore(SessionHandShakeHandler.NAME, "chunked", new ChunkedWriteHandler());
             }
             HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-            response.headers().set("Server", "nginx/1.11");
+            response.headers().set("Server", SERVER_NAME);
             response.headers().set("Content-Length", fileLength);
             response.headers().set("Cache-Control", "max-age=1800");
             response.headers().set("Content-Type", contentType + "; charset=utf-8");
@@ -284,7 +285,7 @@ public class Dispatcher {
         buffer.writeBytes(notFound.getBytes());
         final FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, NOT_FOUND, buffer);
-        response.headers().set("Server", "nginx/1.11");
+        response.headers().set("Server", SERVER_NAME);
         response.headers().set("Content-Length", notFound.getBytes().length);
         response.headers().set(CONNECTION, CLOSE);
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
@@ -310,7 +311,7 @@ public class Dispatcher {
         buffer.writeBytes(clientHostname.getBytes());
         final FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
-        response.headers().set("Server", "nginx/1.11");
+        response.headers().set("Server", SERVER_NAME);
         response.headers().set("Content-Length", clientHostname.getBytes().length);
         response.headers().set("Content-Type", "text/html; charset=utf-8");
         if (needClose(request)) {
@@ -327,7 +328,7 @@ public class Dispatcher {
         buffer.writeBytes(html.getBytes(StandardCharsets.UTF_8));
         final FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
-        response.headers().set("Server", "nginx/1.11");
+        response.headers().set("Server", SERVER_NAME);
         response.headers().set("Content-Length", html.getBytes(StandardCharsets.UTF_8).length);
         response.headers().set("Content-Type", "text/html; charset=utf-8");
         if (needClose(request)) {
@@ -344,7 +345,7 @@ public class Dispatcher {
         buffer.writeBytes(favicon);
         final FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK, buffer);
-        response.headers().set("Server", "nginx/1.11");
+        response.headers().set("Server", SERVER_NAME);
         response.headers().set("Content-Length", favicon.length);
         response.headers().set("Cache-Control", "max-age=86400");
         if (needClose(request)) {
