@@ -38,7 +38,7 @@ public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChanne
     public void initChannel(SocketChannel ch) {
         ChannelPipeline p = ch.pipeline();
         p.addLast(GlobalTrafficMonitor.getInstance());
-        p.addLast(new IdleStateHandler(0, 0, 2, TimeUnit.MINUTES));
+        p.addLast(new IdleStateHandler(0, 0, 15, TimeUnit.SECONDS));
         Span streamSpan = Tracer.spanBuilder(TraceConstant.stream.name())
                 .setSpanKind(SpanKind.SERVER)
                 .setAttribute(TraceConstant.client.name(), ch.remoteAddress().getHostName())

@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Session {
-    private static final int MAX_REQUEST_NUM = 20;
+    private static final int MAX_REQUEST_NUM = 100;
     private static final Logger log = LoggerFactory.getLogger(SessionHandShakeHandler.class);
     private final Map<String, String> auths;
     private Span streamSpan;

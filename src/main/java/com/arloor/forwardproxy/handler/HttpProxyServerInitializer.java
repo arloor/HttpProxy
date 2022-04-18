@@ -35,7 +35,7 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
                 .setSpanKind(SpanKind.SERVER)
                 .setAttribute(TraceConstant.client.name(), ch.remoteAddress().getHostName())
                 .startSpan();
-        p.addLast(new IdleStateHandler(0, 0, 2, TimeUnit.MINUTES));
+        p.addLast(new IdleStateHandler(0, 0, 15, TimeUnit.SECONDS));
         p.addLast(new ChannelTrafficMonitor(1000, streamSpan));
         p.addLast(new HttpRequestDecoder());
         p.addLast(new HttpResponseEncoder());
