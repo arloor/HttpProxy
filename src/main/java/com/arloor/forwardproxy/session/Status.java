@@ -1,6 +1,5 @@
 package com.arloor.forwardproxy.session;
 
-import com.arloor.forwardproxy.handler.HeartbeatIdleStateHandler;
 import com.arloor.forwardproxy.handler.RelayHandler;
 import com.arloor.forwardproxy.handler.SessionHandShakeHandler;
 import com.arloor.forwardproxy.trace.TraceConstant;
@@ -11,7 +10,9 @@ import com.arloor.forwardproxy.vo.Config;
 import com.arloor.forwardproxy.web.Dispatcher;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.ReferenceCountUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Scope;
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED;
@@ -67,7 +67,8 @@ public enum Status {
                     .setParent(io.opentelemetry.context.Context.current().with(session.getStreamSpan()))
                     .startSpan();
             try (Scope scope = dispatch.makeCurrent()) {
-                Dispatcher.handle(session.getRequest(), channelContext);
+                boolean ifNeedClose = session.incrementCountAndIfNeedClose();
+                Dispatcher.handle(session.getRequest(), channelContext, ifNeedClose);
                 // 这里需要将content全部release
                 session.getContents().forEach(ReferenceCountUtil::release);
             } finally {
@@ -132,7 +133,7 @@ public enum Status {
                     .channel(OsUtils.socketChannelClazz())
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                     .option(ChannelOption.SO_KEEPALIVE, true)
-                    .handler(new HeartbeatIdleStateHandler(5, 0, 0, TimeUnit.MINUTES));
+                    .handler(new RelayHandler(channelContext.channel()));
             b.connect(session.getHost(), session.getPort()).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -147,13 +148,12 @@ public enum Status {
                             @Override
                             public void operationComplete(ChannelFuture channelFuture) {
                                 if (channelFuture.isSuccess()) {
+                                    channelContext.pipeline().remove(IdleStateHandler.class);
                                     channelContext.pipeline().remove(HttpRequestDecoder.class);
                                     channelContext.pipeline().remove(HttpResponseEncoder.class);
                                     channelContext.pipeline().remove(HttpServerExpectContinueHandler.class);
                                     channelContext.pipeline().remove(SessionHandShakeHandler.class);
-                                    outboundChannel.pipeline().addLast(new RelayHandler(channelContext.channel()));
                                     channelContext.pipeline().addLast(new RelayHandler(outboundChannel));
-//                                                    ctx.channel().config().setAutoRead(true);
                                 } else {
                                     log.info("reply tunnel established Failed: " + channelContext.channel().remoteAddress() + " " + request.method() + " " + request.uri());
                                     SocksServerUtils.closeOnFlush(channelContext.channel());
@@ -182,7 +182,13 @@ public enum Status {
                     .channel(OsUtils.socketChannelClazz())
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                     .option(ChannelOption.SO_KEEPALIVE, true)
-                    .handler(new HeartbeatIdleStateHandler(5, 0, 0, TimeUnit.MINUTES));
+                    .handler(new ChannelInitializer<SocketChannel>() {
+                        @Override
+                        protected void initChannel(SocketChannel outboundChannel) throws Exception {
+                            outboundChannel.pipeline().addLast(new HttpRequestEncoder());
+                            outboundChannel.pipeline().addLast(new RelayHandler(channelContext.channel()));
+                        }
+                    });
             b.connect(session.getHost(), session.getPort()).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -191,13 +197,11 @@ public enum Status {
                         String targetAddr = ((InetSocketAddress) outboundChannel.remoteAddress()).getAddress().getHostAddress();
                         session.setAttribute(TraceConstant.target.name(), targetAddr);
                         // Connection established use handler provided results
-
                         // 这里有几率抛出NoSuchElementException，原因是连接target host完成时，客户端已经关闭连接。
                         // 考虑到是比较小的几率，不catch。注：该异常没有啥影响。
+                        channelContext.pipeline().remove(IdleStateHandler.class);
                         channelContext.pipeline().remove(SessionHandShakeHandler.class);
                         channelContext.pipeline().remove(HttpResponseEncoder.class);
-                        outboundChannel.pipeline().addLast(new HttpRequestEncoder());
-                        outboundChannel.pipeline().addLast(new RelayHandler(channelContext.channel()));
                         RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel);
                         channelContext.pipeline().addLast(clientEndtoRemoteHandler);
 //                                        ctx.channel().config().setAutoRead(true);

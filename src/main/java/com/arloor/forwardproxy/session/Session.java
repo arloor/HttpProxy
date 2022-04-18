@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Session {
-
+    private static final int MAX_REQUEST_NUM = 20;
     private static final Logger log = LoggerFactory.getLogger(SessionHandShakeHandler.class);
     private final Map<String, String> auths;
     private Span streamSpan;
@@ -25,6 +25,7 @@ public class Session {
 
     private String host;
     private int port;
+    private int requestCount = 0;
     private HttpRequest request;
     private ArrayList<HttpContent> contents = new ArrayList<>();
 
@@ -32,6 +33,11 @@ public class Session {
         this.auths = auths;
         this.streamSpan = streamSpan;
         this.whiteDomains = whiteDomains;
+    }
+
+    public boolean incrementCountAndIfNeedClose() {
+        requestCount++;
+        return requestCount >= MAX_REQUEST_NUM;
     }
 
     public void handle(ChannelHandlerContext channelHandlerContext, HttpObject msg) {

@@ -11,6 +11,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerExpectContinueHandler;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 
@@ -34,7 +35,7 @@ public class HttpProxyServerInitializer extends ChannelInitializer<SocketChannel
                 .setSpanKind(SpanKind.SERVER)
                 .setAttribute(TraceConstant.client.name(), ch.remoteAddress().getHostName())
                 .startSpan();
-        p.addLast(new HeartbeatIdleStateHandler(5, 0, 0, TimeUnit.MINUTES));
+        p.addLast(new IdleStateHandler(0, 0, 2, TimeUnit.MINUTES));
         p.addLast(new ChannelTrafficMonitor(1000, streamSpan));
         p.addLast(new HttpRequestDecoder());
         p.addLast(new HttpResponseEncoder());

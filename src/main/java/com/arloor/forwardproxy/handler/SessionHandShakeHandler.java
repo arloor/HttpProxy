@@ -1,9 +1,11 @@
 package com.arloor.forwardproxy.handler;
 
 import com.arloor.forwardproxy.session.Session;
+import com.arloor.forwardproxy.util.SocksServerUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.HttpObject;
+import io.netty.handler.timeout.IdleStateEvent;
 import io.opentelemetry.api.trace.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,20 +24,24 @@ public class SessionHandShakeHandler extends SimpleChannelInboundHandler<HttpObj
         this.session = new Session(auths, streamSpan, whiteDomains);
     }
 
-//    @Override
-//    public void channelReadComplete(ChannelHandlerContext ctx) {
-//        ctx.flush();
-//    }
-
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, HttpObject msg) {
         session.handle(ctx, msg);
     }
 
     @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        if (evt instanceof IdleStateEvent) {
+            IdleStateEvent event = (IdleStateEvent) evt;
+            log.info("close channel {} because of {}", ctx.channel().remoteAddress(), event.state());
+            SocksServerUtils.closeOnFlush(ctx.channel());
+        }
+    }
+
+    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getHostString();
-        log.info("[EXCEPTION][" + clientHostname + "] " + cause.getMessage());
+        log.info("[EXCEPTION][" + clientHostname + "] " + cause.getClass().getSimpleName() + " " + cause.getMessage());
         ctx.close();
     }
 }

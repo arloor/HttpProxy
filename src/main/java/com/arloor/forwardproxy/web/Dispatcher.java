@@ -12,6 +12,7 @@ import io.netty.channel.*;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.stream.ChunkedFile;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import org.apache.logging.log4j.util.TriConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,8 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
@@ -38,7 +37,7 @@ public class Dispatcher {
     private static final String SERVER_NAME = "github.com/arloor/HttpProxy";
     private static final String MAGIC_HEADER = "arloor";
     private static final MonitorService MONITOR_SERVICE = MonitorService.getInstance();
-    private static Map<String, BiConsumer<HttpRequest, ChannelHandlerContext>> handler = new HashMap<String, BiConsumer<HttpRequest, ChannelHandlerContext>>() {{
+    private static Map<String, TriConsumer<HttpRequest, ChannelHandlerContext, Boolean>> handler = new HashMap<String, TriConsumer<HttpRequest, ChannelHandlerContext, Boolean>>() {{
         put("/favicon.ico", Dispatcher::favicon);
         put("/ip", Dispatcher::ip);
         put("/net", Dispatcher::net);
@@ -46,7 +45,7 @@ public class Dispatcher {
         put("/echarts.min.js", Dispatcher::echarts);
     }};
 
-    private static void echarts(HttpRequest request, ChannelHandlerContext ctx) {
+    private static void echarts(HttpRequest request, ChannelHandlerContext ctx, boolean ifNeedClose) {
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(echarts_min_js);
         final FullHttpResponse response = new DefaultFullHttpResponse(
@@ -54,7 +53,7 @@ public class Dispatcher {
         response.headers().set("Server", SERVER_NAME);
         response.headers().set("Content-Length", echarts_min_js.length);
         response.headers().set("Cache-Control", "max-age=86400");
-        if (needClose(request)) {
+        if (ifNeedClose) {
             response.headers().set(CONNECTION, CLOSE);
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         } else {
@@ -63,9 +62,7 @@ public class Dispatcher {
 
     }
 
-    private static final Map<String, Long> counters = new ConcurrentHashMap<>();
-
-    private static void metrics(HttpRequest httpRequest, ChannelHandlerContext ctx) {
+    private static void metrics(HttpRequest httpRequest, ChannelHandlerContext ctx, boolean ifNeedClose) {
         String html = MONITOR_SERVICE.metrics();
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(html.getBytes());
@@ -74,19 +71,11 @@ public class Dispatcher {
         response.headers().set("Server", SERVER_NAME);
         response.headers().set("Content-Length", html.getBytes().length);
         response.headers().set("Content-Type", "text/text; charset=utf-8");
-        ctx.writeAndFlush(response);
-    }
-
-    private static boolean needClose(HttpRequest httpRequest) {
-        Long counter = counters.computeIfAbsent(httpRequest.uri(), (key) -> 0L);
-        counter++;
-        if (counter > 100) {
-            counter = 0L;
-            counters.put(httpRequest.uri(), counter);
-            return true;
+        if (ifNeedClose) {
+            response.headers().set(CONNECTION, CLOSE);
+            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         } else {
-            counters.put(httpRequest.uri(), counter);
-            return false;
+            ctx.writeAndFlush(response);
         }
     }
 
@@ -112,7 +101,7 @@ public class Dispatcher {
         return output.toByteArray();
     }
 
-    public static void handle(HttpRequest request, ChannelHandlerContext ctx) {
+    public static void handle(HttpRequest request, ChannelHandlerContext ctx, boolean ifNeedClose) {
         SocketAddress socketAddress = ctx.channel().remoteAddress();
         boolean fromLocalAddress = ((InetSocketAddress) socketAddress).getAddress().isSiteLocalAddress();
         boolean fromLocalHost = ((InetSocketAddress) socketAddress).getAddress().isLoopbackAddress();
@@ -120,13 +109,13 @@ public class Dispatcher {
         // 1. 来自局域网 2.无被探测风险 3. 请求头包含特定字符串
         if (fromLocalAddress || fromLocalHost || !Config.ask4Authcate || request.headers().contains(MAGIC_HEADER)) {
             log(request, ctx);
-            handler.getOrDefault(request.uri(), Dispatcher::other).accept(request, ctx);
+            handler.getOrDefault(request.uri(), Dispatcher::other).accept(request, ctx, ifNeedClose);
         } else {
             refuse(request, ctx);
         }
     }
 
-    private static void other(HttpRequest request, ChannelHandlerContext ctx) {
+    private static void other(HttpRequest request, ChannelHandlerContext ctx, boolean ifNeedClose) {
         String path = getPath(request);
         String contentType = getContentType(path);
         try {
@@ -142,8 +131,7 @@ public class Dispatcher {
             response.headers().set("Content-Length", fileLength);
             response.headers().set("Cache-Control", "max-age=1800");
             response.headers().set("Content-Type", contentType + "; charset=utf-8");
-            boolean needClose = needClose(request);
-            response.headers().set(CONNECTION, needClose ? CLOSE : KEEP_ALIVE);
+            response.headers().set(CONNECTION, ifNeedClose ? CLOSE : KEEP_ALIVE);
 
 
             ctx.write(response);
@@ -167,7 +155,7 @@ public class Dispatcher {
             });
 
             ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
-            if (needClose) {
+            if (ifNeedClose) {
                 lastContentFuture.addListener(ChannelFutureListener.CLOSE);
             }
         } catch (FileNotFoundException fnfd) {
@@ -305,7 +293,7 @@ public class Dispatcher {
         ctx.close();
     }
 
-    private static void ip(HttpRequest request, ChannelHandlerContext ctx) {
+    private static void ip(HttpRequest request, ChannelHandlerContext ctx, boolean ifNeedClose) {
         String clientHostname = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress();
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(clientHostname.getBytes());
@@ -314,7 +302,7 @@ public class Dispatcher {
         response.headers().set("Server", SERVER_NAME);
         response.headers().set("Content-Length", clientHostname.getBytes().length);
         response.headers().set("Content-Type", "text/html; charset=utf-8");
-        if (needClose(request)) {
+        if (ifNeedClose) {
             response.headers().set(CONNECTION, CLOSE);
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         } else {
@@ -322,7 +310,7 @@ public class Dispatcher {
         }
     }
 
-    private static void net(HttpRequest request, ChannelHandlerContext ctx) {
+    private static void net(HttpRequest request, ChannelHandlerContext ctx, boolean ifNeedClose) {
         String html = GlobalTrafficMonitor.html(true);
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(html.getBytes(StandardCharsets.UTF_8));
@@ -331,7 +319,7 @@ public class Dispatcher {
         response.headers().set("Server", SERVER_NAME);
         response.headers().set("Content-Length", html.getBytes(StandardCharsets.UTF_8).length);
         response.headers().set("Content-Type", "text/html; charset=utf-8");
-        if (needClose(request)) {
+        if (ifNeedClose) {
             response.headers().set(CONNECTION, CLOSE);
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         } else {
@@ -340,7 +328,7 @@ public class Dispatcher {
     }
 
 
-    private static void favicon(HttpRequest request, ChannelHandlerContext ctx) {
+    private static void favicon(HttpRequest request, ChannelHandlerContext ctx, boolean ifNeedClose) {
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(favicon);
         final FullHttpResponse response = new DefaultFullHttpResponse(
@@ -348,7 +336,7 @@ public class Dispatcher {
         response.headers().set("Server", SERVER_NAME);
         response.headers().set("Content-Length", favicon.length);
         response.headers().set("Cache-Control", "max-age=86400");
-        if (needClose(request)) {
+        if (ifNeedClose) {
             response.headers().set(CONNECTION, CLOSE);
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
         } else {
