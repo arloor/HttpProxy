@@ -87,6 +87,6 @@ direct_memory_total{host="localhost",} 33554439
 
 [性能测试](性能测试.md)
 
-## 电报讨论组
+## 电报交流群
 
-电报讨论组 https://t.me/popstary
+[https://t.me/popstary](https://t.me/popstary)
