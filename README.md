@@ -50,11 +50,11 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout privkey.pem -out cert.
 打开 chrome://flags/#allow-insecure-localhost
 ```
 
-## 客户端说明
+## 支持的客户端
 
-1. 可以使用支持https的软件，例如：surge、shadowrocket、clash
-2. chrome浏览器可以通过[SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件使用本代理（不推荐，会存在被嗅探的风险）
-3. 可以使用caddy的forwardproxy插件作为客户端，使用指南见[forward-README.md](https://github.com/arloor/forward/blob/master/README.md)
+1. surge、shadowrocket、clash的https proxy代理类型。支持IOS、Android、Windows
+2. chrome浏览器[SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件（不推荐，会存在被嗅探的风险）
+3. caddy的forwardproxy插件，使用指南见[forward-README.md](https://github.com/arloor/forward/blob/master/README.md)，可用于Linux、Windows。
 4. Java开发人员可以使用[connect](https://github.com/arloor/connect)项目
 
 ## 网速监控
