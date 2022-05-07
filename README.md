@@ -54,7 +54,8 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout privkey.pem -out cert.
 
 1. 可以使用支持https的软件，例如：surge、shadowrocket、clash
 2. chrome浏览器可以通过[SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件使用本代理（不推荐，会存在被嗅探的风险）
-3. Java开发人员可以使用[connect](https://github.com/arloor/connect)项目
+3. 可以使用caddy的forwardproxy插件作为客户端，使用指南见[forward-README.md](https://github.com/arloor/forward/blob/master/README.md)
+4. Java开发人员可以使用[connect](https://github.com/arloor/connect)项目
 
 ## 网速监控
 
