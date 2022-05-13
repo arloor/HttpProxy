@@ -19,13 +19,15 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
 
     private final Channel relayChannel;
     private Span span;
+    private String host;
 
-    public RelayHandler(Channel relayChannel) {
+    public RelayHandler(Channel relayChannel, String host) {
         this.relayChannel = relayChannel;
+        this.host = host;
     }
 
-    public RelayHandler(Channel relayChannel, Span connectSpan) {
-        this(relayChannel);
+    public RelayHandler(Channel relayChannel, String host, Span connectSpan) {
+        this(relayChannel, host);
         this.span = connectSpan;
     }
 
@@ -74,7 +76,7 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
         if (relayChannel.isActive()) {
             relayChannel.writeAndFlush(msg).addListener(future -> {
                 if (!future.isSuccess()) {
-                    log.error("relay error! {}: {}", future.cause().getClass().getName(), future.cause().getMessage());
+                    log.warn("relay error for [{}]! {}: {}", host, future.cause().getClass().getName(), future.cause().getMessage());
                 }
             });
         } else {

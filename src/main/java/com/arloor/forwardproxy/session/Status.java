@@ -133,7 +133,7 @@ public enum Status {
                     .channel(OsUtils.socketChannelClazz())
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
                     .option(ChannelOption.SO_KEEPALIVE, true)
-                    .handler(new RelayHandler(channelContext.channel()));
+                    .handler(new RelayHandler(channelContext.channel(), session.getHost()));
             b.connect(session.getHost(), session.getPort()).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -153,7 +153,7 @@ public enum Status {
                                     channelContext.pipeline().remove(HttpResponseEncoder.class);
                                     channelContext.pipeline().remove(HttpServerExpectContinueHandler.class);
                                     channelContext.pipeline().remove(SessionHandShakeHandler.class);
-                                    channelContext.pipeline().addLast(new RelayHandler(outboundChannel));
+                                    channelContext.pipeline().addLast(new RelayHandler(outboundChannel, session.getHost()));
                                 } else {
                                     log.info("reply tunnel established Failed: " + channelContext.channel().remoteAddress() + " " + request.method() + " " + request.uri());
                                     SocksServerUtils.closeOnFlush(channelContext.channel());
@@ -186,7 +186,7 @@ public enum Status {
                         @Override
                         protected void initChannel(SocketChannel outboundChannel) throws Exception {
                             outboundChannel.pipeline().addLast(new HttpRequestEncoder());
-                            outboundChannel.pipeline().addLast(new RelayHandler(channelContext.channel()));
+                            outboundChannel.pipeline().addLast(new RelayHandler(channelContext.channel(), session.getHost()));
                         }
                     });
             b.connect(session.getHost(), session.getPort()).addListener(new ChannelFutureListener() {
@@ -202,7 +202,7 @@ public enum Status {
                         channelContext.pipeline().remove(IdleStateHandler.class);
                         channelContext.pipeline().remove(SessionHandShakeHandler.class);
                         channelContext.pipeline().remove(HttpResponseEncoder.class);
-                        RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel);
+                        RelayHandler clientEndtoRemoteHandler = new RelayHandler(outboundChannel, session.getHost());
                         channelContext.pipeline().addLast(clientEndtoRemoteHandler);
 //                                        ctx.channel().config().setAutoRead(true);
 
