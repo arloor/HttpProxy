@@ -74,7 +74,7 @@ public final class RelayHandler extends ChannelInboundHandlerAdapter {
         if (relayChannel.isActive()) {
             relayChannel.writeAndFlush(msg).addListener(future -> {
                 if (!future.isSuccess()) {
-                    log.error("relay error!", future.cause());
+                    log.error("relay error! {}: {}", future.cause().getClass().getName(), future.cause().getMessage());
                 }
             });
         } else {
