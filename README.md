@@ -2,10 +2,45 @@
 
 ## 基于netty的http代理
 
-1. 支持普通GET/POST和CONNECT隧道代理
-2. 代理支持over TLS(也就是surge、小火箭等软件说的https proxy)
-3. 防止主动嗅探是否为http代理
-4. 使用openssl、epoll等技术，支持TLS v1.3。
+- 支持普通GET/POST和CONNECT隧道代理
+- 代理支持over TLS(也就是surge、小火箭等软件说的https proxy)
+- 防止主动嗅探是否为http代理
+- 使用openssl、epoll等技术，支持TLS v1.3。
+
+## 支持的客户端
+
+|平台|支持的客户端|
+|-----|----|
+|Linux、Windows|[clash_for_windows](https://github.com/Fndroid/clash_for_windows_pkg)、[go语言客户端](https://github.com/arloor/forward)、[Java语言客户端](https://github.com/arloor/connect)|
+|IOS|[Surge](https://apps.apple.com/us/app/surge-4/id1442620678)、[shawdowrocket](https://apps.apple.com/us/app/shadowrocket/id932747118)|
+|Android|[ClashForAndroid](https://github.com/Kr328/ClashForAndroid)|
+|chrome|[SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件（不推荐，会存在被嗅探的风险）|
+
+## 网速监控
+
+1. `http(s)://host:port/net`提供了基于echarts.js的网速监控，展示最近500秒的网速，如下图所示
+ ![](/实时网速.png)
+2 `http(s)://host:port/metrics`提供了prometheus的exporter，可以方便地接入prometheus监控，提供网速、内存等监控指标，如下所示
+
+```shell
+# HELP proxy_out 上行流量
+# TYPE proxy_out counter
+proxy_out{host="localhost",} 65205
+# HELP proxy_in 下行流量
+# TYPE proxy_in counter
+proxy_in{host="localhost",} 21205
+# HELP proxy_out_rate 上行网速
+# TYPE proxy_out_rate gauge
+proxy_out_rate{host="localhost",} 23967
+# HELP proxy_in_rate 下行网速
+# TYPE proxy_in_rate gauge
+proxy_in_rate{host="localhost",} 5758
+# HELP direct_memory_total 直接内存使用量 对于jdk9+，请增加-Dio.netty.tryReflectionSetAccessible=true
+# TYPE direct_memory_total gauge
+direct_memory_total{host="localhost",} 33554439
+```
+
+[jdk9以上设置-Dio.netty.tryReflectionSetAccessible=true的说明](/jdk9以上设置-Dio.netty.tryReflectionSetAccessible=true的说明.md)
 
 ## 配置解析
 
@@ -49,40 +84,6 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout privkey.pem -out cert.
 ## chrome不验证本地证书
 打开 chrome://flags/#allow-insecure-localhost
 ```
-
-## 支持的客户端
-
-1. surge、shadowrocket、clash的https proxy代理类型。支持IOS、Android、Windows
-2. chrome浏览器[SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件（不推荐，会存在被嗅探的风险）
-3. caddy的forwardproxy插件，使用指南见[forward-README.md](https://github.com/arloor/forward/blob/master/README.md)，可用于Linux、Windows。
-4. Java开发人员可以使用[connect](https://github.com/arloor/connect)项目
-
-## 网速监控
-
-1. `http(s)://host:port/net`提供了基于echarts.js的网速监控，展示最近500秒的网速
-2. `http(s)://host:port/metrics`提供了prometheus的exporter，可以方便地接入prometheus监控
-
-如下：
-
-```shell
-# HELP proxy_out 上行流量
-# TYPE proxy_out counter
-proxy_out{host="localhost",} 65205
-# HELP proxy_in 下行流量
-# TYPE proxy_in counter
-proxy_in{host="localhost",} 21205
-# HELP proxy_out_rate 上行网速
-# TYPE proxy_out_rate gauge
-proxy_out_rate{host="localhost",} 23967
-# HELP proxy_in_rate 下行网速
-# TYPE proxy_in_rate gauge
-proxy_in_rate{host="localhost",} 5758
-# HELP direct_memory_total 直接内存使用量 对于jdk9+，请增加-Dio.netty.tryReflectionSetAccessible=true
-# TYPE direct_memory_total gauge
-direct_memory_total{host="localhost",} 33554439
-```
-
-[jdk9以上设置-Dio.netty.tryReflectionSetAccessible=true的说明](/jdk9以上设置-Dio.netty.tryReflectionSetAccessible=true的说明.md)
 
 ## 性能测试
 
