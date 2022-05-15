@@ -42,39 +42,47 @@ direct_memory_total{host="localhost",} 33554439
 
 [jdk9以上设置-Dio.netty.tryReflectionSetAccessible=true的说明](/jdk9以上设置-Dio.netty.tryReflectionSetAccessible=true的说明.md)
 
-## 配置解析
+## 运行指南
 
-```shell script
-ask4Authcate=true
+```shell
+# 需要使用jdk17
+maven clean package
+java -jar target/httpproxy-1.0-SNAPSHOT-all.jar -c proxy.properties
 ```
 
-这是防止主动嗅探的开关，true则会主动要求客户端发送用户密码，会存在被主动嗅探的风险。所以建议设置为false，除非是直接通过SwitchyOmega(chrome插件)使用
+### 配置文件说明
+
+`proxy.properties`内容如下
 
 ```shell script
-# http代理配置
-http.enable=true
-http.port=80
-http.auth=arloor:httpforarloor
-```
+# true：主动索要Proxy-Authorization，可能会被探测到是代理服务器。除非通过Chrom插件SwitchyOmega使用该代理，否则不建议设置为true
+# false: 不索要Proxy-Authorization
+ask4Authcate=false
 
-http代理部分的配置，没啥好说的
+# http代理部分设置
+# true:开启，false:不开启
+http.enable=false                 
+# http代理的端口
+http.port=6789
+# http代理的用户名和密码，逗号分割多个用户。不设置则不启用鉴权
+#http.auth=user1:passwd,user2:passwd
 
-```shell script
-# over Tls配置
+# https代理部分设置
+# true:开启，false:不开启
 https.enable=true
+# https代理的端口
 https.port=443
-https.auth=arloor:httpforarloor
-https.fullchain.pem=fullchain.pem
-https.privkey.pem=privkey.pem
+# http代理的用户名和密码，逗号分割多个用户。不设置则不启用鉴权
+#https.auth=user1:passwd,user2:passwd
+# TLS证书的fullchain（从CA证书到域名证书）
+https.fullchain.pem=/path/to/fullchain.cer
+# TLS证书的私钥
+https.privkey.pem=/path/to/private.key
 ```
 
-https代理部分的配置，主要就是证书相关的几个配置需要说明
+### TLS证书的更多说明
 
-https.fullchain.pem 是域名证书+根证书的简单拼接（fullchain是指完整的证书寻找路径，域名证书是用根证书签发的，而签发根证书的证书系统中已自带，由这个完整路径，浏览器才能判断该证书是否有效）
-
-https.privkey.pem 是私钥
-
-以腾讯云的免费ssl证书为例，nginx文件夹中的`1_xxx.com_bundle.crt`是fullchain，`2_xxx.com.key`是privkey，相信代码从业者能够从这里举一反三，从而知道从其他途径签发的证书应该如何配置。
+以腾讯云的免费ssl证书为例，nginx文件夹中的`1_xxx.com_bundle.crt`是fullchain，`2_xxx.com.key`是private.key。相信代码从业者能够从这里举一反三，从而知道从其他途径签发的证书应该如何配置。
 
 测试时，可以使用openssl生成证书和密钥,同时设置chrome不验证本地证书
 
