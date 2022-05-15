@@ -84,9 +84,10 @@ https.privkey.pem=/path/to/private.key
 
 以腾讯云的免费ssl证书为例，nginx文件夹中的`1_xxx.com_bundle.crt`是fullchain，`2_xxx.com.key`是private.key。相信代码从业者能够从这里举一反三，从而知道从其他途径签发的证书应该如何配置。
 
-测试时，可以使用openssl生成证书和密钥,同时设置chrome不验证本地证书
+测试时，可以使用项目内的`cert.pem`和`privkey.pem`（他们由openssl生成），同时需要设置设置chrome不验证localhost的证书
 
 ```shell
+## 证书生成脚本
 openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout privkey.pem -out cert.pem -days 3650
 
 ## chrome不验证本地证书
