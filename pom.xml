@@ -31,7 +31,7 @@
     <version>1.0-SNAPSHOT</version>
     <properties>
         <java.version>17</java.version>
-        <netty.version>4.1.70.Final</netty.version>
+        <netty.version>4.1.77.Final</netty.version>
         <mainClass>com.arloor.forwardproxy.HttpProxyServer</mainClass>
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
     </properties>
@@ -106,7 +106,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-tcnative-boringssl-static</artifactId>
-            <version>2.0.45.Final</version>
+            <version>2.0.52.Final</version>
             <scope>runtime</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
