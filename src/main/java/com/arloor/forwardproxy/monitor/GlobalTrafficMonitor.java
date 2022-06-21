@@ -282,7 +282,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                             }
                         },
                         "name": "上行网速",
-                        "smooth": false,
+                        "smooth": true,
                         "type": "line"
                     },
                     {
@@ -335,7 +335,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
                              }
                          },
                         "name": "下行网速",
-                        "smooth": false,
+                        "smooth": true,
                         "type": "line"
                     }],
                     animation: false,
