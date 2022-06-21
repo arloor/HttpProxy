@@ -123,7 +123,7 @@ public class GlobalTrafficMonitor extends GlobalTrafficShapingHandler {
             if (localEcharts) {
                 param.add("echarts_url", "/echarts.min.js");
             } else {
-                param.add("echarts_url", "https://cdn.staticfile.org/echarts/4.8.0/echarts.min.js");
+                param.add("echarts_url", "https://www.arloor.com/echarts.min.js");
             }
             return RenderUtil.text(TEMPLATE, param);
         } catch (Throwable e) {

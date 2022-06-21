@@ -311,7 +311,7 @@ public class Dispatcher {
     }
 
     private static void net(HttpRequest request, ChannelHandlerContext ctx, boolean ifNeedClose) {
-        String html = GlobalTrafficMonitor.html(true);
+        String html = GlobalTrafficMonitor.html(false);
         ByteBuf buffer = ctx.alloc().buffer();
         buffer.writeBytes(html.getBytes(StandardCharsets.UTF_8));
         final FullHttpResponse response = new DefaultFullHttpResponse(
