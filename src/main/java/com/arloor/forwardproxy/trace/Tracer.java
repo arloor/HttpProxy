@@ -1,12 +1,14 @@
 package com.arloor.forwardproxy.trace;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
@@ -34,7 +36,7 @@ public enum Tracer {
         OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
                 .setTracerProvider(sdkTracerProvider)
                 // 跨进程传播规则
-                .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+                .setPropagators(ContextPropagators.create(TextMapPropagator.composite(W3CTraceContextPropagator.getInstance(), W3CBaggagePropagator.getInstance())))
                 .buildAndRegisterGlobal();
         this.delegate = openTelemetry.getTracer("main");
     }
