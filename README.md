@@ -94,6 +94,14 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout privkey.pem -out cert.
 打开 chrome://flags/#allow-insecure-localhost
 ```
 
+## 注意点
+
+对于非CONNECT的代理请求，在上传场景下，会有大量的HttpContent（底层是ByteBuf）占用大量内存，在master实现下可能会OOM。
+
+`block_on_non_connect`分支特别处理了这种情况，对于非connect请求，会sync在连接远端的过程中，连接完成后再读取body，但是会导致get/post请求整体变慢，因为增加了同步。
+
+这种tradeoff不太好权衡，需要的自行看Status.java的实现区别。
+
 ## 性能测试
 
 [性能测试](性能测试.md)
