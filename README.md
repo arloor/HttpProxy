@@ -96,11 +96,13 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout privkey.pem -out cert.
 
 ## 注意点
 
-对于非CONNECT的代理请求，在上传场景下，会有大量的HttpContent（底层是ByteBuf）占用大量内存，在master实现下可能会OOM。
+自commit`fc52966a092f5969f97e02c970fdcaf28d9354a3`开始，对于非connect隧道代理，连接目标地址的过程会阻塞，完成连接后再进行body读取。即
 
-`block_on_non_connect`分支特别处理了这种情况，对于非connect请求，会sync在连接远端的过程中，连接完成后再读取body，但是会导致get/post请求整体变慢，因为增加了同步。
+```java
+ChannelFuture future=b.connect(session.getHost(),session.getPort()).sync();
+```
 
-这种tradeoff不太好权衡，需要的自行看Status.java的实现区别。
+在此之前，HttpProxy会读取完整的http request再进行请求处理（WEB/TUNNEL/GETPOST），对于GETPOST的代理请求，body的长度是不受控的，在极端情况下，body部分会导致直接内存OOM。
 
 ## 性能测试
 
