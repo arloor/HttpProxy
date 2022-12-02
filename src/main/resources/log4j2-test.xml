@@ -67,7 +67,7 @@
         <logger name="com.arloor.forwardproxy.trace" level="info"
                 additivity="false">
             <appender-ref ref="span"/>
-            <AppenderRef ref="CONSOLE"/>
+<!--            <AppenderRef ref="CONSOLE"/>-->
         </logger>
         <!--level是日志记录的优先级 -->
         <root level="info">
