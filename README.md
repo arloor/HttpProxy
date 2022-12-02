@@ -96,7 +96,7 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout privkey.pem -out cert.
 
 ## 注意点
 
-自commit`fc52966a092f5969f97e02c970fdcaf28d9354a3`开始，对于非connect隧道代理，连接目标地址的过程会阻塞，完成连接后再进行body读取。即
+自[fc52966a](https://github.com/arloor/HttpProxy/commit/fc52966a092f5969f97e02c970fdcaf28d9354a3)开始，对于非connect隧道代理，连接目标地址的过程会阻塞，完成连接后再进行body读取。即
 
 ```java
 ChannelFuture future=b.connect(session.getHost(),session.getPort()).sync();
