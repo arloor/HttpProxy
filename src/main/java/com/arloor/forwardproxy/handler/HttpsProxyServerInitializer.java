@@ -47,7 +47,7 @@ public class HttpsProxyServerInitializer extends ChannelInitializer<SocketChanne
         if (sslCtx != null) {
             p.addLast(sslCtx.newHandler(ch.alloc()));
         }
-        p.addLast(new HttpRequestDecoder());
+        p.addLast(new HttpRequestDecoder(1000,8192,8192));
         p.addLast(new HttpResponseEncoder());
         p.addLast(new HttpServerExpectContinueHandler());
         p.addLast(SessionHandShakeHandler.NAME, new SessionHandShakeHandler(sslConfig.getAuthMap(), streamSpan, new HashSet<>()));

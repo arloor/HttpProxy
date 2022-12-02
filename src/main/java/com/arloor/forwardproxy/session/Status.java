@@ -46,7 +46,7 @@ public enum Status {
         public void handle(Session session, ChannelHandlerContext channelContext, HttpObject msg) {
             //SimpleChannelInboundHandler会将HttpContent中的bytebuf Release，但是这个还会转给relayHandler，所以需要在这里预先retain
             ((HttpContent) msg).content().retain();
-            session.addContent((HttpContent) msg);
+            session.addContent((HttpContent) msg); //暂存transfer-encode: chuncked中的chunk或者普通模式下的body。这里会占用内存，大文件上传下可能会OOM，尚未遇到
             if (msg instanceof LastHttpContent) {
                 // 1. 如果url以 / 开头，则认为是直接请求，而不是代理请求
                 if (session.getRequest().uri().startsWith("/")) {
