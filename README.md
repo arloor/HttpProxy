@@ -9,12 +9,13 @@
 
 ## 支持的客户端
 
-|平台|支持的客户端|
-|-----|----|
-|Linux、Windows|[clash_for_windows](https://github.com/Fndroid/clash_for_windows_pkg)、[go语言客户端](https://github.com/arloor/forward)、[Java语言客户端](https://github.com/arloor/connect)|
-|IOS|[Surge](https://apps.apple.com/us/app/surge-4/id1442620678)、[shawdowrocket](https://apps.apple.com/us/app/shadowrocket/id932747118)|
-|Android|[ClashForAndroid](https://github.com/Kr328/ClashForAndroid)|
-|chrome|[SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件（不推荐，会存在被嗅探的风险）|
+| 平台            | 支持的客户端                                                                                                                                                            |
+|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Linux、Windows | [clash_for_windows](https://github.com/Fndroid/clash_for_windows_pkg)、[go语言客户端](https://github.com/arloor/forward)、[Java语言客户端](https://github.com/arloor/connect) |
+| MacOS         | ClashX、ClashX Pro|                                                                                                                                                 |                                                                                                                                                           |                                                                                                                                                           |
+| IOS           | [Surge](https://apps.apple.com/us/app/surge-4/id1442620678)、[shawdowrocket](https://apps.apple.com/us/app/shadowrocket/id932747118)                               |
+| Android       | [ClashForAndroid](https://github.com/Kr328/ClashForAndroid)                                                                                                       |
+| chrome        | [SwitchyOmega](https://chrome.google.com/webstore/detail/proxy-switchyomega/padekgcemlokbadohgkifijomclgjgif)插件（不推荐，会存在被嗅探的风险）                                    |
 
 ## 网速监控
 
