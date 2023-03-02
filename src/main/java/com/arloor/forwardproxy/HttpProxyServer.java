@@ -90,7 +90,7 @@ public final class HttpProxyServer {
                     .childHandler(new HttpProxyServerInitializer(httpConfig));
 
             Channel httpChannel = b.bind(httpConfig.getPort()).sync().channel();
-            log.info("http proxy@ port=" + httpConfig.getPort() + " auth=" + httpConfig.needAuth());
+            log.info("http proxy@ port={} auth={} url=http://localhost:{}",httpConfig.getPort(), httpConfig.needAuth(),httpConfig.getPort());
             return httpChannel;
         } catch (Exception e) {
             log.error("无法启动Http Proxy", e);
@@ -114,7 +114,7 @@ public final class HttpProxyServer {
                 log.info("定时重加载ssl证书！");
                 initializer.loadSslContext();
             }, 1, 1, TimeUnit.DAYS);
-            log.info("https proxy@ port=" + sslConfig.getPort() + " auth=" + sslConfig.needAuth());
+            log.info("https proxy@ port={} auth={} url:https://localhost:{}" ,sslConfig.getPort(), sslConfig.needAuth(),sslConfig.getPort());
             return sslChannel;
         } catch (Exception e) {
             log.error("无法启动Https Proxy", e);
