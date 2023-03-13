@@ -33,7 +33,7 @@ public class SessionHandShakeHandler extends SimpleChannelInboundHandler<HttpObj
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent event = (IdleStateEvent) evt;
-            log.info("close channel {} because of {}", ctx.channel().remoteAddress(), event.state());
+            log.debug("close channel {} because of {}", ctx.channel().remoteAddress(), event.state());
             SocksServerUtils.closeOnFlush(ctx.channel());
         }
     }
