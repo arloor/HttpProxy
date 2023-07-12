@@ -1,6 +1,7 @@
 package com.arloor.forwardproxy.monitor;
 
 import com.google.common.collect.Lists;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.util.internal.PlatformDependent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,7 +117,8 @@ public class PromMonitorImpl implements MonitorService {
     }
 
     private long nettyUsedDirectMemory() {
-        return PlatformDependent.usedDirectMemory();
+//        return PlatformDependent.usedDirectMemory();
+        return PooledByteBufAllocator.DEFAULT.metric().usedDirectMemory();
     }
 
     private static List<Metric<Long>> procNetDevMetric() {
