@@ -36,7 +36,7 @@ proxy_out_rate{host="localhost",} 23967
 # HELP proxy_in_rate 下行网速
 # TYPE proxy_in_rate gauge
 proxy_in_rate{host="localhost",} 5758
-# HELP direct_memory_total netty直接内存 对于jdk9+，请增加-Dio.netty.tryReflectionSetAccessible=true，对应jdk16+，请增加--add-opens java.base/java.nio=ALL-UNNAMED
+# HELP direct_memory_total netty直接内存 对于jdk9+，请增加-Dio.netty.tryReflectionSetAccessible=true，对于jdk16+，请增加--add-opens java.base/java.nio=ALL-UNNAMED
 # TYPE direct_memory_total gauge
 direct_memory_total{host="localhost",} 33554439
 ```
