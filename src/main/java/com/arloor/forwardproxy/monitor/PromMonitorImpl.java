@@ -98,7 +98,7 @@ public class PromMonitorImpl implements MonitorService {
         metrics.add(new Metric<>(MetricType.counter, "下行流量", "proxy_in", GlobalTrafficMonitor.getInstance().inTotal).tag("host", hostname));
         metrics.add(new Metric<>(MetricType.gauge, "上行网速", "proxy_out_rate", GlobalTrafficMonitor.getInstance().outRate).tag("host", hostname));
         metrics.add(new Metric<>(MetricType.gauge, "下行网速", "proxy_in_rate", GlobalTrafficMonitor.getInstance().inRate).tag("host", hostname));
-        metrics.add(new Metric<>(MetricType.gauge, "netty直接内存 对于jdk9+，请增加-Dio.netty.tryReflectionSetAccessible=true", "direct_memory_total", nettyUsedDirectMemory()).tag("host", hostname));
+        metrics.add(new Metric<>(MetricType.gauge, "netty直接内存 对于jdk9+，请增加-Dio.netty.tryReflectionSetAccessible=true，对应jdk16+，请增加--add-opens java.base/java.nio=ALL-UNNAMED", "direct_memory_total", nettyUsedDirectMemory()).tag("host", hostname));
         metrics.add(new Metric<>(MetricType.gauge, "堆内存使用量", "heap_memory_usage", heapMemoryUsage.getUsed()).tag("host", hostname));
         metrics.add(new Metric<>(MetricType.gauge, "堆内存容量", "heap_memory_committed", heapMemoryUsage.getCommitted()).tag("host", hostname));
         metrics.add(new Metric<>(MetricType.gauge, "非堆内存使用量", "nonheap_memory_usage", nonHeapMemoryUsage.getUsed()).tag("host", hostname));
@@ -117,8 +117,8 @@ public class PromMonitorImpl implements MonitorService {
     }
 
     private long nettyUsedDirectMemory() {
-//        return PlatformDependent.usedDirectMemory();
-        return PooledByteBufAllocator.DEFAULT.metric().usedDirectMemory();
+        return PlatformDependent.usedDirectMemory();
+//        return PooledByteBufAllocator.DEFAULT.metric().usedDirectMemory();
     }
 
     private static List<Metric<Long>> procNetDevMetric() {
