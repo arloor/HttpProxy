@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.PROXY_AUTHENTICATION_REQUIRED;
@@ -142,8 +143,12 @@ public enum Status {
                         String targetAddr = ((InetSocketAddress) outboundChannel.remoteAddress()).getAddress().getHostAddress();
                         session.setAttribute(TraceConstant.target.name(), targetAddr);
                         // Connection established use handler provided results
-                        ChannelFuture responseFuture = channelContext.channel().writeAndFlush(
-                                new DefaultHttpResponse(request.protocolVersion(), new HttpResponseStatus(200, "Connection Established")));
+                        DefaultHttpResponse response = new DefaultHttpResponse(request.protocolVersion(), new HttpResponseStatus(200, "Connection Established"));
+                        int size = ThreadLocalRandom.current().nextInt(150);
+                        for (int i = 0; i < size; i++) {
+                            response.headers().add("Server", "JavaHttpProxy");
+                        }
+                        ChannelFuture responseFuture = channelContext.channel().writeAndFlush(response);
                         responseFuture.addListener(new ChannelFutureListener() {
                             @Override
                             public void operationComplete(ChannelFuture channelFuture) {
