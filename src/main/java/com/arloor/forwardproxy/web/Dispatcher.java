@@ -17,9 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.net.URLDecoder;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -117,7 +115,7 @@ public class Dispatcher {
 
     private static void other(HttpRequest request, ChannelHandlerContext ctx, boolean ifNeedClose) {
         String path = getPath(request);
-        String contentType = getContentType(path);
+        String contentType = URLConnection.getFileNameMap().getContentTypeFor(path);
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(path, "r");
             long fileLength = randomAccessFile.length();
