@@ -1,6 +1,5 @@
 package com.arloor.forwardproxy.trace;
 
-import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
@@ -26,7 +25,7 @@ public class OtelContextDemo {
 
     /**
      * implements ImplicitContextKeyed
-     * @see Baggage#storeInContext(Context)
+     * @see io.opentelemetry.api.baggage.Baggage#storeInContext(Context)
      */
     public static class XrayContext implements ImplicitContextKeyed {
         private String payload;
