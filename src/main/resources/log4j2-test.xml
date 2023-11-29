@@ -12,67 +12,13 @@
             <!--输出日志的格式-->
             <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p %C{1}.%M(%F:%L) - %m%n"/>
         </console>
-
-        <!-- 每次大小超过size，则这size大小的日志会自动存入按yyyy-MM-dd建立.log，作为存档-->
-        <!-- filePattern 指定新建日志文件的名称格式；  -->
-        <!-- createOnDemand 解决重启tomcat或者java -jar 重新运行应用程序时数据丢失的问题 -->
-        <RollingFile name="LOGFILE" fileName="${MSG_LOG_HOME}/proxy.log"
-                     filePattern="${MSG_LOG_HOME}/proxy-%d{MM-dd-yyyy}-%i.log" createOnDemand="true">
-            <!--控制台只输出level及以上级别的信息（onMatch），其他的直接拒绝（onMismatch）-->
-            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
-            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p %C{1}.%M(%F:%L) - %m%n"/>
-            <!-- Policies指定滚动日志的策略，就是什么时候进行新建日志文件输出日志 -->
-            <Policies>
-                <!-- 基于时间的滚动策略,设置每天打包一次 -->
-                <TimeBasedTriggeringPolicy/>
-                <!-- 自定义的策略，会不停的往一个里面加，直到满足其余的策略，才更换 -->
-                <!-- <CronTriggeringPolicy schedule="0 0 * * * ?"/> -->
-                <!-- 基于指定文件大小的滚动策略,设置日志文件满100MB后打包,,size属性用来定义每个日志文件的大小 -->
-                <SizeBasedTriggeringPolicy size="250MB"/>
-            </Policies>
-            <!-- DefaultRolloverStrategy属性如不设置，默认最多7个文件，这里设置10000, 这样才可以达到日志不被删除 -->
-            <!-- 用来指定同一个文件夹下最多有几个日志文件时开始删除最旧的，创建新的 -->
-            <!-- 从2.8版本开始，如果fileIndex属性设置为nomax，那么最大和最小值，都将会被忽略掉，文件编号将从1开发增加-->
-            <!-- 并且每次rollover时递增都从编码最大开始（项目于max效果），而且没有文件数的限制。 -->
-            <DefaultRolloverStrategy max="10000"/>
-        </RollingFile>
-        <RollingFile name="span" fileName="${MSG_LOG_HOME}/span.log"
-                     filePattern="${MSG_LOG_HOME}/span.log-%d{MM-dd-yyyy}-%i" createOnDemand="true">
-            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p - %m%n"/>
-            <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
-            <Policies>
-                <TimeBasedTriggeringPolicy/>
-                <SizeBasedTriggeringPolicy size="250 MB"/>
-            </Policies>
-        </RollingFile>
-        <RollingFile name="web" fileName="${MSG_LOG_HOME}/web.log"
-                     append="true" filePattern="${MSG_LOG_HOME}/web.log-%d{MM-dd-yyyy}-%i" createOnDemand="true">
-            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %p %C{1}.%M(%F:%L) - %m%n"/>
-            <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
-            <Policies>
-                <TimeBasedTriggeringPolicy/>
-                <SizeBasedTriggeringPolicy size="250 MB"/>
-            </Policies>
-        </RollingFile>
     </appenders>
 
     <!--只有定义了logger并引入的appender，appender才会生效-->
     <loggers>
-
-        <logger name="web" level="info"
-                additivity="false">
-            <appender-ref ref="web"/>
-            <AppenderRef ref="CONSOLE"/>
-        </logger>
-        <logger name="com.arloor.forwardproxy.trace" level="info"
-                additivity="false">
-            <appender-ref ref="span"/>
-            <AppenderRef ref="CONSOLE"/>
-        </logger>
         <!--level是日志记录的优先级 -->
         <root level="info">
             <AppenderRef ref="CONSOLE"/>
-            <AppenderRef ref="LOGFILE"/>
         </root>
     </loggers>
 </configuration>
