@@ -99,11 +99,11 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout privkey.pem -out cert.
 
 [性能测试](性能测试.md)
 
-## Rust语言版本
+## 推荐查看Rust语言版本
 
 [rust_http_proxy](https://github.com/arloor/rust_http_proxy)
 
-轻量、性能、小内存专用
+轻量、高性能、内存占用低
 
 ## 电报交流群
 
