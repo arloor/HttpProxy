@@ -104,7 +104,3 @@ openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout privkey.pem -out cert.
 [rust_http_proxy](https://github.com/arloor/rust_http_proxy)
 
 轻量、高性能、内存占用低
-
-## 电报交流群
-
-[https://t.me/popstary](https://t.me/popstary)
